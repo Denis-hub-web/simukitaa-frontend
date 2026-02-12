@@ -29,7 +29,7 @@ const TradeInForm = ({ isOpen, onClose, onSuccess, prefilledCustomer }) => {
     const [stream, setStream] = useState(null);
 
     const totalSteps = 5;
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     useEffect(() => {
         if (prefilledCustomer) {
