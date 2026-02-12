@@ -24,6 +24,7 @@
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
     "axios": "^1.13.2",
+    "canvas-confetti": "^1.9.4",
     "framer-motion": "^12.23.26",
     "i18next": "^25.7.3",
     "jspdf": "^4.0.0",
