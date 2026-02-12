@@ -25,9 +25,7 @@ const RepairDetail = () => {
     const [showCompletionModal, setShowCompletionModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:5000/api'
-        : `http://${window.location.hostname}:5000/api`;
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     useEffect(() => {
         const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -711,7 +709,7 @@ const RepairDetail = () => {
                 const [loading, setLoading] = useState(false);
                 const [noInventory, setNoInventory] = useState(false);
 
-                const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000/api' : `http://${window.location.hostname}:5000/api`;
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     const addPart = (partId) => {
         const part = spareParts.find(p => p.id === partId);
@@ -829,7 +827,7 @@ const RepairDetail = () => {
     const [notes, setNotes] = useState('');
                 const [warranty, setWarranty] = useState('30');
                 const [loading, setLoading] = useState(false);
-                const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000/api' : `http://${window.location.hostname}:5000/api`;
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     const handleSubmit = async (e) => {
                     e.preventDefault();
@@ -864,7 +862,7 @@ const RepairDetail = () => {
     const [amount, setAmount] = useState(balance.toString());
                 const [paymentMethod, setPaymentMethod] = useState('Cash');
                 const [loading, setLoading] = useState(false);
-                const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000/api' : `http://${window.location.hostname}:5000/api`;
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     const handleSubmit = async (e) => {
                     e.preventDefault();
