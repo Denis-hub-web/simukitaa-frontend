@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar as faStarSolid, faCheckCircle, faCircleNotch, faQuoteLeft, faHeart, faSparkles } from '@fortawesome/free-solid-svg-icons';
+import { faStar as faStarSolid, faCheckCircle, faCircleNotch, faQuoteLeft, faHeart } from '@fortawesome/free-solid-svg-icons';
 import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import confetti from 'canvas-confetti';
@@ -148,7 +148,7 @@ const CustomerReview = () => {
                             transition={{ repeat: Infinity, duration: 2 }}
                             className="absolute -top-2 -right-2"
                         >
-                            <FontAwesomeIcon icon={faSparkles} className="text-yellow-400 text-2xl" />
+                            <FontAwesomeIcon icon={faStarSolid} className="text-yellow-400 text-2xl" />
                         </motion.div>
                     </motion.div>
 
@@ -278,8 +278,8 @@ const CustomerReview = () => {
                                     <FontAwesomeIcon
                                         icon={(hover || rating) >= star ? faStarSolid : faStarRegular}
                                         className={`text-5xl md:text-7xl transition-all duration-200 ${(hover || rating) >= star
-                                                ? 'text-yellow-400 drop-shadow-[0_0_25px_rgba(250,204,21,0.8)] animate-pulse'
-                                                : 'text-white/30'
+                                            ? 'text-yellow-400 drop-shadow-[0_0_25px_rgba(250,204,21,0.8)] animate-pulse'
+                                            : 'text-white/30'
                                             }`}
                                         style={{
                                             filter: (hover || rating) >= star ? 'drop-shadow(0 0 10px rgba(250, 204, 21, 0.6))' : 'none'
