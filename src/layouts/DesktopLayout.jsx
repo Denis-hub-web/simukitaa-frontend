@@ -6,7 +6,7 @@ import {
     faHome, faChartLine, faBoxOpen, faUsers, faCog,
     faBell, faSearch, faSignOutAlt, faBars, faTimes,
     faMoneyBillWave, faTools, faTruck, faUser, faBox,
-    faExchangeAlt, faDatabase, faChevronRight, faCompass, faBrain, faGem, faEnvelope, faBullhorn
+    faExchangeAlt, faDatabase, faChevronRight, faCompass, faBrain, faGem, faEnvelope, faBullhorn, faWallet, faFileAlt
 } from '@fortawesome/free-solid-svg-icons';
 import { notificationAPI } from '../utils/api';
 
@@ -50,6 +50,8 @@ const DesktopLayout = () => {
         { icon: faExchangeAlt, label: 'Trade-In Manager', path: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: faBrain, label: 'Activity Ledger', path: '/ceo-data', roles: ['CEO'] },
         { icon: faChartLine, label: 'Reports', path: '/reports', roles: ['CEO', 'MANAGER'] },
+        { icon: faWallet, label: 'Expenses', path: '/expenses', roles: ['CEO', 'MANAGER'] },
+        { icon: faFileAlt, label: 'Daily Sheet', path: '/daily-sheet', roles: ['CEO', 'MANAGER'] },
         { icon: faTruck, label: 'Deliveries', path: '/deliveries', roles: ['CEO', 'MANAGER'] },
         { icon: faUsers, label: 'User Management', path: '/users', roles: ['CEO', 'MANAGER'] },
         { icon: faGem, label: 'Wanakitaa Hub', path: '/wanakitaa', roles: ['CEO', 'MANAGER', 'STAFF'] },

@@ -45,6 +45,8 @@ import SerialNumberScanner from './pages/SerialNumberScanner';
 import TeamManagement from './pages/TeamManagement';
 import StockInventoryPage from './pages/StockInventoryPage';
 import ReportsPage from './pages/ReportsPage';
+import ExpensesPage from './pages/ExpensesPage';
+import DailySheetReport from './pages/DailySheetReport';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
 import './index.css';
@@ -99,6 +101,8 @@ function App() {
                         <Route path="/stock-calculator" element={<StockCalculatorPage />} />
                         <Route path="/team-management" element={<TeamManagement />} />
                         <Route path="/reports" element={<ReportsPage />} />
+                        <Route path="/expenses" element={<ExpensesPage />} />
+                        <Route path="/daily-sheet" element={<DailySheetReport />} />
                         <Route path="/" element={<Navigate to="/dashboard" />} />
                     </Route>
                 ) : (
@@ -278,6 +282,14 @@ function App() {
                         <Route
                             path="/reports"
                             element={isLoggedIn ? <ReportsPage /> : <Navigate to="/login" />}
+                        />
+                        <Route
+                            path="/expenses"
+                            element={isLoggedIn ? <ExpensesPage /> : <Navigate to="/login" />}
+                        />
+                        <Route
+                            path="/daily-sheet"
+                            element={isLoggedIn ? <DailySheetReport /> : <Navigate to="/login" />}
                         />
                         <Route path="/" element={<Navigate to="/login" />} />
                     </>
