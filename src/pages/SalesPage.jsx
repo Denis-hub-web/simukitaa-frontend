@@ -102,7 +102,7 @@ const SalesPage = () => {
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => navigate('/dashboard')}
-                                className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                                className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors mobile-only"
                             >
                                 <FontAwesomeIcon icon={faArrowLeft} className="text-gray-700 text-sm" />
                             </button>

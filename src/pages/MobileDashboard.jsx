@@ -163,9 +163,9 @@ const MobileDashboard = () => {
     }
 
     return (
-        <div className="premium-bg pb-24 md:pb-8">
+        <div className="premium-bg pb-8 md:pb-12">
             {/* Premium Header */}
-            <div className="relative overflow-hidden pb-12 pt-8">
+            <div className="relative overflow-hidden pb-12 pt-8 mobile-only">
                 <div className="max-w-6xl mx-auto px-4 relative z-10">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -206,8 +206,8 @@ const MobileDashboard = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="max-w-6xl mx-auto px-4 -mt-4 relative z-10">
-                <div className="mb-8">
+            <div className="max-w-6xl mx-auto px-4 -mt-4 relative z-10 md:mt-8">
+                <div className="mb-8 mobile-only">
                     <div className="relative group">
                         <FontAwesomeIcon
                             icon={faSearch}
@@ -511,7 +511,7 @@ const MobileDashboard = () => {
 
             {/* Bottom Navigation */}
             {/* Premium Navigation Bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-8">
+            <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-8 mobile-only">
                 <div className="max-w-xl mx-auto bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/40 p-2 flex items-center justify-between">
                     {[
                         { id: 'updates', icon: faBell, label: 'Notifications' },

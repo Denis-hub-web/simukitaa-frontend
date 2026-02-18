@@ -221,9 +221,9 @@ const TradeInsPage = () => {
                             >
                                 {/* Header Image/Status */}
                                 <div className="h-40 bg-gray-100 relative group overflow-hidden">
-                                    {item.photos?.front ? (
+                                    {item.photos?.front || item.photos?.serial || item.serialNumberPhoto ? (
                                         <img
-                                            src={item.photos.front}
+                                            src={item.photos?.front || item.photos?.serial || item.serialNumberPhoto}
                                             alt="Device"
                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                         />

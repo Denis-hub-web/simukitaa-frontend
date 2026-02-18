@@ -198,8 +198,8 @@ const CEOTradeInDashboard = () => {
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="flex gap-4">
                                         <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-[#008069] group-hover:bg-[#008069] group-hover:text-white transition-all shadow-inner overflow-hidden relative">
-                                            {tradeIn.photos?.front ? (
-                                                <img src={tradeIn.photos.front} className="w-full h-full object-cover" alt="Asset" />
+                                            {tradeIn.photos?.front || tradeIn.photos?.serial || tradeIn.serialNumberPhoto ? (
+                                                <img src={tradeIn.photos?.front || tradeIn.photos?.serial || tradeIn.serialNumberPhoto} className="w-full h-full object-cover" alt="Asset" />
                                             ) : (
                                                 <FontAwesomeIcon icon={faMobileAlt} className="text-xl" />
                                             )}
