@@ -11,7 +11,16 @@ import axios from 'axios';
 const DailySheetReport = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+
+    // Get local YYYY-MM-DD date
+    const getLocalDate = () => {
+        const now = new Date();
+        const offset = now.getTimezoneOffset();
+        const local = new Date(now.getTime() - (offset * 60 * 1000));
+        return local.toISOString().split('T')[0];
+    };
+
+    const [selectedDate, setSelectedDate] = useState(getLocalDate());
 
     useEffect(() => {
         fetchDailySheet();
@@ -150,7 +159,7 @@ const DailySheetReport = () => {
                         </button>
 
                         <button
-                            onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                            onClick={() => setSelectedDate(getLocalDate())}
                             className="px-3 md:px-4 py-2 md:py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors text-sm md:text-base whitespace-nowrap"
                         >
                             Today
@@ -326,6 +335,8 @@ const DailySheetReport = () => {
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Description</th>
                                 <th className="text-right p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Amount</th>
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Payment</th>
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Recorded By</th>
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Recorded At</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -341,6 +352,12 @@ const DailySheetReport = () => {
                                         <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] md:text-xs font-medium">
                                             {e.paymentMethod}
                                         </span>
+                                    </td>
+                                    <td className="p-2 md:p-3 text-gray-700 font-medium text-xs md:text-sm">
+                                        {e.recordedBy}
+                                    </td>
+                                    <td className="p-2 md:p-3 text-gray-500 text-xs md:text-sm">
+                                        {new Date(e.recordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </td>
                                 </tr>
                             ))}

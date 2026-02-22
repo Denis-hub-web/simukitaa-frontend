@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faArrowLeft, faSearch, faFilter, faBarcode, faBox, faTruck,
     faCheckCircle, faExclamationTriangle, faSdCard, faPalette,
-    faDownload, faRefresh
+    faDownload, faRefresh, faEdit
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const AllDevicesPage = () => {
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
     const [loading, setLoading] = useState(true);
     const [devices, setDevices] = useState([]);
     const [suppliers, setSuppliers] = useState([]);
@@ -27,6 +28,10 @@ const AllDevicesPage = () => {
     });
     const [sortBy, setSortBy] = useState('newest'); // newest, oldest, priceHigh, priceLow, name
     const [showFilters, setShowFilters] = useState(false);
+    const [editingDeviceId, setEditingDeviceId] = useState(null);
+    const [editPrice, setEditPrice] = useState('');
+    const [editIsLocked, setEditIsLocked] = useState(false);
+    const [updating, setUpdating] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -46,16 +51,27 @@ const AllDevicesPage = () => {
             const products = productsRes.data.data || productsRes.data;
             const suppliersData = suppliersRes.data.data || suppliersRes.data;
 
-            // Flatten all devices from all products
+            // Flatten all devices from all products (EXCLUDING adjustments)
             const allDevices = products.flatMap(product =>
-                (product.devices || []).map(device => ({
-                    ...device,
-                    productId: product.id,
-                    productName: product.name,
-                    productBrand: product.brand,
-                    productModel: product.model,
-                    productCategory: product.category
-                }))
+                (product.devices || [])
+                    .filter(device => !device.isAdjustment) // Hide deductions/adjustments
+                    .map(device => ({
+                        ...device,
+                        productId: product.id,
+                        productName: product.name,
+                        productBrand: product.brand,
+                        productModel: product.model,
+                        productCategory: product.category,
+                        productTrackSerials: product.trackSerials,
+                        // Determine selling price
+                        sellingPrice: product.trackSerials === false
+                            ? (product.basePricing?.nonActive || product.sellingPrice || 0)
+                            : (device.price || 0),
+                        // Track cost price separately
+                        costPrice: product.trackSerials === false
+                            ? (device.price || product.buyingPrice || 0)
+                            : (device.costPrice || 0)
+                    }))
             );
 
             setDevices(allDevices);
@@ -66,6 +82,33 @@ const AllDevicesPage = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleUpdatePrice = async (productId, deviceId) => {
+        try {
+            setUpdating(true);
+            const token = localStorage.getItem('token');
+            await axios.put(`${API_BASE_URL}/stock/products/${productId}/devices/${deviceId}`, {
+                price: parseFloat(editPrice),
+                isPriceLocked: editIsLocked
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            setEditingDeviceId(null);
+            fetchData(); // Refresh data
+        } catch (error) {
+            console.error('Error updating device price:', error);
+            alert('Failed to update price');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const startEditing = (device) => {
+        setEditingDeviceId(device.id);
+        setEditPrice(device.price);
+        setEditIsLocked(device.isPriceLocked || false);
     };
 
     const getConditionBadge = (condition) => {
@@ -129,19 +172,19 @@ const AllDevicesPage = () => {
         .sort((a, b) => {
             if (sortBy === 'newest') return new Date(b.addedAt) - new Date(a.addedAt);
             if (sortBy === 'oldest') return new Date(a.addedAt) - new Date(b.addedAt);
-            if (sortBy === 'priceHigh') return (b.price || 0) - (a.price || 0);
-            if (sortBy === 'priceLow') return (a.price || 0) - (b.price || 0);
+            if (sortBy === 'priceHigh') return (b.sellingPrice || 0) - (a.sellingPrice || 0);
+            if (sortBy === 'priceLow') return (a.sellingPrice || 0) - (b.sellingPrice || 0);
             if (sortBy === 'name') return a.productName.localeCompare(b.productName);
             return 0;
         });
 
     // Statistics
     const stats = {
-        total: devices.length,
-        available: devices.filter(d => d.status === 'available').length,
+        total: devices.reduce((sum, d) => sum + (d.isBatch || d.productTrackSerials === false ? (d.quantity || 0) : 1), 0),
+        available: devices.filter(d => d.status === 'available').reduce((sum, d) => sum + (d.isBatch || d.productTrackSerials === false ? (d.quantity || 0) : 1), 0),
         sold: devices.filter(d => d.status === 'sold').length,
         reserved: devices.filter(d => d.status === 'reserved').length,
-        totalValue: devices.reduce((sum, d) => sum + (d.price || 0), 0)
+        totalValue: devices.reduce((sum, d) => sum + (d.isBatch || d.productTrackSerials === false ? ((d.quantity || 0) * (d.sellingPrice || 0)) : (d.sellingPrice || 0)), 0)
     };
 
     const handleExport = () => {
@@ -210,10 +253,12 @@ const AllDevicesPage = () => {
                             <div className="text-2xl font-black text-yellow-600">{stats.reserved}</div>
                             <div className="text-sm text-gray-600 font-semibold">Reserved</div>
                         </div>
-                        <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl">
-                            <div className="text-xl font-black text-blue-600">{stats.totalValue.toLocaleString()}</div>
-                            <div className="text-sm text-gray-600 font-semibold">Total Value (TZS)</div>
-                        </div>
+                        {user.role === 'CEO' && (
+                            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl">
+                                <div className="text-xl font-black text-blue-600">{stats.totalValue.toLocaleString()}</div>
+                                <div className="text-sm text-gray-600 font-semibold">Total Value (TZS)</div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -351,7 +396,7 @@ const AllDevicesPage = () => {
                 {/* Actions Bar */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                     <div className="text-sm text-gray-600 font-semibold">
-                        Showing {filteredAndSortedDevices.length} of {devices.length} devices
+                        Showing {filteredAndSortedDevices.length} items (Total {stats.available} available devices)
                     </div>
                     <div className="flex items-center gap-2">
                         <label className="text-sm font-bold text-gray-700">Sort by:</label>
@@ -409,19 +454,18 @@ const AllDevicesPage = () => {
                                                     {device.productModel && <span>• {device.productModel}</span>}
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    {/* SIM Type Badge */}
-                                                    {device.simType && (
-                                                        <span className={`px-3 py-1 rounded-lg font-bold text-xs ${
-                                                            device.simType === 'ESIM' ? 'bg-blue-100 text-blue-700' :
+                                                    {/* SIM Type Badge - Hide for Standard/Batch */}
+                                                    {device.simType && device.simType !== 'Standard' && (
+                                                        <span className={`px-3 py-1 rounded-lg font-bold text-xs ${device.simType === 'ESIM' ? 'bg-blue-100 text-blue-700' :
                                                             device.simType === 'DUAL_SIM' ? 'bg-indigo-100 text-indigo-700' :
-                                                            'bg-gray-100 text-gray-700'
-                                                        }`}>
+                                                                'bg-gray-100 text-gray-700'
+                                                            }`}>
                                                             {device.simType === 'ESIM' ? '📶 eSIM' :
-                                                             device.simType === 'DUAL_SIM' ? '📱📶 Dual SIM' :
-                                                             '📱 Physical SIM'}
+                                                                device.simType === 'DUAL_SIM' ? '📱📶 Dual SIM' :
+                                                                    '📱 Physical SIM'}
                                                         </span>
                                                     )}
-                                                    
+
                                                     <span className={`px-3 py-1 rounded-lg font-bold text-xs ${conditionBadge.color}`}>
                                                         {conditionBadge.label}
                                                     </span>
@@ -429,14 +473,29 @@ const AllDevicesPage = () => {
                                                         <FontAwesomeIcon icon={statusBadge.icon} />
                                                         {statusBadge.label}
                                                     </span>
-                                                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg font-bold text-xs flex items-center gap-1">
-                                                        <FontAwesomeIcon icon={faSdCard} />
-                                                        {device.variant?.storage}
-                                                    </span>
-                                                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg font-bold text-xs flex items-center gap-1">
-                                                        <FontAwesomeIcon icon={faPalette} />
-                                                        {device.variant?.color}
-                                                    </span>
+
+                                                    {/* Variant Details - Hide if Standard */}
+                                                    {device.variant?.storage && device.variant.storage !== 'Standard' && (
+                                                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg font-bold text-xs flex items-center gap-1">
+                                                            <FontAwesomeIcon icon={faSdCard} />
+                                                            {device.variant?.storage}
+                                                        </span>
+                                                    )}
+                                                    {device.variant?.color && device.variant.color !== 'Standard' && (
+                                                        <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg font-bold text-xs flex items-center gap-1">
+                                                            <FontAwesomeIcon icon={faPalette} />
+                                                            {device.variant?.color}
+                                                        </span>
+                                                    )}
+
+                                                    {/* Batch Badge */}
+                                                    {(device.isBatch || device.productTrackSerials === false) && (
+                                                        <span className="px-3 py-1 bg-indigo-600 text-white rounded-lg font-black text-xs flex items-center gap-1 shadow-sm">
+                                                            <FontAwesomeIcon icon={faBox} />
+                                                            {device.quantity} Devices Available
+                                                        </span>
+                                                    )}
+
                                                     <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg font-bold text-xs flex items-center gap-1">
                                                         <FontAwesomeIcon icon={faTruck} />
                                                         {getSupplierName(device.supplierId)}
@@ -444,16 +503,92 @@ const AllDevicesPage = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Price & Date */}
-                                            <div className="text-right">
-                                                <div className="text-2xl font-black text-gray-900">
-                                                    {device.price.toLocaleString()} TZS
+                                            {/* Price & Date & Actions */}
+                                            <div className="flex items-center gap-3 self-end md:self-auto mt-4 md:mt-0">
+                                                <div className="text-right">
+                                                    {user.role === 'CEO' && (
+                                                        <>
+                                                            <div className="text-2xl font-black text-indigo-600 text-nowrap">
+                                                                {(device.sellingPrice || 0).toLocaleString()} TZS
+                                                            </div>
+                                                            <div className="text-[10px] text-gray-400 font-bold uppercase"> Selling Price </div>
+                                                        </>
+                                                    )}
+                                                    <div className="text-[9px] text-gray-400">
+                                                        Added {new Date(device.addedAt).toLocaleDateString()}
+                                                    </div>
                                                 </div>
-                                                <div className="text-xs text-gray-500">
-                                                    Added {new Date(device.addedAt).toLocaleDateString()}
-                                                </div>
+                                                {user.role === 'CEO' && (
+                                                    <button
+                                                        onClick={() => startEditing(device)}
+                                                        className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-transparent hover:border-indigo-100"
+                                                    >
+                                                        <FontAwesomeIcon icon={faEdit} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
+
+                                        {/* Inline Price Editor */}
+                                        <AnimatePresence>
+                                            {editingDeviceId === device.id && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="mt-4 pt-4 border-t-2 border-dashed border-gray-100 overflow-hidden"
+                                                >
+                                                    <div className="flex flex-wrap items-end gap-4">
+                                                        <div className="flex-1 min-w-[200px]">
+                                                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">New Selling Price (TZS)</label>
+                                                            <input
+                                                                type="number"
+                                                                value={editPrice}
+                                                                onChange={(e) => setEditPrice(e.target.value)}
+                                                                className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all font-bold"
+                                                                placeholder="Enter price"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="flex items-center gap-3 cursor-pointer group mb-2">
+                                                                <div className={`w-10 h-6 rounded-full transition-all relative ${editIsLocked ? 'bg-indigo-600' : 'bg-gray-300'}`}>
+                                                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${editIsLocked ? 'left-5' : 'left-1'}`} />
+                                                                </div>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="sr-only"
+                                                                    checked={editIsLocked}
+                                                                    onChange={(e) => setEditIsLocked(e.target.checked)}
+                                                                />
+                                                                <span className={`text-[10px] font-bold uppercase ${editIsLocked ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                                                    Lock Price
+                                                                </span>
+                                                            </label>
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => setEditingDeviceId(null)}
+                                                                className="px-4 py-2 border-2 border-gray-200 text-gray-500 rounded-xl font-bold hover:bg-gray-50 transition-all text-sm"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleUpdatePrice(device.productId, device.id)}
+                                                                disabled={updating}
+                                                                className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all text-sm disabled:opacity-50"
+                                                            >
+                                                                {updating ? 'Saving...' : 'Save Price'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    {editIsLocked && (
+                                                        <p className="text-[10px] text-indigo-500 font-bold mt-2">
+                                                            🔒 Locked: This price will be protected from bulk updates.
+                                                        </p>
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </motion.div>
                                 );
                             })}

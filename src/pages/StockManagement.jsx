@@ -13,6 +13,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const StockManagement = () => {
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
     const [activeTab, setActiveTab] = useState('all');
     const [products, setProducts] = useState([]);
     const [suppliers, setSuppliers] = useState([]);
@@ -136,12 +137,14 @@ const StockManagement = () => {
                         <div className="text-3xl font-black text-orange-600 mb-1">{lowStockCount}</div>
                         <div className="text-sm text-gray-600 font-semibold">Low Stock</div>
                     </div>
-                    <div className="bg-white rounded-2xl p-5 border-2 border-purple-100 shadow-sm">
-                        <div className="text-3xl font-black text-purple-600 mb-1">
-                            TZS {(totalValue / 1000000).toFixed(1)}M
+                    {user.role === 'CEO' && (
+                        <div className="bg-white rounded-2xl p-5 border-2 border-purple-100 shadow-sm">
+                            <div className="text-3xl font-black text-purple-600 mb-1">
+                                TZS {(totalValue / 1000000).toFixed(1)}M
+                            </div>
+                            <div className="text-sm text-gray-600 font-semibold">Total Value</div>
                         </div>
-                        <div className="text-sm text-gray-600 font-semibold">Total Value</div>
-                    </div>
+                    )}
                 </motion.div>
 
                 {/* Top Navigation Tabs */}
@@ -248,42 +251,50 @@ const StockManagement = () => {
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
-                                                <span className="flex items-center gap-1">
-                                                    <FontAwesomeIcon icon={faLayerGroup} className="text-blue-500" />
-                                                    {product.stockSummary?.total || 0} devices
-                                                </span>
+                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl font-bold border border-blue-100">
+                                                    <FontAwesomeIcon icon={faBox} className="text-blue-500" />
+                                                    Available: {product.stockSummary?.total || 0}
+                                                </div>
+                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-xl font-bold border border-green-100">
+                                                    <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" />
+                                                    Sold: {product.trackSerials !== false
+                                                        ? (product.devices || []).filter(d => d.status === 'sold').length
+                                                        : (product.totalSold || 0)}
+                                                </div>
                                                 {product.brand && (
-                                                    <span className="flex items-center gap-1">
-                                                        <FontAwesomeIcon icon={faCubes} className="text-green-500" />
+                                                    <span className="flex items-center gap-1 text-gray-500 font-semibold">
+                                                        <FontAwesomeIcon icon={faCubes} className="text-gray-400" />
                                                         {product.brand}
                                                     </span>
                                                 )}
-                                                <span className="flex items-center gap-1">
-                                                    <FontAwesomeIcon icon={faTags} className="text-purple-500" />
+                                                <span className="flex items-center gap-1 text-gray-500 font-semibold">
+                                                    <FontAwesomeIcon icon={faTags} className="text-gray-400" />
                                                     {product.category || 'Phones'}
                                                 </span>
                                             </div>
 
-                                            {/* Condition Breakdown */}
-                                            <div className="flex flex-wrap gap-3 mt-2">
-                                                <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded-lg text-[10px] font-black uppercase text-gray-600 border border-gray-100">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-                                                    N-Active: {product.stockSummary?.byCondition?.nonActive || 0}
+                                            {/* Condition Breakdown - Only for tracked products */}
+                                            {product.trackSerials !== false && (
+                                                <div className="flex flex-wrap gap-3 mt-2">
+                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded-lg text-[10px] font-black uppercase text-gray-600 border border-gray-100">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
+                                                        N-Active: {product.stockSummary?.byCondition?.nonActive || 0}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg text-[10px] font-black uppercase text-green-600 border border-green-100">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+                                                        Active: {product.stockSummary?.byCondition?.active || 0}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 rounded-lg text-[10px] font-black uppercase text-blue-600 border border-blue-100">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                                        Refurb: {product.stockSummary?.byCondition?.refurbished || 0}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 rounded-lg text-[10px] font-black uppercase text-orange-600 border border-orange-100">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
+                                                        Used: {product.stockSummary?.byCondition?.used || 0}
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg text-[10px] font-black uppercase text-green-600 border border-green-100">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
-                                                    Active: {product.stockSummary?.byCondition?.active || 0}
-                                                </div>
-                                                <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 rounded-lg text-[10px] font-black uppercase text-blue-600 border border-blue-100">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
-                                                    Refurb: {product.stockSummary?.byCondition?.refurbished || 0}
-                                                </div>
-                                                <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 rounded-lg text-[10px] font-black uppercase text-orange-600 border border-orange-100">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
-                                                    Used: {product.stockSummary?.byCondition?.used || 0}
-                                                </div>
-                                            </div>
+                                            )}
 
                                             {/* Storage Variants */}
                                             {product.variants?.storage && (
@@ -299,19 +310,24 @@ const StockManagement = () => {
 
                                         {/* Actions */}
                                         <div className="flex items-center gap-2">
+                                            {product.trackSerials !== false && (
+                                                <button
+                                                    onClick={() => navigate(`/stock-management/add-device/${product.id}`)}
+                                                    className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors"
+                                                    title="Add Device"
+                                                >
+                                                    <FontAwesomeIcon icon={faPlus} />
+                                                </button>
+                                            )}
                                             <button
-                                                onClick={() => navigate(`/stock-management/add-device/${product.id}`)}
-                                                className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors"
-                                                title="Add Device"
+                                                onClick={() => navigate(`/stock-management/devices/${encodeURIComponent(product.id)}`)}
+                                                className="p-3 bg-gray-50 text-gray-400 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-all flex items-center justify-center gap-2 border border-transparent hover:border-purple-100 group/btn"
+                                                title={product.trackSerials === false ? "View Details" : "View Devices"}
                                             >
-                                                <FontAwesomeIcon icon={faPlus} />
-                                            </button>
-                                            <button
-                                                onClick={() => navigate(`/stock-management/devices/${product.id}`)}
-                                                className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
-                                                title="View Devices"
-                                            >
-                                                <FontAwesomeIcon icon={faEye} />
+                                                <FontAwesomeIcon icon={product.trackSerials === false ? faLayerGroup : faBarcode} className="group-hover/btn:scale-110 transition-transform" />
+                                                <span className="text-xs font-bold hidden sm:inline">
+                                                    {product.trackSerials === false ? "View Details" : "View Devices"}
+                                                </span>
                                             </button>
                                             <button
                                                 onClick={() => navigate(`/stock-management/edit-product/${product.id}`)}

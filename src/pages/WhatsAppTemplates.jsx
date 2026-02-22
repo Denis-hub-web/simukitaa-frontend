@@ -20,7 +20,7 @@ const WhatsAppTemplates = () => {
     const [previewLang, setPreviewLang] = useState('swahili'); // 'swahili' or 'english'
     const [status, setStatus] = useState(null);
 
-    const API_BASE = 'http://localhost:5000/api/settings/whatsapp';
+    const API_BASE = (import.meta.env.VITE_API_URL || '') + '/api/settings/whatsapp';
     const token = localStorage.getItem('token');
 
     useEffect(() => {

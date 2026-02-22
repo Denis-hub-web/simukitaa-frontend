@@ -7,7 +7,7 @@ import {
     faArrowLeft, faArrowRight, faMobileAlt, faSearch, faTimes, faTruck, faBan, faExchangeAlt, faCamera
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
-import api, { customerAPI, salesAPI } from '../utils/api';
+import api, { customerAPI, salesAPI, paymentAPI } from '../utils/api';
 import TradeInForm from '../components/TradeInForm';
 import SerialScannerModal from '../components/SerialScannerModal';
 
@@ -48,6 +48,9 @@ const NewSalePage = () => {
     const [suggestions, setSuggestions] = useState([]);
     const [showTradeInForm, setShowTradeInForm] = useState(false);
     const [showScannerModal, setShowScannerModal] = useState(false);
+    const [searchMode, setSearchMode] = useState('SERIAL'); // 'SERIAL' or 'NAME'
+    const [productSuggestions, setProductSuggestions] = useState([]);
+    const [paymentMethods, setPaymentMethods] = useState(['CASH', 'M-PESA', 'TIGOPESA', 'AIRTEL_MONEY', 'HALOPESA', 'BANK']);
 
     // API URL
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -55,7 +58,19 @@ const NewSalePage = () => {
     // Load customers
     useEffect(() => {
         loadCustomers();
+        loadPaymentMethods();
     }, []);
+
+    const loadPaymentMethods = async () => {
+        try {
+            const response = await paymentAPI.getMethods();
+            if (response.data.success) {
+                setPaymentMethods(response.data.data.methods);
+            }
+        } catch (error) {
+            console.error('Failed to load payment methods:', error);
+        }
+    };
 
     const loadCustomers = async () => {
         try {
@@ -66,29 +81,76 @@ const NewSalePage = () => {
         }
     };
 
-    // Serial number search
-    const handleSerialSearch = async (serial) => {
-        setSearchSerial(serial);
-
-        if (serial.length < 1) {
-            setFoundDevice(null);
+    // Unified Product & Serial search
+    const handleUnifiedSearch = async (query) => {
+        setSearchSerial(query);
+        if (query.length < 2) {
             setSuggestions([]);
+            setProductSuggestions([]);
             return;
         }
 
         setSearching(true);
         try {
-            const response = await api.get(`/serial-search/${serial.trim()}`);
+            const response = await api.get(`/stock/products`);
+            const products = response.data.data || [];
 
-            if (response.data.success) {
-                setSuggestions(response.data.data);
+            // 1. Find Products (by Name/Brand/Model)
+            const filteredProducts = products.filter(p =>
+                (p.name && p.name.toLowerCase().includes(query.toLowerCase())) ||
+                (p.brand && p.brand.toLowerCase().includes(query.toLowerCase())) ||
+                (p.model && p.model.toLowerCase().includes(query.toLowerCase()))
+            );
+            setProductSuggestions(filteredProducts);
+
+            // 2. Find Specific Devices (by Serial/IMEI) - requires 3+ chars
+            if (query.length >= 3) {
+                const deviceMatches = [];
+                products.forEach(product => {
+                    if (product.devices && Array.isArray(product.devices)) {
+                        product.devices.forEach(device => {
+                            if (device.status === 'available' &&
+                                device.serialNumber &&
+                                device.serialNumber.toUpperCase().includes(query.toUpperCase())) {
+                                deviceMatches.push({
+                                    product: product,
+                                    device: device,
+                                    price: device.price || product.basePricing?.[device.condition] || 0,
+                                    condition: device.condition
+                                });
+                            }
+                        });
+                    }
+                });
+                setSuggestions(deviceMatches);
+            } else {
+                setSuggestions([]);
             }
         } catch (error) {
             console.error('Search error:', error);
-            setSuggestions([]);
         } finally {
             setSearching(false);
         }
+    };
+
+    const handleSelectSimpleProduct = (product) => {
+        setFoundDevice({
+            product: product,
+            device: { id: null, status: 'available' }, // No specific device
+            price: product.basePricing?.nonActive || 0,
+            condition: 'nonActive'
+        });
+        setFormData({
+            ...formData,
+            serialNumber: 'N/A',
+            productId: product.id,
+            productName: `${product.brand} ${product.name}`,
+            deviceId: '', // Empty for non-tracked
+            condition: 'nonActive',
+            sellingPrice: product.basePricing?.nonActive || 0,
+        });
+        setProductSuggestions([]);
+        setSearchSerial(`${product.brand} ${product.name}`);
     };
 
     const handleSelectDevice = (match) => {
@@ -110,13 +172,17 @@ const NewSalePage = () => {
 
     // Navigation
     const handleNext = () => {
-        if (currentStep < totalSteps) {
+        if (currentStep === 2 && foundDevice?.product?.trackSerials === false) {
+            setCurrentStep(4); // Skip Trade-In (Step 3) for accessories
+        } else if (currentStep < totalSteps) {
             setCurrentStep(currentStep + 1);
         }
     };
 
     const handleBack = () => {
-        if (currentStep > 1) {
+        if (currentStep === 4 && foundDevice?.product?.trackSerials === false) {
+            setCurrentStep(2); // Skip back to Selection from Payment
+        } else if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
         }
     };
@@ -127,10 +193,15 @@ const NewSalePage = () => {
             case 1:
                 // Either existing customer selected OR new customer name/phone filled
                 if (formData.isNewCustomer) {
-                    return formData.customerName.trim() !== '' && formData.customerPhone.trim() !== '';
+                    const isDuplicate = customers.some(c => c.phone === formData.customerPhone);
+                    return formData.customerName.trim() !== '' && formData.customerPhone.trim() !== '' && !isDuplicate;
                 }
                 return formData.customerId !== '';
-            case 2: return formData.deviceId !== '';
+            case 2:
+                // Check if product is selected AND has stock if simple product
+                if (!foundDevice) return false;
+                if (foundDevice.product?.trackSerials === false && (foundDevice.product?.quantity || 0) <= 0) return false;
+                return formData.productId !== '';
             case 3: return true; // Trade-in optional
             case 4: return formData.paymentMethod && formData.amountPaid;
             case 5: return true; // Review
@@ -346,8 +417,13 @@ const NewSalePage = () => {
                                                 value={formData.customerPhone}
                                                 onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
                                                 placeholder="e.g. 0712345678"
-                                                className="premium-input py-4"
+                                                className={`premium-input py-4 ${customers.some(c => c.phone === formData.customerPhone) ? 'border-red-400 focus:ring-red-500/10' : ''}`}
                                             />
+                                            {formData.isNewCustomer && formData.customerPhone && customers.some(c => c.phone === formData.customerPhone) && (
+                                                <p className="text-red-500 text-[10px] font-bold mt-2 animate-pulse">
+                                                    ⚠️ Mteja mwenye namba hii tayari yupo! (This phone number is already registered)
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="pt-4">
                                             <button
@@ -381,49 +457,58 @@ const NewSalePage = () => {
                                     </div>
                                     <div>
                                         <h2 className="premium-h2">Product Selection</h2>
-                                        <p className="premium-label mb-0">Select or scan the product serial number</p>
+                                        <p className="premium-label mb-0">Search product name or scan serial number</p>
                                     </div>
                                 </div>
 
-                                {/* Serial Number Input */}
+                                {/* Unified Search Input */}
                                 <div className="relative mb-8 group">
-                                    <FontAwesomeIcon icon={faBarcode} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
+                                    <FontAwesomeIcon icon={faSearch} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
                                     <input
                                         type="text"
                                         value={searchSerial}
-                                        onChange={(e) => handleSerialSearch(e.target.value.toUpperCase())}
-                                        placeholder="Enter Serial Number or IMEI..."
-                                        className="premium-input !pl-16 !pr-48 py-4 uppercase"
+                                        onChange={(e) => handleUnifiedSearch(e.target.value)}
+                                        placeholder="Type product name (e.g. Speaker) or scan serial..."
+                                        className="premium-input !pl-16 py-4 uppercase !pr-48"
                                         autoFocus
                                     />
                                     {searching && (
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
                                         </div>
                                     )}
 
-                                    {/* Scan Button */}
                                     <button
                                         onClick={() => setShowScannerModal(true)}
-                                        className="absolute right-16 top-1/2 -translate-y-1/2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
                                     >
                                         <FontAwesomeIcon icon={faCamera} />
                                         <span className="hidden sm:inline">Scan</span>
                                     </button>
 
-                                    {/* Suggestions Dropdown */}
+                                    {/* Combined Suggestions Dropdown */}
                                     <AnimatePresence>
-                                        {suggestions.length > 0 && (
+                                        {(suggestions.length > 0 || productSuggestions.length > 0) && (
                                             <motion.div
                                                 initial={{ opacity: 0, y: -10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -10 }}
                                                 className="absolute z-50 left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-h-[500px] overflow-y-auto"
                                             >
+                                                {/* Devices (by Serial) */}
+                                                {suggestions.length > 0 && (
+                                                    <div className="p-3 bg-blue-50/50 border-b border-gray-100 text-[10px] font-black uppercase tracking-widest text-blue-500">
+                                                        Matched Devices (by Serial)
+                                                    </div>
+                                                )}
                                                 {suggestions.map((match) => (
                                                     <button
                                                         key={match.device.id}
-                                                        onClick={() => handleSelectDevice(match)}
+                                                        onClick={() => {
+                                                            handleSelectDevice(match);
+                                                            setSuggestions([]);
+                                                            setProductSuggestions([]);
+                                                        }}
                                                         className="w-full p-5 flex items-start gap-4 hover:bg-blue-50 transition-colors text-left border-b border-gray-50 last:border-0"
                                                     >
                                                         <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -438,37 +523,59 @@ const NewSalePage = () => {
                                                                     {match.price.toLocaleString()} TZS
                                                                 </span>
                                                             </div>
-
-                                                            {/* Serial Number */}
                                                             <div className="mb-2">
                                                                 <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-mono font-bold">
                                                                     SN: {match.device.serialNumber}
                                                                 </span>
                                                             </div>
+                                                        </div>
+                                                    </button>
+                                                ))}
 
-                                                            {/* Specs as separate badges */}
-                                                            <div className="flex flex-wrap items-center gap-1.5">
-                                                                {/* SIM Type Badge - First */}
-                                                                {match.device.simType && (
-                                                                    <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${match.device.simType === 'ESIM' ? 'bg-blue-100 text-blue-700' :
-                                                                        match.device.simType === 'DUAL_SIM' ? 'bg-indigo-100 text-indigo-700' :
-                                                                            'bg-gray-100 text-gray-700'
-                                                                        }`}>
-                                                                        {match.device.simType === 'ESIM' ? '📶 eSIM' :
-                                                                            match.device.simType === 'DUAL_SIM' ? '📱📶 Dual' :
-                                                                                '📱 Physical'}
+                                                {/* Products (by Name) */}
+                                                {productSuggestions.length > 0 && (
+                                                    <div className="p-3 bg-purple-50/50 border-b border-gray-100 text-[10px] font-black uppercase tracking-widest text-purple-500">
+                                                        Products (by Name)
+                                                    </div>
+                                                )}
+                                                {productSuggestions.map((product) => (
+                                                    <button
+                                                        key={product.id}
+                                                        onClick={() => {
+                                                            if (product.quantity <= 0) return;
+                                                            handleSelectSimpleProduct(product);
+                                                            setSuggestions([]);
+                                                            setProductSuggestions([]);
+                                                        }}
+                                                        disabled={product.quantity <= 0}
+                                                        className={`w-full p-5 flex items-start gap-4 transition-colors text-left border-b border-gray-50 last:border-0 ${product.quantity <= 0 ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:bg-purple-50'}`}
+                                                    >
+                                                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                            <FontAwesomeIcon icon={faMobileAlt} className="text-purple-600" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex justify-between items-start mb-2">
+                                                                <h4 className="font-black text-base text-gray-900 leading-tight">
+                                                                    {product.brand} {product.name}
+                                                                </h4>
+                                                                <div className="text-right">
+                                                                    <div className="text-sm font-black text-purple-600">
+                                                                        {product.basePricing?.nonActive?.toLocaleString()} TZS
+                                                                    </div>
+                                                                    <div className={`text-[10px] font-bold ${product.quantity > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                                        {product.quantity || 0} IN STOCK
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-[10px] font-bold uppercase">
+                                                                    {product.category}
+                                                                </span>
+                                                                {product.trackSerials === false && (
+                                                                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-600 rounded-md text-[10px] font-bold uppercase">
+                                                                        QUANTITY-BASED
                                                                     </span>
                                                                 )}
-
-                                                                <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-xs font-bold">
-                                                                    💾 {match.device.storage}
-                                                                </span>
-                                                                <span className="px-2 py-0.5 bg-pink-100 text-pink-700 rounded-md text-xs font-bold">
-                                                                    🎨 {match.device.color}
-                                                                </span>
-                                                                <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-md text-xs font-bold uppercase">
-                                                                    {match.device.condition}
-                                                                </span>
                                                             </div>
                                                         </div>
                                                     </button>
@@ -516,9 +623,11 @@ const NewSalePage = () => {
                                                             </span>
                                                         )}
 
-                                                        <span className="px-2 py-0.5 bg-white text-gray-700 rounded-md text-[10px] font-bold border border-green-100 uppercase">
-                                                            {foundDevice.condition}
-                                                        </span>
+                                                        {foundDevice.product.trackSerials !== false && (
+                                                            <span className="px-2 py-0.5 bg-white text-gray-700 rounded-md text-[10px] font-bold border border-green-100 uppercase">
+                                                                {foundDevice.condition}
+                                                            </span>
+                                                        )}
                                                         <span className="px-2 py-0.5 bg-white text-gray-700 rounded-md text-[10px] font-bold border border-green-100">
                                                             {foundDevice.device.storage}
                                                         </span>
@@ -645,7 +754,7 @@ const NewSalePage = () => {
 
                                 {/* Payment Methods */}
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-                                    {['CASH', 'M-PESA', 'TIGOPESA', 'AIRTEL_MONEY', 'HALOPESA', 'BANK', 'CUSTOM'].map(method => (
+                                    {paymentMethods.map(method => (
                                         <button
                                             key={method}
                                             onClick={() => setFormData({ ...formData, paymentMethod: method })}
@@ -657,6 +766,15 @@ const NewSalePage = () => {
                                             {method.replace('_', ' ')}
                                         </button>
                                     ))}
+                                    <button
+                                        onClick={() => setFormData({ ...formData, paymentMethod: 'CUSTOM' })}
+                                        className={`p-4 rounded-2xl border-2 transition-all text-[10px] font-black uppercase tracking-widest ${formData.paymentMethod === 'CUSTOM'
+                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-lg'
+                                            : 'border-gray-50 bg-gray-50/50 hover:bg-white text-gray-400 hover:text-gray-700 hover:border-gray-200'
+                                            }`}
+                                    >
+                                        + CUSTOM
+                                    </button>
                                 </div>
 
                                 {/* Custom Payment Method Input */}
@@ -815,8 +933,10 @@ const NewSalePage = () => {
                                         <div className="text-sm text-green-600 font-semibold mb-1">Product Details</div>
                                         <div className="font-bold text-lg">{formData.productName}</div>
                                         <div className="grid grid-cols-2 gap-2 mt-2">
-                                            <div className="text-sm text-gray-600">Serial: <span className="font-bold">{formData.serialNumber}</span></div>
-                                            <div className="text-sm text-gray-600 text-right">Condition: <span className="font-bold uppercase tracking-tighter">{formData.condition}</span></div>
+                                            <div className="text-sm text-gray-600 overflow-hidden text-ellipsis whitespace-nowrap">Serial: <span className="font-bold">{formData.serialNumber}</span></div>
+                                            {foundDevice?.product?.trackSerials !== false && (
+                                                <div className="text-sm text-gray-600 text-right">Condition: <span className="font-bold uppercase tracking-tighter">{formData.condition}</span></div>
+                                            )}
                                         </div>
                                         <div className="mt-2 pt-2 border-t border-green-100 flex items-center gap-2">
                                             <FontAwesomeIcon icon={faTruck} className="text-green-500 text-xs" />
@@ -931,7 +1051,7 @@ const NewSalePage = () => {
                     isOpen={showScannerModal}
                     onClose={() => setShowScannerModal(false)}
                     onSerialDetected={(serial) => {
-                        handleSerialSearch(serial);
+                        handleUnifiedSearch(serial);
                         setShowScannerModal(false);
                     }}
                 />

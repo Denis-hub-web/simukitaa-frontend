@@ -343,8 +343,9 @@ const Dashboard = () => {
                                 { label: 'Repairs', icon: faTools, color: 'purple', bgColor: 'bg-purple-50', textColor: 'text-purple-600', hoverBg: 'hover:bg-purple-100', action: () => setShowRepairModal(true) },
                                 { label: 'Customers', icon: faUserPlus, color: 'blue', bgColor: 'bg-blue-50', textColor: 'text-blue-600', hoverBg: 'hover:bg-blue-100', action: () => setShowCustomerModal(true) },
                                 { label: 'Inventory', icon: faBoxOpen, color: 'orange', bgColor: 'bg-amber-50', textColor: 'text-amber-600', hoverBg: 'hover:bg-amber-100', action: () => setShowProductModal(true) },
+                                user.role === 'CEO' && { label: 'Daily Sheet', icon: faFileInvoiceDollar, color: 'emerald', bgColor: 'bg-emerald-50', textColor: 'text-emerald-600', hoverBg: 'hover:bg-emerald-100', action: () => navigate('/daily-sheet') },
                                 { label: 'Team', icon: faUserCog, color: 'indigo', bgColor: 'bg-indigo-50', textColor: 'text-indigo-600', hoverBg: 'hover:bg-indigo-100', action: () => navigate('/team-management') }
-                            ].map((action, i) => (
+                            ].filter(Boolean).map((action, i) => (
                                 <motion.button
                                     key={i}
                                     whileHover={{ scale: 1.02, y: -2 }}

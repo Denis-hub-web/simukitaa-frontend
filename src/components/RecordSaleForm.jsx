@@ -20,7 +20,7 @@ import {
     faTruck,
     faShieldAlt
 } from '@fortawesome/free-solid-svg-icons';
-import { salesAPI, productAPI, customerAPI, userAPI, tradeInAPI } from '../utils/api';
+import { salesAPI, productAPI, customerAPI, userAPI, tradeInAPI, paymentAPI } from '../utils/api';
 import TradeInForm from './TradeInForm';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BrowserMultiFormatReader } from '@zxing/browser';
@@ -80,6 +80,14 @@ const RecordSaleForm = ({ onSuccess, onCancel }) => {
     const [newCustomer, setNewCustomer] = useState({ name: '', phone: '' });
     const [tradeInId, setTradeInId] = useState(null);
     const [customPaymentMethod, setCustomPaymentMethod] = useState('');
+    const [paymentMethods, setPaymentMethods] = useState([
+        { value: 'CASH', label: 'Cash / Taslimu' },
+        { value: 'M-PESA', label: 'M-Pesa (Vodacom)' },
+        { value: 'TIGO_PESA', label: 'Tigo Pesa' },
+        { value: 'AIRTEL_MONEY', label: 'Airtel Money' },
+        { value: 'HALOPESA', label: 'Halopesa (Halotel)' },
+        { value: 'BANK_TRANSFER', label: 'Bank Transfer' }
+    ]);
 
     // Scanner States (simplified for image upload)
     const [showScanner, setShowScanner] = useState(false);
@@ -270,7 +278,24 @@ const RecordSaleForm = ({ onSuccess, onCancel }) => {
 
     useEffect(() => {
         loadData();
+        loadPaymentMethods();
     }, []);
+
+    const loadPaymentMethods = async () => {
+        try {
+            const response = await paymentAPI.getMethods();
+            if (response.data.success) {
+                const methods = response.data.data.methods.map(m => ({
+                    value: m,
+                    label: m.replace('_', ' ')
+                }));
+                // Keep CUSTOM at the end if not already there, but we handle it manually too
+                setPaymentMethods(methods.filter(m => m.value !== 'CUSTOM'));
+            }
+        } catch (error) {
+            console.error('Failed to load payment methods:', error);
+        }
+    };
 
     const loadData = async () => {
         try {
@@ -358,6 +383,14 @@ const RecordSaleForm = ({ onSuccess, onCancel }) => {
             setError('Name and phone are required');
             return;
         }
+
+        // Check for duplicate phone
+        const isDuplicate = customers.some(c => c.phone === newCustomer.phone);
+        if (isDuplicate) {
+            setError('Mteja mwenye namba hii tayari yupo! / Customer with this phone already exists');
+            return;
+        }
+
         try {
             const response = await customerAPI.create(newCustomer);
             const createdCustomer = response.data.data.customer;
@@ -561,9 +594,14 @@ const RecordSaleForm = ({ onSuccess, onCancel }) => {
                                             type="tel"
                                             value={newCustomer.phone}
                                             onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                                            className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 ${customers.some(c => c.phone === newCustomer.phone) ? 'border-red-400' : 'border-gray-200'}`}
                                             placeholder="0755855909"
                                         />
+                                        {newCustomer.phone && customers.some(c => c.phone === newCustomer.phone) && (
+                                            <p className="text-red-500 text-[10px] font-bold mt-2 animate-pulse">
+                                                ⚠️ Namba hii tayari imesajiliwa! (Registered)
+                                            </p>
+                                        )}
                                     </div>
                                     <button
                                         type="button"
@@ -802,24 +840,13 @@ const RecordSaleForm = ({ onSuccess, onCancel }) => {
                                     Payment Method *
                                 </label>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {[
-                                        { value: 'CASH', label: 'Cash / Taslimu' },
-                                        { value: 'M-PESA', label: 'M-Pesa (Vodacom)' },
-                                        { value: 'TIGO_PESA', label: 'Tigo Pesa' },
-                                        { value: 'AIRTEL_MONEY', label: 'Airtel Money' },
-                                        { value: 'HALOPESA', label: 'Halopesa (Halotel)' },
-                                        { value: 'T-PESA', label: 'T-Pesa (TTCL)' },
-                                        { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
-                                        { value: 'CARD', label: 'Card Payment' },
-                                        { value: 'MIXED', label: 'Mixed / Mchanganyiko' },
-                                        { value: 'CUSTOM', label: 'Custom / Nyingine' }
-                                    ].map(method => (
+                                    {paymentMethods.map(method => (
                                         <button
                                             key={method.value}
                                             type="button"
                                             onClick={() => {
                                                 setFormData({ ...formData, paymentMethod: method.value });
-                                                if (method.value !== 'CUSTOM') setCustomPaymentMethod('');
+                                                setCustomPaymentMethod('');
                                             }}
                                             className={`px-4 py-3 rounded-xl border-2 transition-all font-semibold text-sm ${formData.paymentMethod === method.value
                                                 ? 'border-green-500 bg-green-50 text-green-700'
@@ -829,6 +856,19 @@ const RecordSaleForm = ({ onSuccess, onCancel }) => {
                                             {method.label}
                                         </button>
                                     ))}
+                                    <button
+                                        key="CUSTOM"
+                                        type="button"
+                                        onClick={() => {
+                                            setFormData({ ...formData, paymentMethod: 'CUSTOM' });
+                                        }}
+                                        className={`px-4 py-3 rounded-xl border-2 transition-all font-semibold text-sm ${formData.paymentMethod === 'CUSTOM'
+                                            ? 'border-green-500 bg-green-50 text-green-700'
+                                            : 'border-gray-200 hover:border-gray-300'
+                                            }`}
+                                    >
+                                        + CUSTOM
+                                    </button>
                                 </div>
 
                                 {/* Trade-In Selection Section */}
@@ -941,178 +981,178 @@ const RecordSaleForm = ({ onSuccess, onCancel }) => {
                     )}
 
                     {currentStep === 4 && (
-        <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-4"
-        >
-            <div className="bg-gray-50 rounded-2xl p-6 space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b">
-                    <span className="text-gray-600">Customer</span>
-                    <span className="font-semibold">{selectedCustomer?.name}</span>
-                </div>
-                <div className="flex justify-between items-center pb-3 border-b">
-                    <span className="text-gray-600">Product</span>
-                    <span className="font-semibold">{selectedProduct?.name} {selectedProduct?.model}</span>
-                </div>
-                {formData.serialNumber && (
-                    <div className="flex justify-between items-center pb-3 border-b">
-                        <span className="text-gray-600">SN/IMEI</span>
-                        <span className="font-semibold text-blue-600">{formData.serialNumber}</span>
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="space-y-4"
+                        >
+                            <div className="bg-gray-50 rounded-2xl p-6 space-y-4">
+                                <div className="flex justify-between items-center pb-3 border-b">
+                                    <span className="text-gray-600">Customer</span>
+                                    <span className="font-semibold">{selectedCustomer?.name}</span>
+                                </div>
+                                <div className="flex justify-between items-center pb-3 border-b">
+                                    <span className="text-gray-600">Product</span>
+                                    <span className="font-semibold">{selectedProduct?.name} {selectedProduct?.model}</span>
+                                </div>
+                                {formData.serialNumber && (
+                                    <div className="flex justify-between items-center pb-3 border-b">
+                                        <span className="text-gray-600">SN/IMEI</span>
+                                        <span className="font-semibold text-blue-600">{formData.serialNumber}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between items-center pb-3 border-b">
+                                    <span className="text-gray-600">Selling Price</span>
+                                    <span className="font-semibold text-green-600">TSH {parseInt(formData.sellingPrice).toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center pb-3 border-b">
+                                    <span className="text-gray-600">Payment Method</span>
+                                    <span className="font-semibold">
+                                        {formData.paymentMethod === 'CUSTOM' && customPaymentMethod
+                                            ? customPaymentMethod
+                                            : formData.paymentMethod}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center pb-3 border-b">
+                                    <span className="text-gray-600">Amount Paid</span>
+                                    <span className="font-semibold">TSH {parseInt(formData.amountPaid).toLocaleString()}</span>
+                                </div>
+                                {hasTradeIn && (
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600">Trade-In</span>
+                                        <span className="font-semibold text-purple-600">✓ Included</span>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    )
+                    }
+
+                    {/* Navigation Buttons */}
+                    <div className="flex gap-3 pt-6">
+                        {currentStep > 1 && (
+                            <button
+                                type="button"
+                                onClick={handleBack}
+                                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium flex items-center gap-2"
+                            >
+                                <FontAwesomeIcon icon={faArrowLeft} />
+                                Back
+                            </button>
+                        )}
+
+                        {currentStep < 4 ? (
+                            <button
+                                type="button"
+                                onClick={handleNext}
+                                disabled={!canProceed()}
+                                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 font-medium flex items-center justify-center gap-2"
+                            >
+                                Next
+                                <FontAwesomeIcon icon={faArrowRight} />
+                            </button>
+                        ) : (
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 font-medium flex items-center justify-center gap-2"
+                            >
+                                <FontAwesomeIcon icon={faCheckCircle} />
+                                {loading ? 'Recording...' : 'Record Sale'}
+                            </button>
+                        )}
+
+                        {currentStep === 1 && (
+                            <button
+                                type="button"
+                                onClick={onCancel}
+                                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
+                            >
+                                Cancel
+                            </button>
+                        )}
                     </div>
-                )}
-                <div className="flex justify-between items-center pb-3 border-b">
-                    <span className="text-gray-600">Selling Price</span>
-                    <span className="font-semibold text-green-600">TSH {parseInt(formData.sellingPrice).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center pb-3 border-b">
-                    <span className="text-gray-600">Payment Method</span>
-                    <span className="font-semibold">
-                        {formData.paymentMethod === 'CUSTOM' && customPaymentMethod
-                            ? customPaymentMethod
-                            : formData.paymentMethod}
-                    </span>
-                </div>
-                <div className="flex justify-between items-center pb-3 border-b">
-                    <span className="text-gray-600">Amount Paid</span>
-                    <span className="font-semibold">TSH {parseInt(formData.amountPaid).toLocaleString()}</span>
-                </div>
-                {hasTradeIn && (
-                    <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Trade-In</span>
-                        <span className="font-semibold text-purple-600">✓ Included</span>
-                    </div>
-                )}
-            </div>
-        </motion.div>
-    )
-}
-
-{/* Navigation Buttons */ }
-<div className="flex gap-3 pt-6">
-    {currentStep > 1 && (
-        <button
-            type="button"
-            onClick={handleBack}
-            className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium flex items-center gap-2"
-        >
-            <FontAwesomeIcon icon={faArrowLeft} />
-            Back
-        </button>
-    )}
-
-    {currentStep < 4 ? (
-        <button
-            type="button"
-            onClick={handleNext}
-            disabled={!canProceed()}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 font-medium flex items-center justify-center gap-2"
-        >
-            Next
-            <FontAwesomeIcon icon={faArrowRight} />
-        </button>
-    ) : (
-        <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 font-medium flex items-center justify-center gap-2"
-        >
-            <FontAwesomeIcon icon={faCheckCircle} />
-            {loading ? 'Recording...' : 'Record Sale'}
-        </button>
-    )}
-
-    {currentStep === 1 && (
-        <button
-            type="button"
-            onClick={onCancel}
-            className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
-        >
-            Cancel
-        </button>
-    )}
-</div>
                 </form >
             </div >
 
-    {/* Confirmation Dialog */ }
-{
-    showConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Confirm Sale</h3>
-                <p className="text-gray-600 mb-6">
-                    Are you sure you want to record this sale?
-                </p>
-                <div className="flex gap-3">
-                    <button
-                        onClick={() => setShowConfirm(false)}
-                        className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
-                    >
-                        No
-                    </button>
-                    <button
-                        onClick={() => {
-                            console.log("Submitting with TradeInID:", tradeInId);
-                            if (tradeInId) alert(`Linked Trade-In ID: ${tradeInId}`);
-                            confirmSubmit();
-                        }}
-                        className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:shadow-lg transition-all font-medium"
-                    >
-                        Yes
-                    </button>
-                </div>
-            </div>
-        </div >
-    )
-}
+            {/* Confirmation Dialog */}
+            {
+                showConfirm && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+                            <h3 className="text-xl font-bold text-gray-900 mb-4">Confirm Sale</h3>
+                            <p className="text-gray-600 mb-6">
+                                Are you sure you want to record this sale?
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowConfirm(false)}
+                                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
+                                >
+                                    No
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        console.log("Submitting with TradeInID:", tradeInId);
+                                        if (tradeInId) alert(`Linked Trade-In ID: ${tradeInId}`);
+                                        confirmSubmit();
+                                    }}
+                                    className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:shadow-lg transition-all font-medium"
+                                >
+                                    Yes
+                                </button>
+                            </div>
+                        </div>
+                    </div >
+                )
+            }
 
-{/* Trade-In Modal */ }
-{
-    showTradeInModal && (
-        <TradeInForm
-            isOpen={showTradeInModal}
-            onClose={() => setShowTradeInModal(false)}
-            onSuccess={(data) => {
-                console.log('Trade-In Success Data:', data);
-                // Handle both possible data structures (nested data or direct)
-                const tradeInObj = data.data?.tradeIn || data.tradeIn || data;
-                if (tradeInObj && tradeInObj.id) {
-                    setTradeInId(tradeInObj.id);
-                    alert(`✅ Trade-In Linked! ID: ${tradeInObj.id}`);
-                } else {
-                    alert('⚠️ Trade-in submitted but ID missing in response.');
-                    console.error('Missing tradeIn ID in:', data);
-                }
-                setShowTradeInModal(false);
-            }}
-            prefilledCustomer={selectedCustomer}
-        />
-    )
-}
-{/* Processing Overlay with Status */ }
-<AnimatePresence>
-    {showScanner && (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
-        >
-            <div className="bg-white rounded-3xl p-8 shadow-2xl flex flex-col items-center gap-4 max-w-md w-full">
-                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                <p className="text-gray-900 font-bold text-lg">AI Processing Image...</p>
-                <div className="w-full bg-gray-100 rounded-lg p-4 text-left space-y-2 max-h-64 overflow-y-auto">
-                    <p className="text-xs font-mono text-gray-600">📸 Image loaded</p>
-                    <p className="text-xs font-mono text-gray-600">🎨 Enhancing contrast & brightness...</p>
-                    <p className="text-xs font-mono text-gray-600">🔍 Running OCR...</p>
-                    <p className="text-xs font-mono text-blue-600 font-bold">⏳ Looking for "Serial" keyword...</p>
-                    <p className="text-xs font-mono text-gray-400 italic">Check browser console (F12) for detailed logs</p>
-                </div>
-            </div>
-        </motion.div>
-    )}
-</AnimatePresence>
+            {/* Trade-In Modal */}
+            {
+                showTradeInModal && (
+                    <TradeInForm
+                        isOpen={showTradeInModal}
+                        onClose={() => setShowTradeInModal(false)}
+                        onSuccess={(data) => {
+                            console.log('Trade-In Success Data:', data);
+                            // Handle both possible data structures (nested data or direct)
+                            const tradeInObj = data.data?.tradeIn || data.tradeIn || data;
+                            if (tradeInObj && tradeInObj.id) {
+                                setTradeInId(tradeInObj.id);
+                                alert(`✅ Trade-In Linked! ID: ${tradeInObj.id}`);
+                            } else {
+                                alert('⚠️ Trade-in submitted but ID missing in response.');
+                                console.error('Missing tradeIn ID in:', data);
+                            }
+                            setShowTradeInModal(false);
+                        }}
+                        prefilledCustomer={selectedCustomer}
+                    />
+                )
+            }
+            {/* Processing Overlay with Status */}
+            <AnimatePresence>
+                {showScanner && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+                    >
+                        <div className="bg-white rounded-3xl p-8 shadow-2xl flex flex-col items-center gap-4 max-w-md w-full">
+                            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                            <p className="text-gray-900 font-bold text-lg">AI Processing Image...</p>
+                            <div className="w-full bg-gray-100 rounded-lg p-4 text-left space-y-2 max-h-64 overflow-y-auto">
+                                <p className="text-xs font-mono text-gray-600">📸 Image loaded</p>
+                                <p className="text-xs font-mono text-gray-600">🎨 Enhancing contrast & brightness...</p>
+                                <p className="text-xs font-mono text-gray-600">🔍 Running OCR...</p>
+                                <p className="text-xs font-mono text-blue-600 font-bold">⏳ Looking for "Serial" keyword...</p>
+                                <p className="text-xs font-mono text-gray-400 italic">Check browser console (F12) for detailed logs</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 };

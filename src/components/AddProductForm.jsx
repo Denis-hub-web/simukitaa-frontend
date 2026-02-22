@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMobileAlt, faBoxOpen, faDollarSign } from '@fortawesome/free-solid-svg-icons';
+import { faMobileAlt, faBoxOpen, faDollarSign, faBell, faBellSlash } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { productAPI } from '../utils/api';
 
 const AddProductForm = ({ onSuccess, onCancel }) => {
@@ -14,7 +15,8 @@ const AddProductForm = ({ onSuccess, onCancel }) => {
         condition: 'NEW',
         costPrice: '',
         sellingPrice: '',
-        quantity: '1'
+        quantity: '1',
+        notificationsEnabled: true
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -202,6 +204,53 @@ const AddProductForm = ({ onSuccess, onCancel }) => {
                                     className="bg-transparent border-b border-white/10 focus:border-[#00ffa3] py-2 w-full text-xl font-black text-white outline-none transition-all"
                                 />
                             </div>
+                        </div>
+
+                        {/* Customer Notification Toggle - Premium Upgrade */}
+                        <div className={`relative overflow-hidden group transition-all duration-500 rounded-[2.5rem] border ${formData.notificationsEnabled
+                            ? 'bg-gradient-to-br from-[#00ffa3]/10 to-transparent border-[#00ffa3]/20 shadow-[0_20px_40px_rgba(0,255,163,0.05)]'
+                            : 'bg-white/5 border-white/5 opacity-60'
+                            }`}>
+                            <div className="p-8 flex items-center justify-between relative z-10">
+                                <div className="flex items-center gap-5">
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${formData.notificationsEnabled
+                                        ? 'bg-[#00ffa3] text-black shadow-[0_0_20px_rgba(0,255,163,0.4)] rotate-0'
+                                        : 'bg-white/5 text-white/20 -rotate-12'
+                                        }`}>
+                                        <FontAwesomeIcon icon={formData.notificationsEnabled ? faBell : faBellSlash} className="text-xl" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center gap-3">
+                                            <p className="text-xs font-black text-white uppercase tracking-[0.2em]">Customer Gratitude</p>
+                                            {formData.notificationsEnabled && (
+                                                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#00ffa3]/20 rounded-full border border-[#00ffa3]/30">
+                                                    <div className="w-1 h-1 rounded-full bg-[#00ffa3] animate-pulse" />
+                                                    <span className="text-[7px] font-black text-[#00ffa3] uppercase tracking-widest">Live</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[9px] font-bold text-white/30 uppercase tracking-widest group-hover:text-white/50 transition-colors">
+                                            <FontAwesomeIcon icon={faWhatsapp} className={formData.notificationsEnabled ? 'text-[#25D366]' : ''} />
+                                            <span>WhatsApp Automation</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, notificationsEnabled: !formData.notificationsEnabled })}
+                                    className={`relative w-16 h-8 rounded-full transition-all duration-500 p-1 ${formData.notificationsEnabled ? 'bg-[#00ffa3]' : 'bg-white/10'
+                                        }`}
+                                >
+                                    <div className={`w-6 h-6 rounded-full bg-white shadow-xl transition-all duration-500 transform ${formData.notificationsEnabled ? 'translate-x-8' : 'translate-x-0'
+                                        } flex items-center justify-center overflow-hidden`}>
+                                        <div className={`absolute inset-0 bg-[#00ffa3] transition-opacity duration-500 ${formData.notificationsEnabled ? 'opacity-20' : 'opacity-0'}`} />
+                                    </div>
+                                </button>
+                            </div>
+
+                            {/* Decorative background element */}
+                            <div className={`absolute top-0 right-0 w-32 h-32 bg-[#00ffa3] rounded-full blur-[60px] transition-opacity duration-1000 ${formData.notificationsEnabled ? 'opacity-[0.07]' : 'opacity-0'}`} />
                         </div>
                     </div>
                 </div>

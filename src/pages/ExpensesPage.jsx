@@ -25,6 +25,7 @@ const CATEGORIES = [
 const PAYMENT_METHODS = ['Cash', 'Mobile Money', 'Bank Transfer', 'Card'];
 
 const ExpensesPage = () => {
+    const [user] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
     const [expenses, setExpenses] = useState([]);
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -36,9 +37,17 @@ const ExpensesPage = () => {
         endDate: ''
     });
 
+    // Get current date in local YYYY-MM-DD format
+    const getCurrentDate = () => {
+        const now = new Date();
+        const offset = now.getTimezoneOffset();
+        const localDate = new Date(now.getTime() - (offset * 60 * 1000));
+        return localDate.toISOString().split('T')[0];
+    };
+
     // Form state
     const [formData, setFormData] = useState({
-        date: new Date().toISOString().split('T')[0],
+        date: getCurrentDate(),
         category: 'Transport',
         description: '',
         amount: '',
@@ -99,7 +108,7 @@ const ExpensesPage = () => {
             setShowAddModal(false);
             setEditingExpense(null);
             setFormData({
-                date: new Date().toISOString().split('T')[0],
+                date: getCurrentDate(),
                 category: 'Transport',
                 description: '',
                 amount: '',
@@ -172,7 +181,7 @@ const ExpensesPage = () => {
                         onClick={() => {
                             setEditingExpense(null);
                             setFormData({
-                                date: new Date().toISOString().split('T')[0],
+                                date: getCurrentDate(),
                                 category: 'Transport',
                                 description: '',
                                 amount: '',
@@ -188,8 +197,8 @@ const ExpensesPage = () => {
                 </div>
             </motion.div>
 
-            {/* Summary Cards */}
-            {summary && (
+            {/* Summary Cards - CEO ONLY */}
+            {user.role === 'CEO' && summary && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
@@ -242,6 +251,12 @@ const ExpensesPage = () => {
 
             {/* Filters & Expense List */}
             <div className="bg-white rounded-2xl md:rounded-3xl shadow-xl p-4 md:p-8">
+                {user.role !== 'CEO' && (
+                    <div className="mb-6 pb-6 border-b border-gray-100">
+                        <h2 className="text-xl font-black text-gray-900 mb-2">My Expense History</h2>
+                        <p className="text-gray-500 text-sm">Below are the expenses you have recorded personally.</p>
+                    </div>
+                )}
                 {/* Filters */}
                 <div className="flex flex-wrap gap-4 mb-6">
                     <div className="flex-1 min-w-[200px]">
@@ -289,19 +304,21 @@ const ExpensesPage = () => {
                                 <th className="text-left p-4 font-black text-gray-700">Description</th>
                                 <th className="text-right p-4 font-black text-gray-700">Amount</th>
                                 <th className="text-left p-4 font-black text-gray-700">Payment</th>
+                                <th className="text-left p-4 font-black text-gray-700">Recorded By</th>
+                                <th className="text-left p-4 font-black text-gray-700">Time</th>
                                 <th className="text-center p-4 font-black text-gray-700">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="6" className="text-center p-8">
+                                    <td colSpan="8" className="text-center p-8">
                                         <FontAwesomeIcon icon={faSpinner} spin className="text-4xl text-gray-400" />
                                     </td>
                                 </tr>
                             ) : expenses.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="text-center p-8 text-gray-500">
+                                    <td colSpan="8" className="text-center p-8 text-gray-500">
                                         No expenses found. Add your first expense!
                                     </td>
                                 </tr>
@@ -335,28 +352,38 @@ const ExpensesPage = () => {
                                                 {formatCurrency(expense.amount)}
                                             </td>
                                             <td className="p-4">
-                                                <span className="px-3 py-1 bg-gray-100 rounded-lg text-sm font-medium text-gray-700">
+                                                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-lg text-xs font-medium">
                                                     {expense.paymentMethod}
                                                 </span>
                                             </td>
+                                            <td className="p-4 text-gray-700 font-medium">
+                                                {expense.recordedBy}
+                                            </td>
+                                            <td className="p-4 text-gray-500 text-sm">
+                                                {new Date(expense.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </td>
                                             <td className="p-4">
                                                 <div className="flex items-center justify-center gap-2">
-                                                    <motion.button
-                                                        whileHover={{ scale: 1.1 }}
-                                                        whileTap={{ scale: 0.9 }}
-                                                        onClick={() => handleEdit(expense)}
-                                                        className="w-10 h-10 bg-blue-500 text-white rounded-xl shadow hover:bg-blue-600"
-                                                    >
-                                                        <FontAwesomeIcon icon={faEdit} />
-                                                    </motion.button>
-                                                    <motion.button
-                                                        whileHover={{ scale: 1.1 }}
-                                                        whileTap={{ scale: 0.9 }}
-                                                        onClick={() => handleDelete(expense.id)}
-                                                        className="w-10 h-10 bg-red-500 text-white rounded-xl shadow hover:bg-red-600"
-                                                    >
-                                                        <FontAwesomeIcon icon={faTrash} />
-                                                    </motion.button>
+                                                    {user.role === 'CEO' && (
+                                                        <motion.button
+                                                            whileHover={{ scale: 1.1 }}
+                                                            whileTap={{ scale: 0.9 }}
+                                                            onClick={() => handleEdit(expense)}
+                                                            className="w-10 h-10 bg-blue-500 text-white rounded-xl shadow hover:bg-blue-600"
+                                                        >
+                                                            <FontAwesomeIcon icon={faEdit} />
+                                                        </motion.button>
+                                                    )}
+                                                    {user.role === 'CEO' && (
+                                                        <motion.button
+                                                            whileHover={{ scale: 1.1 }}
+                                                            whileTap={{ scale: 0.9 }}
+                                                            onClick={() => handleDelete(expense.id)}
+                                                            className="w-10 h-10 bg-red-500 text-white rounded-xl shadow hover:bg-red-600"
+                                                        >
+                                                            <FontAwesomeIcon icon={faTrash} />
+                                                        </motion.button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </motion.tr>
@@ -367,6 +394,15 @@ const ExpensesPage = () => {
                     </table>
                 </div>
             </div>
+            {user.role !== 'CEO' && expenses.length === 0 && (
+                <div className="bg-white rounded-2xl md:rounded-3xl shadow-xl p-12 text-center mt-6">
+                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600 text-3xl">
+                        <FontAwesomeIcon icon={faPlus} />
+                    </div>
+                    <h2 className="text-2xl font-black text-gray-900 mb-2">Ready to add an expense?</h2>
+                    <p className="text-gray-500 max-w-md mx-auto">Click the button above to record a business cost. Financial summaries and history are restricted to management.</p>
+                </div>
+            )}
 
             {/* Add/Edit Modal */}
             <AnimatePresence>

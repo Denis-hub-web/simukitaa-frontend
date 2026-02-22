@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faArrowLeft, faBox, faSave, faTruck, faTag, faCubes
+    faArrowLeft, faBox, faSave, faTruck, faTag, faCubes, faBell, faBellSlash
 } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const EditProductPage = () => {
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
     const { productId } = useParams();
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -18,13 +20,55 @@ const EditProductPage = () => {
         brand: '',
         model: '',
         category: 'Phones',
+        trackSerials: true,
+        buyingPrice: '',
         storageOptions: '',
         colorOptions: '',
         nonActivePrice: '',
         activePrice: '',
         refurbishedPrice: '',
-        usedPrice: ''
+        usedPrice: '',
+        variantPricing: [],
+        notificationsEnabled: true
     });
+
+    // Sync variantPricing when options change
+    useEffect(() => {
+        if (!formData.trackSerials) return;
+
+        const storages = formData.storageOptions.split(',').map(s => s.trim()).filter(s => s) || ['Standard'];
+        const colors = formData.colorOptions.split(',').map(c => c.trim()).filter(c => c) || ['Any'];
+        const simTypes = ['DUAL_SIM', 'ESIM', 'PHYSICAL_SIM'];
+
+        const newPricing = [];
+        storages.forEach(s => {
+            colors.forEach(c => {
+                simTypes.forEach(sim => {
+                    const existing = formData.variantPricing.find(p => p.storage === s && p.color === c && p.simType === sim);
+                    if (existing) {
+                        newPricing.push(existing);
+                    } else {
+                        newPricing.push({
+                            storage: s,
+                            color: c,
+                            simType: sim,
+                            prices: {
+                                nonActive: formData.nonActivePrice || 0,
+                                active: formData.activePrice || 0,
+                                refurbished: formData.refurbishedPrice || 0,
+                                used: formData.usedPrice || 0
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        if (JSON.stringify(newPricing) !== JSON.stringify(formData.variantPricing)) {
+            setFormData(prev => ({ ...prev, variantPricing: newPricing }));
+        }
+    }, [formData.storageOptions, formData.colorOptions, formData.trackSerials]);
+    const [applyPriceToInventory, setApplyPriceToInventory] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -45,12 +89,16 @@ const EditProductPage = () => {
                 brand: product.brand || '',
                 model: product.model || '',
                 category: product.category || 'Phones',
+                trackSerials: product.trackSerials !== false,
+                buyingPrice: product.buyingPrice || '',
                 storageOptions: product.variants?.storage?.join(', ') || '',
                 colorOptions: product.variants?.color?.join(', ') || '',
                 nonActivePrice: product.basePricing?.nonActive || '',
                 activePrice: product.basePricing?.active || '',
                 refurbishedPrice: product.basePricing?.refurbished || '',
-                usedPrice: product.basePricing?.used || ''
+                usedPrice: product.basePricing?.used || '',
+                variantPricing: product.variantPricing || [],
+                notificationsEnabled: product.notificationsEnabled !== false
             });
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -78,16 +126,26 @@ const EditProductPage = () => {
                 brand: formData.brand,
                 model: formData.model,
                 category: formData.category,
+                trackSerials: formData.trackSerials,
+                buyingPrice: parseFloat(formData.buyingPrice) || 0,
+                applyPriceToInventory,
                 variants: {
                     storage: formData.storageOptions.split(',').map(s => s.trim()).filter(s => s),
                     color: formData.colorOptions.split(',').map(c => c.trim()).filter(c => c)
                 },
-                basePricing: {
+                basePricing: formData.trackSerials ? {
                     nonActive: parseFloat(formData.nonActivePrice) || 0,
                     active: parseFloat(formData.activePrice) || 0,
                     refurbished: parseFloat(formData.refurbishedPrice) || 0,
                     used: parseFloat(formData.usedPrice) || 0
-                }
+                } : {
+                    nonActive: parseFloat(formData.nonActivePrice) || 0,
+                    active: parseFloat(formData.nonActivePrice) || 0,
+                    refurbished: parseFloat(formData.nonActivePrice) || 0,
+                    used: parseFloat(formData.nonActivePrice) || 0
+                },
+                variantPricing: formData.trackSerials ? formData.variantPricing : [],
+                notificationsEnabled: formData.notificationsEnabled
             };
 
             await axios.put(`${API_BASE_URL}/stock/products/${productId}`, productData, {
@@ -194,85 +252,212 @@ const EditProductPage = () => {
                                         <option value="Accessories">Accessories</option>
                                     </select>
                                 </div>
+                                {user.role === 'CEO' && formData.trackSerials && (
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Default Buying Price (TZS)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.buyingPrice}
+                                            onChange={(e) => setFormData({ ...formData, buyingPrice: e.target.value })}
+                                            placeholder="e.g., 500000"
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-orange-100 focus:border-orange-500 focus:outline-none transition-all bg-orange-50/10 shadow-sm"
+                                        />
+                                        <p className="text-[11px] text-orange-600 mt-2 font-bold flex items-center gap-1">
+                                            <span>💡 Automatically used for Manager stock entries</span>
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* Variant Options */}
-                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-100">
-                            <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
-                                <FontAwesomeIcon icon={faTag} className="text-purple-600" />
-                                Variant Options
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Storage Options</label>
-                                    <input
-                                        type="text"
-                                        value={formData.storageOptions}
-                                        onChange={(e) => setFormData({ ...formData, storageOptions: e.target.value })}
-                                        placeholder="e.g., 128GB, 256GB, 512GB"
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-all"
-                                    />
-                                    <p className="text-sm text-gray-500 mt-2">Separate with commas</p>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Color Options</label>
-                                    <input
-                                        type="text"
-                                        value={formData.colorOptions}
-                                        onChange={(e) => setFormData({ ...formData, colorOptions: e.target.value })}
-                                        placeholder="e.g., Black, White, Gold"
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-all"
-                                    />
-                                    <p className="text-sm text-gray-500 mt-2">Separate with commas</p>
+                        {/* Variant Options - Hide for accessories */}
+                        {formData.trackSerials && (
+                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-100">
+                                <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
+                                    <FontAwesomeIcon icon={faTag} className="text-purple-600" />
+                                    Variant Options
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Storage Options</label>
+                                        <input
+                                            type="text"
+                                            value={formData.storageOptions}
+                                            onChange={(e) => setFormData({ ...formData, storageOptions: e.target.value })}
+                                            placeholder="e.g., 128GB, 256GB, 512GB"
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-all"
+                                        />
+                                        <p className="text-sm text-gray-500 mt-2">Separate with commas</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Color Options</label>
+                                        <input
+                                            type="text"
+                                            value={formData.colorOptions}
+                                            onChange={(e) => setFormData({ ...formData, colorOptions: e.target.value })}
+                                            placeholder="e.g., Black, White, Gold"
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-all"
+                                        />
+                                        <p className="text-sm text-gray-500 mt-2">Separate with commas</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
-                        {/* Base Pricing */}
-                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-100">
-                            <h3 className="text-lg font-black text-gray-900 mb-4">Base Pricing (TZS)</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Non-Active</label>
-                                    <input
-                                        type="number"
-                                        value={formData.nonActivePrice}
-                                        onChange={(e) => setFormData({ ...formData, nonActivePrice: e.target.value })}
-                                        placeholder="0"
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-all"
-                                    />
+                        {/* Pricing Information - Only for non-tracked products */}
+                        {user.role === 'CEO' && !formData.trackSerials && (
+                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-100">
+                                <h3 className="text-lg font-black text-gray-900 mb-4">Pricing Information</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Buying Price (TZS)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.buyingPrice}
+                                            onChange={(e) => setFormData({ ...formData, buyingPrice: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Selling Price (TZS)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.nonActivePrice}
+                                            onChange={(e) => setFormData({ ...formData, nonActivePrice: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Active</label>
-                                    <input
-                                        type="number"
-                                        value={formData.activePrice}
-                                        onChange={(e) => setFormData({ ...formData, activePrice: e.target.value })}
-                                        placeholder="0"
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-all"
-                                    />
+                            </div>
+                        )}
+
+                        {/* Base Pricing - DEPRECATED */}
+                        {false && formData.trackSerials && (
+                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-100">
+                                {/* ... hidden ... */}
+                            </div>
+                        )}
+                        {/* Variant Pricing Matrix */}
+                        {user.role === 'CEO' && formData.trackSerials && formData.variantPricing.length > 0 && (
+                            <div className="bg-white rounded-3xl p-8 border-2 border-indigo-100 shadow-sm mt-6">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div>
+                                            <h3 className="text-xl font-black text-gray-900">Variant Pricing Matrix</h3>
+                                            <p className="text-sm text-gray-500">Set unique prices for each storage/SIM combination</p>
+                                        </div>
+                                        <label className="flex items-center gap-3 cursor-pointer bg-indigo-50 px-4 py-2 rounded-xl border-2 border-indigo-200 hover:border-indigo-400 transition-all">
+                                            <input
+                                                type="checkbox"
+                                                checked={applyPriceToInventory}
+                                                onChange={(e) => setApplyPriceToInventory(e.target.checked)}
+                                                className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <span className="text-sm font-bold text-indigo-700">Apply to current UNLOCKED units</span>
+                                        </label>
+                                    </div>
+                                    {applyPriceToInventory && (
+                                        <p className="text-xs text-orange-600 mt-3 font-bold flex items-center gap-2">
+                                            ⚠️ This will update all available stock that isn't manually locked!
+                                        </p>
+                                    )}
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Refurbished</label>
-                                    <input
-                                        type="number"
-                                        value={formData.refurbishedPrice}
-                                        onChange={(e) => setFormData({ ...formData, refurbishedPrice: e.target.value })}
-                                        placeholder="0"
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-all"
-                                    />
+
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="border-b-2 border-gray-100">
+                                                <th className="py-4 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Variant</th>
+                                                <th className="py-4 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Condition Prices (TZS)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {formData.variantPricing.map((variant, idx) => (
+                                                <tr key={`${variant.storage}-${variant.simType}-${variant.color}`} className="hover:bg-gray-50/50 transition-colors">
+                                                    <td className="py-4 px-2">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-gray-900">{variant.storage}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-md font-bold uppercase">
+                                                                    {variant.simType?.replace('_', ' ') || 'DUAL SIM'}
+                                                                </span>
+                                                                <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded-md font-bold uppercase">
+                                                                    {variant.color}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4 px-2">
+                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                            {['nonActive', 'active', 'refurbished', 'used'].map(condition => (
+                                                                <div key={condition} className="space-y-1">
+                                                                    <label className="text-[10px] uppercase font-bold text-gray-400 px-1">
+                                                                        {condition === 'nonActive' ? 'NEW' : condition}
+                                                                    </label>
+                                                                    <input
+                                                                        type="number"
+                                                                        value={variant.prices[condition]}
+                                                                        onChange={(e) => {
+                                                                            const updated = [...formData.variantPricing];
+                                                                            updated[idx].prices[condition] = parseFloat(e.target.value) || 0;
+                                                                            setFormData({ ...formData, variantPricing: updated });
+                                                                        }}
+                                                                        placeholder="Price"
+                                                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:outline-none text-sm transition-all"
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Used</label>
-                                    <input
-                                        type="number"
-                                        value={formData.usedPrice}
-                                        onChange={(e) => setFormData({ ...formData, usedPrice: e.target.value })}
-                                        placeholder="0"
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-all"
-                                    />
+                            </div>
+                        )}
+
+                        {/* Customer Notification Toggle - Premium Upgrade */}
+                        <div className={`bg-white rounded-3xl p-8 border-2 transition-all duration-500 shadow-sm ${formData.notificationsEnabled
+                            ? 'border-green-200 bg-gradient-to-br from-green-50/50 to-white'
+                            : 'border-gray-100 bg-gray-50/30 grayscale opacity-70'
+                            }`}>
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                <div className="flex items-center gap-5">
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm ${formData.notificationsEnabled
+                                        ? 'bg-green-500 text-white rotate-0'
+                                        : 'bg-gray-200 text-gray-400 -rotate-6'
+                                        }`}>
+                                        <FontAwesomeIcon icon={formData.notificationsEnabled ? faBell : faBellSlash} className="text-xl" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-3">
+                                            <p className="text-xl font-black text-gray-900">Customer Gratitude</p>
+                                            <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all duration-500 ${formData.notificationsEnabled
+                                                ? 'bg-green-100 text-green-700 border-green-200'
+                                                : 'bg-gray-100 text-gray-500 border-gray-200'
+                                                }`}>
+                                                {formData.notificationsEnabled ? 'Active' : 'Muted'}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-500 italic">
+                                            <FontAwesomeIcon icon={faWhatsapp} className={formData.notificationsEnabled ? 'text-green-500' : ''} />
+                                            <span>Send automatic WhatsApp thank you after sale</span>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, notificationsEnabled: !formData.notificationsEnabled })}
+                                    className={`relative w-20 h-10 rounded-full transition-all duration-500 p-1.5 ${formData.notificationsEnabled ? 'bg-green-500 shadow-lg shadow-green-200' : 'bg-gray-200'
+                                        }`}
+                                >
+                                    <div className={`w-7 h-7 rounded-full bg-white shadow-md transition-all duration-500 transform ${formData.notificationsEnabled ? 'translate-x-10' : 'translate-x-0'
+                                        } flex items-center justify-center`}>
+                                        {formData.notificationsEnabled && <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />}
+                                    </div>
+                                </button>
                             </div>
                         </div>
 

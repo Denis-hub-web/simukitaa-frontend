@@ -47,6 +47,7 @@ import StockInventoryPage from './pages/StockInventoryPage';
 import ReportsPage from './pages/ReportsPage';
 import ExpensesPage from './pages/ExpensesPage';
 import DailySheetReport from './pages/DailySheetReport';
+import ToolsPage from './pages/ToolsPage';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
 import './index.css';
@@ -64,11 +65,6 @@ function App() {
                     <Route element={<DesktopLayout />}>
                         <Route path="/dashboard" element={<MobileDashboard />} />
                         <Route path="/stock" element={<CEOStockManagement />} />
-                        <Route path="/stock-advanced" element={<AdvancedStockManagement />} />
-                        <Route path="/condition-stock" element={<StockLibrary />} />
-                        <Route path="/condition-stock/list" element={<ConditionStockManagement />} />
-                        <Route path="/condition-stock/category/:type/:category" element={<CategoryView />} />
-                        <Route path="/condition-stock/ai-insights" element={<AIInsightsView />} />
                         <Route path="/manager" element={<ManagerDashboard />} />
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="/settings/whatsapp" element={<WhatsAppTemplates />} />
@@ -103,6 +99,7 @@ function App() {
                         <Route path="/reports" element={<ReportsPage />} />
                         <Route path="/expenses" element={<ExpensesPage />} />
                         <Route path="/daily-sheet" element={<DailySheetReport />} />
+                        <Route path="/tools" element={<ToolsPage />} />
                         <Route path="/" element={<Navigate to="/dashboard" />} />
                     </Route>
                 ) : (
@@ -114,26 +111,6 @@ function App() {
                         <Route
                             path="/stock"
                             element={isLoggedIn ? <CEOStockManagement /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/stock-advanced"
-                            element={isLoggedIn ? <AdvancedStockManagement /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/condition-stock"
-                            element={isLoggedIn ? <StockLibrary /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/condition-stock/list"
-                            element={isLoggedIn ? <ConditionStockManagement /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/condition-stock/category/:type/:category"
-                            element={isLoggedIn ? <CategoryView /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/condition-stock/ai-insights"
-                            element={isLoggedIn ? <AIInsightsView /> : <Navigate to="/login" />}
                         />
                         <Route
                             path="/manager"

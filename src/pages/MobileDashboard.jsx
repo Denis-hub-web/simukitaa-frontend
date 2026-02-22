@@ -31,7 +31,9 @@ import {
     faCubes,
     faEnvelope,
     faBullhorn,
-    faUserCog
+    faUserCog,
+    faFileAlt,
+    faWallet
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
@@ -263,6 +265,25 @@ const MobileDashboard = () => {
                                         </div>
                                     </div>
 
+                                    {/* Daily Sheet Access for CEO */}
+                                    <div className="mb-6">
+                                        <button
+                                            onClick={() => navigate('/daily-sheet')}
+                                            className="w-full premium-card p-6 flex items-center justify-between group hover:shadow-lg transition-all bg-gradient-to-br from-emerald-500/10 to-transparent border-emerald-100"
+                                        >
+                                            <div className="flex items-center gap-6">
+                                                <div className="w-16 h-16 bg-emerald-500 rounded-[1.5rem] flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                                                    <FontAwesomeIcon icon={faFileAlt} className="text-2xl" />
+                                                </div>
+                                                <div className="text-left">
+                                                    <h3 className="text-xl font-black text-gray-900 tracking-tight leading-none mb-1">Daily Sheet</h3>
+                                                    <p className="premium-label text-emerald-600">Financial Audit & Performance</p>
+                                                </div>
+                                            </div>
+                                            <FontAwesomeIcon icon={faChevronRight} className="text-emerald-300 group-hover:translate-x-1 transition-transform" />
+                                        </button>
+                                    </div>
+
                                     {/* AI Business Intelligence - Full Focus */}
                                     <div className="mb-6">
                                         <AIBusinessIntelligence />
@@ -365,19 +386,6 @@ const MobileDashboard = () => {
                                                             {user?.role === 'MANAGER' && (
                                                                 <>
                                                                     <button
-                                                                        onClick={() => navigate('/ceo-data')}
-                                                                        className="premium-card p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all group flex items-center gap-3 bg-gray-900 border-gray-800"
-                                                                    >
-                                                                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                                            <FontAwesomeIcon icon={faBrain} className="text-white text-lg" />
-                                                                        </div>
-                                                                        <div className="flex-1 text-left">
-                                                                            <p className="font-bold text-white text-xs mb-0.5">Activity</p>
-                                                                            <p className="text-[10px] text-white/60 font-semibold">Ledger</p>
-                                                                        </div>
-                                                                    </button>
-
-                                                                    <button
                                                                         onClick={() => navigate('/wanakitaa')}
                                                                         className="premium-card p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all group flex items-center gap-3 bg-[#008069] border-[#008069]"
                                                                     >
@@ -467,19 +475,15 @@ const MobileDashboard = () => {
                             {[
                                 // Primary Actions (For All Roles)
                                 { title: 'New Sale', desc: 'Record a Product Sale', icon: faShoppingCart, color: 'text-emerald-500', bg: 'bg-emerald-50', link: '/sales/new', roles: ['CEO', 'MANAGER', 'STAFF'], category: 'primary' },
-                                { title: 'New Repair', desc: 'Create Repair Job', icon: faTools, color: 'text-purple-500', bg: 'bg-purple-50', link: '/repair-form', roles: ['CEO', 'MANAGER', 'STAFF'], category: 'primary' },
 
                                 // Management Tools (CEO/Manager)
-                                { title: 'Activity Ledger', desc: 'Real-Time Business Logs', icon: faBrain, color: 'text-gray-900', bg: 'bg-gray-100', link: '/ceo-data', roles: ['CEO'], category: 'management' },
-                                { title: 'Reports', desc: 'Sales & Imports', icon: faChartLine, color: 'text-blue-600', bg: 'bg-blue-50', link: '/reports', roles: ['CEO', 'MANAGER'], category: 'management' },
+                                { title: 'Expenses', desc: 'Record & Track Costs', icon: faWallet, color: 'text-rose-500', bg: 'bg-rose-50', link: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'], category: 'management' },
                                 { title: 'Trade-In Manager', desc: 'Approve & Add to Stock', icon: faExchangeAlt, color: 'text-indigo-500', bg: 'bg-indigo-50', link: '/trade-ins', roles: ['CEO', 'MANAGER'], category: 'management' },
-                                { title: 'Stock Table', desc: 'All Product Variants', icon: faCubes, color: 'text-pink-500', bg: 'bg-pink-50', link: '/stock-inventory', roles: ['CEO', 'MANAGER'], category: 'management' },
                                 { title: 'Stock Management', desc: 'Add & Organize Inventory', icon: faBoxOpen, color: 'text-blue-500', bg: 'bg-blue-50', link: '/stock-management', roles: ['CEO', 'MANAGER'], category: 'management' },
                                 { title: 'Supplier Network', desc: 'Procurement Partners', icon: faTruck, color: 'text-indigo-500', bg: 'bg-indigo-50', link: '/suppliers', roles: ['CEO', 'MANAGER'], category: 'management' },
 
                                 // Sales & Operations
                                 { title: 'Sales History', desc: 'Transactional Ledger', icon: faMoneyBillWave, color: 'text-emerald-500', bg: 'bg-emerald-50', link: '/sales', roles: ['CEO'], category: 'operations' },
-                                { title: 'Repair Registry', desc: 'Service Lifecycle', icon: faTools, color: 'text-purple-500', bg: 'bg-purple-50', link: '/repairs', roles: ['CEO', 'MANAGER', 'STAFF'], category: 'operations' },
                                 { title: 'Wanakitaa Hub', desc: 'Loyalty & Community', icon: faGem, color: 'text-purple-500', bg: 'bg-purple-50', link: '/wanakitaa', roles: ['CEO', 'MANAGER'], category: 'operations' },
 
                                 // Communications (CEO/Manager)
@@ -517,7 +521,7 @@ const MobileDashboard = () => {
                         { id: 'updates', icon: faBell, label: 'Notifications' },
                         { id: 'tools', icon: faBoxOpen, label: 'Tools', hidden: user?.role === 'TECHNICIAN' },
                         { id: 'home', icon: faHome, label: 'Home' },
-                        { id: 'calculator', icon: 'lucide-calculator', label: 'Calculator', isLucide: true, hidden: !['CEO', 'MANAGER'].includes(user?.role) },
+                        { id: 'calculator', icon: 'lucide-calculator', label: 'Calculator', isLucide: true, hidden: user?.role !== 'CEO' },
                         { id: 'settings', icon: faCog, label: 'Settings' }
                     ].filter(t => !t.hidden).map(tab => (
                         <button

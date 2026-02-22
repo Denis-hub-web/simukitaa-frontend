@@ -10,8 +10,11 @@ import {
     faCamera,
     faUpload,
     faCheck,
-    faSave
+    faSave,
+    faBell,
+    faBellSlash
 } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 
 const StepByStepProductForm = ({ isOpen, onClose, onSave, product, isEdit, showBuyingPrice }) => {
     const [currentStep, setCurrentStep] = useState(1);
@@ -25,14 +28,15 @@ const StepByStepProductForm = ({ isOpen, onClose, onSave, product, isEdit, showB
         costPrice: product?.costPrice || '',
         model: product?.model || '',
         color: product?.color || '',
-        storage: product?.storage || ''
+        storage: product?.storage || '',
+        notificationsEnabled: product?.notificationsEnabled !== undefined ? product.notificationsEnabled : true
     });
     const [serialImage, setSerialImage] = useState(null);
     const [scanningBarcode, setScanningBarcode] = useState(false);
     const [serialDuplicate, setSerialDuplicate] = useState(false);
     const [checkingSerial, setCheckingSerial] = useState(false);
 
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = (import.meta.env.VITE_API_URL || '') + '/api';
 
     const totalSteps = showBuyingPrice ? 8 : 7;
 
@@ -49,7 +53,8 @@ const StepByStepProductForm = ({ isOpen, onClose, onSave, product, isEdit, showB
                 costPrice: product.costPrice || 0,
                 model: product.model || '',
                 color: product.color || '',
-                storage: product.storage || ''
+                storage: product.storage || '',
+                notificationsEnabled: product.notificationsEnabled !== undefined ? product.notificationsEnabled : true
             });
         }
     }, [product, isEdit]);
@@ -466,6 +471,39 @@ const StepByStepProductForm = ({ isOpen, onClose, onSave, product, isEdit, showB
                                             placeholder="Color (e.g., Desert Titanium)"
                                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#008069] focus:border-transparent"
                                         />
+
+                                        {/* Customer Notification Toggle - Premium Upgrade */}
+                                        <div className={`mt-6 rounded-3xl p-6 border-2 transition-all duration-500 ${formData.notificationsEnabled
+                                            ? 'border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-white shadow-sm'
+                                            : 'border-gray-100 bg-gray-50/30'
+                                            }`}>
+                                            <div className="flex items-center justify-between gap-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${formData.notificationsEnabled
+                                                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'
+                                                        : 'bg-gray-200 text-gray-400'
+                                                        }`}>
+                                                        <FontAwesomeIcon icon={formData.notificationsEnabled ? faBell : faBellSlash} />
+                                                    </div>
+                                                    <div className="space-y-0.5">
+                                                        <p className="font-black text-gray-900 text-sm">Customer Gratitude</p>
+                                                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 italic uppercase tracking-wider">
+                                                            <FontAwesomeIcon icon={faWhatsapp} className={formData.notificationsEnabled ? 'text-emerald-500' : ''} />
+                                                            <span>WhatsApp Automation</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, notificationsEnabled: !formData.notificationsEnabled })}
+                                                    className={`relative w-16 h-8 rounded-full transition-all duration-500 p-1 ${formData.notificationsEnabled ? 'bg-emerald-500' : 'bg-gray-300'
+                                                        }`}
+                                                >
+                                                    <div className={`w-6 h-6 rounded-full bg-white shadow-md transition-all duration-500 transform ${formData.notificationsEnabled ? 'translate-x-8' : 'translate-x-0'
+                                                        }`} />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </motion.div>
                             )}

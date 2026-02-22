@@ -97,16 +97,35 @@ const Login = () => {
 
     return (
         <div className="min-h-[100dvh] relative overflow-hidden flex items-center justify-center p-4">
-            {/* Blurred gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-700 to-teal-600">
-                <div className="absolute inset-0 backdrop-blur-3xl bg-white/10" />
+            {/* High-Fidelity Image Background */}
+            <div className="absolute inset-0 z-0">
+                <img
+                    src="/login-bg.jpg"
+                    alt="Background"
+                    className="w-full h-full object-cover scale-105"
+                />
+
+                {/* Center Blur Effect Overlay */}
+                <div
+                    className="absolute inset-0 backdrop-blur-md bg-black/30"
+                    style={{
+                        maskImage: 'radial-gradient(circle at center, black 0%, transparent 70%)',
+                        WebkitMaskImage: 'radial-gradient(circle at center, black 0%, transparent 70%)'
+                    }}
+                />
+
+                {/* Overall Darken/Mood Overlay */}
+                <div className="absolute inset-0 bg-blue-900/40 mix-blend-multiply" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
+
+                {/* Animated Depth Effects */}
                 <motion.div
                     animate={{
                         scale: [1, 1.1, 1],
                         rotate: [0, 5, 0],
                     }}
                     transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-0 right-0 w-[600px] h-[600px] sm:w-[800px] sm:h-[800px] bg-gradient-to-br from-blue-500/30 to-transparent rounded-full blur-3xl"
+                    className="absolute top-0 right-0 w-[600px] h-[600px] sm:w-[800px] sm:h-[800px] bg-gradient-to-br from-blue-500/20 to-transparent rounded-full blur-3xl"
                 />
                 <motion.div
                     animate={{
@@ -114,7 +133,7 @@ const Login = () => {
                         rotate: [0, -5, 0],
                     }}
                     transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute bottom-0 left-0 w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] bg-gradient-to-tr from-teal-500/30 to-transparent rounded-full blur-3xl"
+                    className="absolute bottom-0 left-0 w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] bg-gradient-to-tr from-teal-500/20 to-transparent rounded-full blur-3xl"
                 />
             </div>
 

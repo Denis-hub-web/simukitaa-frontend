@@ -6,7 +6,8 @@ import {
     faHome, faChartLine, faBoxOpen, faUsers, faCog,
     faBell, faSearch, faSignOutAlt, faBars, faTimes,
     faMoneyBillWave, faTools, faTruck, faUser, faBox,
-    faExchangeAlt, faDatabase, faChevronRight, faCompass, faBrain, faGem, faEnvelope, faBullhorn, faWallet, faFileAlt
+    faExchangeAlt, faDatabase, faChevronRight, faCompass, faBrain, faGem, faEnvelope, faBullhorn, faWallet, faFileAlt,
+    faUserCog
 } from '@fortawesome/free-solid-svg-icons';
 import { notificationAPI } from '../utils/api';
 
@@ -43,25 +44,21 @@ const DesktopLayout = () => {
 
     const menuItems = [
         { icon: faHome, label: 'Dashboard', path: '/dashboard', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { icon: faMoneyBillWave, label: 'Sales', path: '/sales', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { icon: faTools, label: 'Repair Form', path: '/repair-form', roles: ['CEO', 'MANAGER', 'STAFF', 'TECHNICIAN'] },
-        { icon: faBoxOpen, label: 'Advanced Inventory', path: '/stock-advanced', roles: ['CEO', 'MANAGER'] },
-        { icon: faDatabase, label: 'AI Stock Manager', path: '/condition-stock', roles: ['CEO', 'MANAGER'] },
+        { icon: faMoneyBillWave, label: 'Sales History', path: '/sales', roles: ['CEO'] },
+        { icon: faWallet, label: 'Expenses', path: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: faExchangeAlt, label: 'Trade-In Manager', path: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { icon: faBrain, label: 'Activity Ledger', path: '/ceo-data', roles: ['CEO'] },
-        { icon: faChartLine, label: 'Reports', path: '/reports', roles: ['CEO', 'MANAGER'] },
-        { icon: faWallet, label: 'Expenses', path: '/expenses', roles: ['CEO', 'MANAGER'] },
-        { icon: faFileAlt, label: 'Daily Sheet', path: '/daily-sheet', roles: ['CEO', 'MANAGER'] },
-        { icon: faTruck, label: 'Deliveries', path: '/deliveries', roles: ['CEO', 'MANAGER'] },
-        { icon: faUsers, label: 'User Management', path: '/users', roles: ['CEO', 'MANAGER'] },
-        { icon: faGem, label: 'Wanakitaa Hub', path: '/wanakitaa', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { icon: faCompass, label: 'Message Center', path: '/messages', roles: ['CEO', 'MANAGER'] },
-        { icon: faBullhorn, label: 'Campaigns', path: '/campaigns', roles: ['CEO', 'MANAGER'] },
-        { icon: faEnvelope, label: 'Notifications', path: '/notification-templates', roles: ['CEO', 'MANAGER'] },
+        { icon: faBoxOpen, label: 'Stock Management', path: '/stock-management', roles: ['CEO', 'MANAGER'] },
+        { icon: faTruck, label: 'Supplier Network', path: '/suppliers', roles: ['CEO', 'MANAGER'] },
+        { icon: faGem, label: 'Wanakitaa Hub', path: '/wanakitaa', roles: ['CEO', 'MANAGER'] },
+        { icon: faBullhorn, label: 'Campaigns', path: '/campaigns', roles: ['CEO'] },
+        { icon: faEnvelope, label: 'Templates', path: '/notification-templates', roles: ['CEO'] },
+        { icon: faUserCog, label: 'Team Management', path: '/team-management', roles: ['CEO'] },
         { icon: faCog, label: 'Settings', path: '/settings', roles: ['CEO', 'MANAGER', 'STAFF'] },
     ];
 
     const visibleMenuItems = menuItems.filter(item => item.roles.includes(userRole));
+
+    // Group items by category for rendering
 
     return (
         <div className="premium-bg min-h-screen flex overflow-hidden">
@@ -95,19 +92,19 @@ const DesktopLayout = () => {
                 </div>
 
                 {/* Primary Navigation */}
-                <nav className="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar">
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar">
                     {visibleMenuItems.map((item, index) => (
                         <button
                             key={index}
                             onClick={() => navigate(item.path)}
-                            className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all group relative overflow-hidden ${window.location.pathname === item.path
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all group relative overflow-hidden ${window.location.pathname === item.path
                                 ? 'premium-btn-primary shadow-xl shadow-blue-500/20'
                                 : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50'
                                 } ${sidebarCollapsed ? 'justify-center' : ''}`}
                         >
                             <FontAwesomeIcon
                                 icon={item.icon}
-                                className={`text-lg transition-transform duration-500 group-hover:scale-110 ${sidebarCollapsed ? '' : 'w-6'} ${window.location.pathname === item.path ? 'text-white' : 'text-gray-400 group-hover:text-blue-600'}`}
+                                className={`text-sm transition-transform duration-500 group-hover:scale-110 ${sidebarCollapsed ? '' : 'w-5'} ${window.location.pathname === item.path ? 'text-white' : 'text-gray-400 group-hover:text-blue-600'}`}
                             />
                             {!sidebarCollapsed && (
                                 <span className={`font-black text-[10px] uppercase tracking-widest ${window.location.pathname === item.path ? 'text-white' : ''}`}>{item.label}</span>

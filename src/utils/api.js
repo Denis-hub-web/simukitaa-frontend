@@ -171,4 +171,9 @@ export const reportsAPI = {
     getImports: (params) => api.get('/reports/imports', { params })
 };
 
+// Payment APIs
+export const paymentAPI = {
+    getMethods: () => api.get('/payment/methods')
+};
+
 export default api;

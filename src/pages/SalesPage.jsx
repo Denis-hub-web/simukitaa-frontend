@@ -20,7 +20,8 @@ const SalesPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterMethod, setFilterMethod] = useState('all');
-    const [filterDate, setFilterDate] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
         fetchSales();
@@ -66,10 +67,28 @@ const SalesPage = () => {
             (sale.product?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (sale.staffName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (sale.serialNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (sale.storage || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (sale.color || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (sale.id || '').toLowerCase().includes(searchQuery.toLowerCase());
 
         const matchesMethod = filterMethod === 'all' || sale.paymentMethod === filterMethod;
-        const matchesDate = !filterDate || sale.saleDate.startsWith(filterDate);
+
+        // Date Range Logic
+        let matchesDate = true;
+        const saleDateObj = new Date(sale.saleDate);
+        saleDateObj.setHours(0, 0, 0, 0);
+
+        if (startDate) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            if (saleDateObj < start) matchesDate = false;
+        }
+
+        if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(0, 0, 0, 0);
+            if (saleDateObj > end) matchesDate = false;
+        }
 
         return matchesSearch && matchesMethod && matchesDate;
     }).sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
@@ -139,14 +158,26 @@ const SalesPage = () => {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                            <FontAwesomeIcon icon={faCalendarAlt} className="text-blue-500" />
-                            <input
-                                type="date"
-                                className="bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 cursor-pointer outline-none"
-                                value={filterDate}
-                                onChange={(e) => setFilterDate(e.target.value)}
-                            />
+                        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-blue-500 uppercase tracking-tighter">From</span>
+                                <input
+                                    type="date"
+                                    className="bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 cursor-pointer outline-none p-0"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                            </div>
+                            <div className="w-px h-4 bg-gray-200" />
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-purple-500 uppercase tracking-tighter">To</span>
+                                <input
+                                    type="date"
+                                    className="bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 cursor-pointer outline-none p-0"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                />
+                            </div>
                         </div>
                         <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                             <FontAwesomeIcon icon={faFilter} className="text-purple-500" />
@@ -165,7 +196,8 @@ const SalesPage = () => {
                         </div>
                         <button
                             onClick={() => {
-                                setFilterDate('');
+                                setStartDate('');
+                                setEndDate('');
                                 setFilterMethod('all');
                                 setSearchQuery('');
                                 fetchSales();
@@ -318,12 +350,31 @@ const SalesPage = () => {
                                             {/* Product */}
                                             <td className="px-5 py-3">
                                                 <div className="font-semibold text-sm text-gray-900">{sale.product?.name || 'Unknown'}</div>
-                                                <div className={`text-xs font-medium mt-0.5 ${sale.condition === 'active' ? 'text-green-600' :
-                                                    sale.condition === 'used' ? 'text-amber-600' :
-                                                        'text-gray-500'
-                                                    }`}>
-                                                    {sale.condition || 'N/A'}
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    {sale.storage && (
+                                                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">
+                                                            {sale.storage}
+                                                        </span>
+                                                    )}
+                                                    {sale.color && (
+                                                        <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded text-[10px] font-bold border border-purple-100">
+                                                            {sale.color}
+                                                        </span>
+                                                    )}
+                                                    {sale.simType && (
+                                                        <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[10px] font-bold border border-amber-100">
+                                                            {sale.simType.replace(/_/g, ' ')}
+                                                        </span>
+                                                    )}
                                                 </div>
+                                                {sale.product?.trackSerials !== false && (
+                                                    <div className={`text-[10px] font-black mt-1 uppercase tracking-wider ${sale.condition === 'active' ? 'text-green-600' :
+                                                        sale.condition === 'used' ? 'text-amber-600' :
+                                                            'text-gray-500'
+                                                        }`}>
+                                                        {sale.condition || 'N/A'}
+                                                    </div>
+                                                )}
                                             </td>
 
                                             {/* Serial */}

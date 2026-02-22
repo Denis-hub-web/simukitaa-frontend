@@ -20,7 +20,7 @@ import {
     faHeadphones,
     faBox
 } from '@fortawesome/free-solid-svg-icons';
-import { salesAPI, productAPI, customerAPI } from '../utils/api';
+import { salesAPI, productAPI, customerAPI, paymentAPI } from '../utils/api';
 import axios from 'axios';
 import TradeInForm from './TradeInForm';
 
@@ -61,11 +61,46 @@ const ConversationalSaleForm = ({ onSuccess, onCancel }) => {
     const [showNewCustomer, setShowNewCustomer] = useState(false);
     const [showTradeInModal, setShowTradeInModal] = useState(false);
     const [newCustomer, setNewCustomer] = useState({ name: '', phone: '' });
+    const [paymentMethods, setPaymentMethods] = useState([
+        { value: 'CASH', label: 'Cash', icon: '💵' },
+        { value: 'M-PESA', label: 'M-Pesa', icon: '📱' },
+        { value: 'TIGO_PESA', label: 'Tigo Pesa', icon: '📱' },
+        { value: 'AIRTEL_MONEY', label: 'Airtel Money', icon: '📱' },
+        { value: 'BANK_TRANSFER', label: 'Bank', icon: '🏦' }
+    ]);
 
     // Load data on mount
     useEffect(() => {
         loadData();
+        loadPaymentMethods();
     }, []);
+
+    const loadPaymentMethods = async () => {
+        try {
+            const response = await paymentAPI.getMethods();
+            if (response.data.success) {
+                const iconMap = {
+                    'CASH': '💵',
+                    'M-PESA': '📱',
+                    'TIGOPESA': '📱',
+                    'TIGO_PESA': '📱',
+                    'AIRTEL_MONEY': '📱',
+                    'HALOPESA': '📱',
+                    'BANK': '🏦',
+                    'BANK_TRANSFER': '🏦',
+                    'CARD': '💳'
+                };
+                const methods = response.data.data.methods.map(m => ({
+                    value: m,
+                    label: m.replace('_', ' '),
+                    icon: iconMap[m] || '💰'
+                }));
+                setPaymentMethods(methods.filter(m => m.value !== 'CUSTOM'));
+            }
+        } catch (error) {
+            console.error('Failed to load payment methods:', error);
+        }
+    };
 
     const loadData = async () => {
         try {
@@ -366,10 +401,20 @@ const ConversationalSaleForm = ({ onSuccess, onCancel }) => {
                                                 placeholder="Phone Number"
                                                 value={newCustomer.phone}
                                                 onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none"
+                                                className={`w-full px-4 py-3 rounded-xl border-2 focus:border-blue-500 focus:outline-none ${customers.some(c => c.phone === newCustomer.phone) ? 'border-red-400' : 'border-gray-200'}`}
                                             />
+                                            {newCustomer.phone && customers.some(c => c.phone === newCustomer.phone) && (
+                                                <p className="text-red-500 text-[10px] font-bold animate-pulse">
+                                                    ⚠️ Namba hii imeshajiliwa! (Registered)
+                                                </p>
+                                            )}
                                             <button
                                                 onClick={async () => {
+                                                    const isDuplicate = customers.some(c => c.phone === newCustomer.phone);
+                                                    if (isDuplicate) {
+                                                        alert('Mteja mwenye namba hii tayari yupo!');
+                                                        return;
+                                                    }
                                                     try {
                                                         const res = await customerAPI.create(newCustomer);
                                                         const customer = res.data.data.customer;
@@ -386,7 +431,7 @@ const ConversationalSaleForm = ({ onSuccess, onCancel }) => {
                                                         alert('Failed to add customer');
                                                     }
                                                 }}
-                                                disabled={!newCustomer.name || !newCustomer.phone}
+                                                disabled={!newCustomer.name || !newCustomer.phone || customers.some(c => c.phone === newCustomer.phone)}
                                                 className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold disabled:opacity-50"
                                             >
                                                 Add Customer
@@ -438,17 +483,17 @@ const ConversationalSaleForm = ({ onSuccess, onCancel }) => {
                                                     }}
                                                     disabled={isOutOfStock}
                                                     className={`w-full p-5 rounded-2xl border-2 transition-all text-left group ${isSelected
-                                                            ? 'border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg'
-                                                            : isOutOfStock
-                                                                ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                                                                : 'border-gray-200 hover:border-green-300 bg-white hover:shadow-md'
+                                                        ? 'border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg'
+                                                        : isOutOfStock
+                                                            ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                                                            : 'border-gray-200 hover:border-green-300 bg-white hover:shadow-md'
                                                         }`}
                                                 >
                                                     <div className="flex items-start gap-4">
                                                         {/* Product Icon/Image */}
                                                         <div className={`w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all ${isSelected
-                                                                ? 'bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg'
-                                                                : 'bg-gradient-to-br from-gray-100 to-gray-200 group-hover:from-green-100 group-hover:to-emerald-100'
+                                                            ? 'bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg'
+                                                            : 'bg-gradient-to-br from-gray-100 to-gray-200 group-hover:from-green-100 group-hover:to-emerald-100'
                                                             }`}>
                                                             <FontAwesomeIcon
                                                                 icon={
@@ -489,8 +534,8 @@ const ConversationalSaleForm = ({ onSuccess, onCancel }) => {
                                                                 </span>
                                                                 <span className="text-gray-300">•</span>
                                                                 <span className={`text-xs font-bold ${isOutOfStock ? 'text-red-600' :
-                                                                        product.stock <= 5 ? 'text-amber-600' :
-                                                                            'text-green-600'
+                                                                    product.stock <= 5 ? 'text-amber-600' :
+                                                                        'text-green-600'
                                                                     }`}>
                                                                     {isOutOfStock ? '❌ Out of Stock' :
                                                                         product.stock <= 5 ? `⚠️ ${product.stock} left` :
@@ -706,14 +751,7 @@ const ConversationalSaleForm = ({ onSuccess, onCancel }) => {
 
                                     {/* Payment Methods */}
                                     <div className="grid grid-cols-2 gap-4 mb-6">
-                                        {[
-                                            { value: 'CASH', label: 'Cash', icon: '💵' },
-                                            { value: 'M-PESA', label: 'M-Pesa', icon: '📱' },
-                                            { value: 'TIGO_PESA', label: 'Tigo Pesa', icon: '📱' },
-                                            { value: 'AIRTEL_MONEY', label: 'Airtel Money', icon: '📱' },
-                                            { value: 'BANK_TRANSFER', label: 'Bank', icon: '🏦' },
-                                            { value: 'CARD', label: 'Card', icon: '💳' }
-                                        ].map(method => (
+                                        {paymentMethods.map(method => (
                                             <button
                                                 key={method.value}
                                                 onClick={() => setFormData({ ...formData, paymentMethod: method.value })}
@@ -728,6 +766,19 @@ const ConversationalSaleForm = ({ onSuccess, onCancel }) => {
                                                 </div>
                                             </button>
                                         ))}
+                                        <button
+                                            key="CUSTOM"
+                                            onClick={() => setFormData({ ...formData, paymentMethod: 'CUSTOM' })}
+                                            className={`p-6 rounded-2xl border-2 transition-all ${formData.paymentMethod === 'CUSTOM'
+                                                ? 'border-indigo-500 bg-indigo-50 shadow-lg'
+                                                : 'border-gray-200 hover:border-indigo-300 bg-white'
+                                                }`}
+                                        >
+                                            <div className="text-center">
+                                                <div className="text-4xl mb-2">➕</div>
+                                                <h4 className="font-bold">Custom</h4>
+                                            </div>
+                                        </button>
                                     </div>
 
                                     {/* Amount Input */}
