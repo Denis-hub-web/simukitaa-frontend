@@ -9,6 +9,7 @@ import {
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../utils/api';
 
 const WhatsAppTemplates = () => {
     const navigate = useNavigate();
@@ -20,7 +21,7 @@ const WhatsAppTemplates = () => {
     const [previewLang, setPreviewLang] = useState('swahili'); // 'swahili' or 'english'
     const [status, setStatus] = useState(null);
 
-    const API_BASE = (import.meta.env.VITE_API_URL || '') + '/api/settings/whatsapp';
+    const API_BASE = `${API_URL}/settings/whatsapp`;
     const token = localStorage.getItem('token');
 
     useEffect(() => {

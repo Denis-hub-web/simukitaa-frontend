@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import axios from 'axios';
+import { API_URL } from '../utils/api';
 import {
     faTimes,
     faArrowRight,
@@ -36,7 +37,7 @@ const StepByStepProductForm = ({ isOpen, onClose, onSave, product, isEdit, showB
     const [serialDuplicate, setSerialDuplicate] = useState(false);
     const [checkingSerial, setCheckingSerial] = useState(false);
 
-    const API_BASE_URL = (import.meta.env.VITE_API_URL || '') + '/api';
+    const API_BASE_URL = API_URL;
 
     const totalSteps = showBuyingPrice ? 8 : 7;
 

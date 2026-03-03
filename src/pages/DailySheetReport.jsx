@@ -7,6 +7,7 @@ import {
     faChevronLeft, faChevronRight
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
+import { API_URL } from '../utils/api';
 
 const DailySheetReport = () => {
     const [data, setData] = useState(null);
@@ -29,7 +30,7 @@ const DailySheetReport = () => {
     const fetchDailySheet = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/reports/daily-sheet`, {
+            const response = await axios.get(`${API_URL}/reports/daily-sheet`, {
                 params: { date: selectedDate },
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
