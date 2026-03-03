@@ -9,7 +9,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_URL } from '../utils/api';
+const API_BASE_URL = API_URL; // Alias for backward compatibility if needed
 
 const CATEGORIES = [
     { value: 'Transport', label: 'Transport', icon: faTruck, color: '#3B82F6' },

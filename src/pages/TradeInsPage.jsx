@@ -9,7 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { faThLarge, faList, faImage, faSync, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_URL as API_BASE_URL } from '../utils/api';
 
 const TradeInsPage = () => {
     const navigate = useNavigate();

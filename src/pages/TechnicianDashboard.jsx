@@ -9,8 +9,10 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '../utils/api';
 
 const TechnicianDashboard = () => {
+    const API_URL_VAR = API_URL;
     const navigate = useNavigate();
     const [repairs, setRepairs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -18,7 +20,6 @@ const TechnicianDashboard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     useEffect(() => {
         loadUserData();

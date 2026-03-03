@@ -10,6 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../utils/api';
 
 const CEOTradeInDashboard = () => {
     const navigate = useNavigate();
@@ -25,7 +26,7 @@ const CEOTradeInDashboard = () => {
     const [categories, setCategories] = useState([]);
     const [serialNumberPhoto, setSerialNumberPhoto] = useState(null);
 
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const API_BASE_URL = API_URL;
 
     useEffect(() => {
         loadTradeIns();

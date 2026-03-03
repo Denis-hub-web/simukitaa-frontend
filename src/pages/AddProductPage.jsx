@@ -10,7 +10,7 @@ import {
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_URL as API_BASE_URL } from '../utils/api';
 
 const AddProductPage = () => {
     const navigate = useNavigate();

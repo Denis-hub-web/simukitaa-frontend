@@ -5,6 +5,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL as API_BASE_URL } from '../utils/api';
 
 const StockInventoryTable = () => {
     const [inventory, setInventory] = useState([]);
@@ -12,14 +13,6 @@ const StockInventoryTable = () => {
     // Modal functionality disabled
 
     const navigate = useNavigate();
-
-    const getBaseUrl = () => {
-        if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-        const hostname = window.location.hostname;
-        return (hostname === 'localhost' || hostname === '127.0.0.1')
-            ? 'http://localhost:5000/api'
-            : `http://${hostname}:5000/api`;
-    };
 
     useEffect(() => {
         loadInventory();

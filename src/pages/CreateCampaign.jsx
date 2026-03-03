@@ -7,8 +7,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_URL } from '../utils/api';
 
 const CreateCampaign = () => {
     const navigate = useNavigate();
@@ -267,8 +266,8 @@ const CreateCampaign = () => {
                                                 key={product.id}
                                                 onClick={() => toggleProduct(product.id)}
                                                 className={`p-4 rounded-xl text-left transition-all border-2 ${selectedProducts.includes(product.id)
-                                                        ? 'bg-blue-50 border-blue-500 shadow-md'
-                                                        : 'bg-white border-gray-200 hover:border-gray-300'
+                                                    ? 'bg-blue-50 border-blue-500 shadow-md'
+                                                    : 'bg-white border-gray-200 hover:border-gray-300'
                                                     }`}
                                             >
                                                 <div className="flex items-start justify-between gap-3">

@@ -7,6 +7,7 @@ import {
     faMoneyBillWave, faPlus, faTimes, faChevronRight
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
+import { API_URL } from '../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const formatCurrency = (amount) => {
@@ -17,7 +18,7 @@ const formatCurrency = (amount) => {
     }).format(amount || 0);
 };
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL_VAR = API_URL;
 
 const ProgressiveRepairForm = () => {
     const { id } = useParams();

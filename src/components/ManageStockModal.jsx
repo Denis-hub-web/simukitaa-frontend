@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faMinus, faPlus, faSave, faArrowUp, faArrowDown, faCalculator } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_URL as API_BASE_URL } from '../utils/api';
 
 const ManageStockModal = ({ show, onClose, onSuccess, product, initialCondition = 'nonActive' }) => {
     const [condition, setCondition] = useState(initialCondition);

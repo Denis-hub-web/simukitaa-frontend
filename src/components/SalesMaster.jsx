@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_URL as API_BASE_URL } from '../utils/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faBrain, faSearch, faArrowUp, faArrowDown, faMinus,
@@ -12,14 +13,6 @@ const SalesMaster = () => {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
-
-    const getBaseUrl = () => {
-        if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-        const hostname = window.location.hostname;
-        return (hostname === 'localhost' || hostname === '127.0.0.1')
-            ? 'http://localhost:5000/api'
-            : `http://${hostname}:5000/api`;
-    };
 
     const handleQuery = async (queryText) => {
         if (!queryText.trim()) return;

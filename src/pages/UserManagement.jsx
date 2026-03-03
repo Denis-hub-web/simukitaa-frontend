@@ -7,10 +7,11 @@ import {
     faPhone, faEnvelope, faUserShield, faUsers, faCircle, faKey,
     faTrashAlt, faFilter, faUserTie, faTruck, faWrench, faUserTag
 } from '@fortawesome/free-solid-svg-icons';
-import { userAPI } from '../utils/api';
+import { userAPI, API_URL } from '../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const UserManagement = () => {
+    const API_URL_LOCAL = API_URL;
     const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -271,7 +272,6 @@ const UserRegistrationModal = ({ onClose, onSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [tempPassword, setTempPassword] = useState('');
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     const handleSubmit = async (e) => {
         e.preventDefault();

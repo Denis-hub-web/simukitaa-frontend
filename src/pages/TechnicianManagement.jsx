@@ -8,6 +8,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '../utils/api';
 
 const TechnicianManagement = () => {
     const navigate = useNavigate();
@@ -17,7 +18,6 @@ const TechnicianManagement = () => {
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [selectedTechnician, setSelectedTechnician] = useState(null);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     useEffect(() => {
         loadTechnicians();
@@ -282,7 +282,6 @@ const TechnicianRegistrationModal = ({ onClose, onSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [tempPassword, setTempPassword] = useState('');
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     const addSpecialization = () => {
         if (specializationInput.trim() && !formData.specializations.includes(specializationInput.trim())) {
@@ -361,7 +360,6 @@ const TechnicianRegistrationModal = ({ onClose, onSuccess }) => {
 const EditTechnicianModal = ({ technician, onClose, onSuccess }) => {
     const [formData, setFormData] = useState({ name: technician.name, email: technician.email, phone: technician.phone });
     const [loading, setLoading] = useState(false);
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     const handleSubmit = async (e) => {
         e.preventDefault();

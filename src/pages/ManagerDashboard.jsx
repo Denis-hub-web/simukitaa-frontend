@@ -8,6 +8,7 @@ import {
     faShieldAlt, faUserTie, faChevronRight
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
+import { API_URL } from '../utils/api';
 
 const ManagerDashboard = () => {
     const navigate = useNavigate();
@@ -18,7 +19,7 @@ const ManagerDashboard = () => {
     // Get user for role checking
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const API_BASE_URL = API_URL;
 
     useEffect(() => {
         loadTeamPerformance();

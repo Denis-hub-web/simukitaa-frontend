@@ -25,7 +25,7 @@ const getApiBaseUrl = () => {
     return 'https://api.simukitaa.com/api';
 };
 
-const API_URL = getApiBaseUrl();
+export const API_URL = getApiBaseUrl();
 
 console.log('API URL:', API_URL); // Debug log
 

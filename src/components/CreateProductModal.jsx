@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faArrowLeft, faSave, faPlus } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_URL as API_BASE_URL } from '../utils/api';
 
 const CreateProductModal = ({ show, onClose, onSuccess, initialBrand = '', initialCategory = '' }) => {
     const [formData, setFormData] = useState({

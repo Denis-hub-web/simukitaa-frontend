@@ -6,11 +6,11 @@ import {
     faClipboardList, faChevronRight, faSearch, faPlus
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_URL } from '../utils/api';
 
 const CreateRepairPage = () => {
     const navigate = useNavigate();
+    const API_URL_VAR = API_URL;
     const [customers, setCustomers] = useState([]);
     const [technicians, setTechnicians] = useState([]);
     const [loading, setLoading] = useState(false);

@@ -8,7 +8,7 @@ import {
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_URL } from '../utils/api';
 
 const CampaignManager = () => {
     const navigate = useNavigate();
@@ -160,8 +160,8 @@ const CampaignManager = () => {
                             key={f.id}
                             onClick={() => setFilter(f.id)}
                             className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${filter === f.id
-                                    ? 'bg-gray-900 text-white shadow-lg'
-                                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                                ? 'bg-gray-900 text-white shadow-lg'
+                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                                 }`}
                         >
                             {f.label}

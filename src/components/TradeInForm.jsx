@@ -6,7 +6,7 @@ import {
     faMobileAlt, faSpinner, faMicrochip, faShieldAlt, faInfoCircle,
     faUser, faBoxOpen, faTools
 } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
+import { API_URL } from '../utils/api';
 import Tesseract from 'tesseract.js';
 
 const TradeInForm = ({ isOpen, onClose, onSuccess, prefilledCustomer }) => {
@@ -29,7 +29,7 @@ const TradeInForm = ({ isOpen, onClose, onSuccess, prefilledCustomer }) => {
     const [stream, setStream] = useState(null);
 
     const totalSteps = 5;
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const API_BASE_URL = API_URL;
 
     useEffect(() => {
         if (prefilledCustomer) {

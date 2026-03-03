@@ -7,11 +7,12 @@ import {
     faArrowLeft, faArrowRight, faMobileAlt, faSearch, faTimes, faTruck, faBan, faExchangeAlt, faCamera
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
-import api, { customerAPI, salesAPI, paymentAPI } from '../utils/api';
+import api, { customerAPI, salesAPI, paymentAPI, API_URL } from '../utils/api';
 import TradeInForm from '../components/TradeInForm';
 import SerialScannerModal from '../components/SerialScannerModal';
 
 const NewSalePage = () => {
+    const API_URL_VAR = API_URL;
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const totalSteps = 5;
@@ -53,7 +54,6 @@ const NewSalePage = () => {
     const [paymentMethods, setPaymentMethods] = useState(['CASH', 'M-PESA', 'TIGOPESA', 'AIRTEL_MONEY', 'HALOPESA', 'BANK']);
 
     // API URL
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     // Load customers
     useEffect(() => {

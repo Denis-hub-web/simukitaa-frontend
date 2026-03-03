@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPaperPlane, faBrain, faComment, faCopy, faCheck } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
+import { API_URL } from '../utils/api';
 import ReactMarkdown from 'react-markdown';
 
 export default function AIBusinessIntelligence() {
@@ -9,14 +10,6 @@ export default function AIBusinessIntelligence() {
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
     const [copiedIndex, setCopiedIndex] = useState(null);
-
-    const getBaseUrl = () => {
-        if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-        const hostname = window.location.hostname;
-        return (hostname === 'localhost' || hostname === '127.0.0.1')
-            ? 'http://localhost:5000/api'
-            : `http://${hostname}:5000/api`;
-    };
 
     const handleSend = async () => {
         if (!input.trim()) return;
@@ -29,7 +22,7 @@ export default function AIBusinessIntelligence() {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.post(
-                `${getBaseUrl()}/ai/chat`,
+                `${API_URL}/ai/chat`,
                 { message: input },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

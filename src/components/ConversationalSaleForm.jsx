@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -105,18 +106,7 @@ const ConversationalSaleForm = ({ onSuccess, onCancel }) => {
     const loadData = async () => {
         try {
             const token = localStorage.getItem('token');
-
-            // Dynamically determine API URL (same logic as api.js)
-            const hostname = window.location.hostname;
-            let API_URL;
-            if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-                API_URL = `http://${hostname}:5000/api`;
-            } else {
-                API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-            }
-
-            console.log('Loading data from:', API_URL);
-            console.log('Token exists:', !!token);
+            if (!token) throw new Error('No authentication token');
 
             const [customersRes, productsRes] = await Promise.all([
                 customerAPI.getAll(),

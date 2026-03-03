@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTools, faUser, faMobileAlt, faPlus, faUserPlus, faTruck } from '@fortawesome/free-solid-svg-icons';
-import { repairAPI, customerAPI, userAPI } from '../utils/api';
+import { repairAPI, customerAPI, userAPI, API_URL } from '../utils/api';
 
-const CreateRepairForm = ({ onSuccess, onCancel }) => {
+const CreateRepairForm = ({ isOpen, onClose, onSuccess, prefilledCustomer }) => {
+    const API_URL_VAR = API_URL;
     const [customers, setCustomers] = useState([]);
     const [isNewCustomer, setIsNewCustomer] = useState(false);
     const [formData, setFormData] = useState({
@@ -29,7 +30,6 @@ const CreateRepairForm = ({ onSuccess, onCancel }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     useEffect(() => {
         loadCustomers();
