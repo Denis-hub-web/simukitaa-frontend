@@ -67,9 +67,13 @@ const MobileDashboard = () => {
             return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`;
         }
 
-        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:5000/api'
-            : `http://${window.location.hostname}:5000/api`;
+        const hostname = window.location.hostname;
+        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+
+        if (isLocal) return 'http://localhost:5000/api';
+
+        // PRODUCTION: Use the dedicated API subdomain (Cloudflare → Render)
+        return 'https://api.simukitaa.com/api';
     })();
 
     useEffect(() => {

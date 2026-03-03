@@ -7,6 +7,7 @@ import axios from 'axios';
 
 // Dynamically determine the API base URL
 const getApiBaseUrl = () => {
+    // PRIORITY 1: Use the environment variable if set
     const envUrl = import.meta.env.VITE_API_URL;
     if (envUrl) {
         const cleaned = envUrl.replace(/\/+$/, '');
@@ -14,14 +15,14 @@ const getApiBaseUrl = () => {
     }
 
     const hostname = window.location.hostname;
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
 
-    // If accessing from network IP, use that IP for backend
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-        return `http://${hostname}:5000/api`;
+    if (isLocal) {
+        return 'http://localhost:5000/api';
     }
 
-    // Default to localhost
-    return 'http://localhost:5000/api';
+    // PRODUCTION: Use the dedicated API subdomain (Cloudflare → Render)
+    return 'https://api.simukitaa.com/api';
 };
 
 const API_URL = getApiBaseUrl();
