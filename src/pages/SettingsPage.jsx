@@ -9,15 +9,13 @@ import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import api from '../utils/api';
 
 const SettingsPage = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const token = localStorage.getItem('token');
     const [activeSection, setActiveSection] = useState('account');
+
 
     // --- Factory Reset State ---
     const [showResetModal, setShowResetModal] = useState(false);
@@ -31,9 +29,7 @@ const SettingsPage = () => {
         setResetLoading(true);
         setResetError('');
         try {
-            await axios.post(`${API_BASE}/admin/factory-reset`, { password: resetPassword }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.post('/admin/factory-reset', { password: resetPassword });
             setResetDone(true);
             setTimeout(() => {
                 localStorage.clear();
@@ -181,8 +177,8 @@ const SettingsPage = () => {
                                             key={section.id}
                                             onClick={() => setActiveSection(section.id)}
                                             className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-200 relative group ${isActive
-                                                    ? 'bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg'
-                                                    : 'hover:bg-gray-50'
+                                                ? 'bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg'
+                                                : 'hover:bg-gray-50'
                                                 }`}
                                         >
                                             {/* Active left bar */}
