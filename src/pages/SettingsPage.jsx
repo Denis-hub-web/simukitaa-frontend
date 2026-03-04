@@ -113,10 +113,36 @@ const SettingsPage = () => {
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-4 -mt-6 relative z-10">
+            {/* Mobile Tab Bar (visible only on small screens) */}
+            <div className="lg:hidden sticky top-0 z-20 bg-[#efeff4] px-4 pt-3 pb-2">
+                <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                    {settingsSections.map((section) => (
+                        <button
+                            key={section.id}
+                            onClick={() => setActiveSection(section.id)}
+                            className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeSection === section.id
+                                    ? 'bg-gray-900 text-white shadow-lg'
+                                    : 'bg-white text-gray-500 border border-gray-100 shadow-sm'
+                                }`}
+                        >
+                            <FontAwesomeIcon icon={section.icon} className="text-xs" />
+                            {section.label}
+                        </button>
+                    ))}
+                    <button
+                        onClick={handleLogout}
+                        className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-red-50 text-red-600 border border-red-100 shadow-sm"
+                    >
+                        <FontAwesomeIcon icon={faSignOutAlt} className="text-xs" />
+                        Logout
+                    </button>
+                </div>
+            </div>
+
+            <div className="max-w-6xl mx-auto px-4 mt-4 lg:-mt-6 relative z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Navigation Sector */}
-                    <div className="lg:col-span-1 space-y-4">
+                    {/* Desktop Sidebar Navigation (hidden on mobile) */}
+                    <div className="hidden lg:block lg:col-span-1 space-y-4">
                         <div className="bg-white rounded-[2.5rem] p-4 shadow-sm border border-gray-100">
                             <div className="px-4 py-3 mb-2">
                                 <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none">Settings Menu</p>
@@ -126,11 +152,9 @@ const SettingsPage = () => {
                                     <button
                                         key={section.id}
                                         onClick={() => setActiveSection(section.id)}
-                                        className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${activeSection === section.id ? 'bg-gray-900 text-white shadow-xl scale-[1.02]' : 'hover:bg-gray-50 text-gray-500'
-                                            }`}
+                                        className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${activeSection === section.id ? 'bg-gray-900 text-white shadow-xl scale-[1.02]' : 'hover:bg-gray-50 text-gray-500'}`}
                                     >
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeSection === section.id ? 'bg-white/10' : 'bg-gray-50'
-                                            }`}>
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeSection === section.id ? 'bg-white/10' : 'bg-gray-50'}`}>
                                             <FontAwesomeIcon icon={section.icon} className={activeSection === section.id ? 'text-white' : 'text-gray-400 group-hover:text-gray-900'} />
                                         </div>
                                         <div className="text-left">
