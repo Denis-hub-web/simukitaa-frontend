@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -45,6 +45,7 @@ const NewSalePage = () => {
     const [searchSerial, setSearchSerial] = useState('');
     const [foundDevice, setFoundDevice] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [loadingStep, setLoadingStep] = useState(0);
     const [searching, setSearching] = useState(false);
     const [suggestions, setSuggestions] = useState([]);
     const [showTradeInForm, setShowTradeInForm] = useState(false);
@@ -52,6 +53,25 @@ const NewSalePage = () => {
     const [searchMode, setSearchMode] = useState('SERIAL'); // 'SERIAL' or 'NAME'
     const [productSuggestions, setProductSuggestions] = useState([]);
     const [paymentMethods, setPaymentMethods] = useState(['CASH', 'M-PESA', 'TIGOPESA', 'AIRTEL_MONEY', 'HALOPESA', 'BANK']);
+
+    const SALE_STEPS = [
+        { icon: '📦', text: 'Packaging device...' },
+        { icon: '🧾', text: 'Generating receipt...' },
+        { icon: '💾', text: 'Saving to records...' },
+        { icon: '📊', text: 'Updating inventory...' },
+        { icon: '💬', text: 'Sending WhatsApp receipt...' },
+        { icon: '✅', text: 'Finalising transfer...' },
+    ];
+
+    const loadingStepRef = useRef(0);
+    useEffect(() => {
+        if (!loading) { loadingStepRef.current = 0; setLoadingStep(0); return; }
+        const interval = setInterval(() => {
+            loadingStepRef.current = (loadingStepRef.current + 1) % SALE_STEPS.length;
+            setLoadingStep(loadingStepRef.current);
+        }, 1400);
+        return () => clearInterval(interval);
+    }, [loading]);
 
     // API URL
 
@@ -270,6 +290,73 @@ const NewSalePage = () => {
 
     return (
         <div className="premium-bg p-4 md:p-8 pb-32">
+
+            {/* ✨ ANIMATED SALE PROCESSING OVERLAY */}
+            <AnimatePresence>
+                {loading && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-[#008069] via-[#00a884] to-[#005c4b]"
+                    >
+                        {/* Background blobs */}
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full -ml-40 -mb-40 blur-3xl" />
+
+                        <div className="relative z-10 flex flex-col items-center gap-8 px-8 text-center max-w-sm">
+                            {/* Pulsing icon */}
+                            <motion.div
+                                key={loadingStep}
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 1.5, opacity: 0 }}
+                                transition={{ duration: 0.4 }}
+                                className="w-28 h-28 bg-white/15 backdrop-blur-md rounded-[2.5rem] flex items-center justify-center text-6xl shadow-2xl border border-white/20"
+                            >
+                                {SALE_STEPS[loadingStep].icon}
+                            </motion.div>
+
+                            {/* Title */}
+                            <div>
+                                <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Processing Sale</p>
+                                <motion.h2
+                                    key={`text-${loadingStep}`}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="text-white text-2xl font-black tracking-tight"
+                                >
+                                    {SALE_STEPS[loadingStep].text}
+                                </motion.h2>
+                            </div>
+
+                            {/* Step dots */}
+                            <div className="flex items-center gap-2">
+                                {SALE_STEPS.map((_, i) => (
+                                    <motion.div
+                                        key={i}
+                                        animate={{ width: i === loadingStep ? 28 : 8, opacity: i === loadingStep ? 1 : 0.35 }}
+                                        className="h-2 rounded-full bg-white"
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Animated progress bar */}
+                            <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+                                <motion.div
+                                    className="h-full bg-white rounded-full"
+                                    animate={{ width: `${((loadingStep + 1) / SALE_STEPS.length) * 100}%` }}
+                                    transition={{ duration: 1.2, ease: 'easeInOut' }}
+                                />
+                            </div>
+
+                            <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Please wait, do not close this page</p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">

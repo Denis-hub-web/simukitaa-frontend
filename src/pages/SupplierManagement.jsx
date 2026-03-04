@@ -10,6 +10,9 @@ import { supplierAPI } from '../utils/supplierAPI';
 
 const SupplierManagement = () => {
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isCEO = user.role === 'CEO';
+
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -198,8 +201,8 @@ const SupplierManagement = () => {
                                     <div className="flex items-center gap-4">
                                         {/* Icon */}
                                         <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${supplier.status === 'active'
-                                                ? 'bg-gradient-to-br from-green-100 to-emerald-100'
-                                                : 'bg-gradient-to-br from-gray-100 to-slate-100'
+                                            ? 'bg-gradient-to-br from-green-100 to-emerald-100'
+                                            : 'bg-gradient-to-br from-gray-100 to-slate-100'
                                             }`}>
                                             <FontAwesomeIcon
                                                 icon={faBuilding}
@@ -249,13 +252,15 @@ const SupplierManagement = () => {
                                             >
                                                 <FontAwesomeIcon icon={faEdit} />
                                             </button>
-                                            <button
-                                                onClick={() => handleDelete(supplier.id)}
-                                                className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
-                                                title="Delete Supplier"
-                                            >
-                                                <FontAwesomeIcon icon={faTrash} />
-                                            </button>
+                                            {isCEO && (
+                                                <button
+                                                    onClick={() => handleDelete(supplier.id)}
+                                                    className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                                    title="Delete Supplier"
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </motion.div>
