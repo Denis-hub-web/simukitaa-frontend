@@ -3,17 +3,48 @@ import {
     faUser, faBell, faShield, faLanguage, faPalette,
     faQuestionCircle, faSignOutAlt, faChevronRight, faKey,
     faDatabase, faDownload, faArrowLeft, faCheckCircle,
-    faMoon, faGlobe, faUserShield
+    faMoon, faGlobe, faUserShield, faTriangleExclamation, faTrash, faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const SettingsPage = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const token = localStorage.getItem('token');
     const [activeSection, setActiveSection] = useState('account');
+
+    // --- Factory Reset State ---
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [resetPassword, setResetPassword] = useState('');
+    const [resetLoading, setResetLoading] = useState(false);
+    const [resetError, setResetError] = useState('');
+    const [resetDone, setResetDone] = useState(false);
+
+    const handleFactoryReset = async () => {
+        if (!resetPassword) { setResetError('Enter your password to confirm'); return; }
+        setResetLoading(true);
+        setResetError('');
+        try {
+            await axios.post(`${API_BASE}/admin/factory-reset`, { password: resetPassword }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setResetDone(true);
+            setTimeout(() => {
+                localStorage.clear();
+                navigate('/login');
+            }, 3000);
+        } catch (err) {
+            setResetError(err.response?.data?.message || 'Reset failed. Check your password.');
+        } finally {
+            setResetLoading(false);
+        }
+    };
 
     const handleLogout = () => {
         if (window.confirm('Log out of your account?')) {
@@ -33,6 +64,16 @@ const SettingsPage = () => {
 
     return (
         <div className="min-h-screen bg-[#efeff4] pb-24">
+            <FactoryResetModal
+                show={showResetModal}
+                password={resetPassword}
+                setPassword={setResetPassword}
+                onConfirm={handleFactoryReset}
+                onCancel={() => setShowResetModal(false)}
+                loading={resetLoading}
+                error={resetError}
+                done={resetDone}
+            />
             {/* Premium Global Header */}
             <div className="bg-gradient-to-r from-[#008069] via-[#00a884] to-[#008069] relative overflow-hidden pb-12 pt-4 shadow-xl">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
@@ -186,6 +227,7 @@ const SettingsPage = () => {
                                             <h3 className="text-2xl font-black text-gray-900 tracking-tighter mb-1">Security</h3>
                                             <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none">Privacy & Security Settings</p>
                                         </div>
+                                        {/* Change Password */}
                                         <button className="w-full flex items-center justify-between p-8 bg-gray-50/50 rounded-[2rem] border border-gray-100 group hover:bg-[#008069]/5 transition-all">
                                             <div className="flex items-center gap-6">
                                                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#008069] shadow-sm transform group-hover:rotate-12 transition-transform">
@@ -202,9 +244,36 @@ const SettingsPage = () => {
                                             <FontAwesomeIcon icon={faUserShield} className="text-amber-500 mt-1" />
                                             <div>
                                                 <p className="text-[10px] font-black text-amber-900 uppercase tracking-widest leading-none mb-1">Advanced Protection</p>
-                                                <p className="text-[10px] font-bold text-amber-900 leading-relaxed uppercase opacity-80">Biometric & hardware key modules are managed by terminal administrator.</p>
+                                                <p className="text-[10px] font-bold text-amber-900 leading-relaxed uppercase opacity-80">Biometric &amp; hardware key modules are managed by terminal administrator.</p>
                                             </div>
                                         </div>
+
+                                        {/* CEO-ONLY: Danger Zone */}
+                                        {user.role === 'CEO' && (
+                                            <div className="mt-6 border-2 border-red-200 rounded-[2rem] p-6 bg-red-50">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                                                        <FontAwesomeIcon icon={faTriangleExclamation} className="text-red-600" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-black text-red-900 uppercase tracking-tight">Danger Zone</p>
+                                                        <p className="text-[9px] font-black text-red-600 uppercase tracking-widest">Irreversible Actions</p>
+                                                    </div>
+                                                </div>
+                                                <p className="text-[10px] font-bold text-red-800 leading-relaxed mb-4">
+                                                    <strong>Factory Reset</strong> will permanently delete all sales, customers, products, staff, repairs, deliveries and trade-ins.<br />
+                                                    <span className="text-green-700">✓ Your CEO login will be preserved.</span><br />
+                                                    <span className="text-green-700">✓ All message templates will be preserved.</span>
+                                                </p>
+                                                <button
+                                                    onClick={() => { setShowResetModal(true); setResetError(''); setResetPassword(''); }}
+                                                    className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                    Factory Reset — Fresh Start
+                                                </button>
+                                            </div>
+                                        )}
                                     </motion.div>
                                 )}
 
@@ -275,3 +344,68 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
+
+// ================================================
+// FACTORY RESET CONFIRMATION MODAL (Renders globally)
+// ================================================
+function FactoryResetModal({ show, password, setPassword, onConfirm, onCancel, loading, error, done }) {
+    if (!show) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-[2.5rem] p-8 shadow-2xl max-w-md w-full border-2 border-red-200"
+            >
+                {done ? (
+                    <div className="text-center py-8">
+                        <div className="text-5xl mb-4">✅</div>
+                        <h3 className="text-xl font-black text-gray-900 mb-2">Reset Complete!</h3>
+                        <p className="text-sm text-gray-600">All data cleared. Redirecting to login...</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center">
+                                <FontAwesomeIcon icon={faTriangleExclamation} className="text-2xl text-red-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-gray-900">Confirm Factory Reset</h3>
+                                <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">This cannot be undone</p>
+                            </div>
+                        </div>
+                        <div className="bg-red-50 rounded-2xl p-4 mb-6 text-[11px] font-bold text-red-800 space-y-1">
+                            <p>⛔ Deletes: all sales, products, customers, staff, repairs, trade-ins, deliveries</p>
+                            <p>✅ Keeps: your CEO account &amp; all message templates</p>
+                        </div>
+                        <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-3">Enter your CEO password to confirm:</p>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            placeholder="Your password"
+                            className="w-full px-5 py-4 bg-gray-50 rounded-2xl text-sm font-bold border-2 border-gray-200 focus:border-red-400 focus:outline-none mb-4"
+                        />
+                        {error && <p className="text-xs font-bold text-red-600 mb-4">{error}</p>}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={onCancel}
+                                className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={onConfirm}
+                                disabled={loading}
+                                className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-700 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                            >
+                                {loading ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faTrash} />}
+                                {loading ? 'Resetting...' : 'Reset Now'}
+                            </button>
+                        </div>
+                    </>
+                )}
+            </motion.div>
+        </div>
+    );
+}
