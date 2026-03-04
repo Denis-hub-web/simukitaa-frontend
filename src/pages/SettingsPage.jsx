@@ -25,11 +25,14 @@ const SettingsPage = () => {
     const [resetDone, setResetDone] = useState(false);
 
     const handleFactoryReset = async () => {
-        if (!resetPassword) { setResetError('Enter your password to confirm'); return; }
+        if (!resetPassword || resetPassword.trim().toUpperCase() !== 'RESET') {
+            setResetError('Type RESET in capital letters to confirm');
+            return;
+        }
         setResetLoading(true);
         setResetError('');
         try {
-            await api.post('/admin/factory-reset', { password: resetPassword });
+            await api.post('/admin/factory-reset', { confirmPhrase: resetPassword.trim().toUpperCase() });
             setResetDone(true);
             setTimeout(() => {
                 localStorage.clear();
@@ -460,13 +463,13 @@ function FactoryResetModal({ show, password, setPassword, onConfirm, onCancel, l
                             <p>⛔ Deletes: all sales, products, customers, staff, repairs, trade-ins, deliveries</p>
                             <p>✅ Keeps: your CEO account &amp; all message templates</p>
                         </div>
-                        <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-3">Enter your CEO password to confirm:</p>
+                        <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-3">Type <span className="text-red-600">RESET</span> to confirm:</p>
                         <input
-                            type="password"
+                            type="text"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
-                            placeholder="Your password"
-                            className="w-full px-5 py-4 bg-gray-50 rounded-2xl text-sm font-bold border-2 border-gray-200 focus:border-red-400 focus:outline-none mb-4"
+                            placeholder="Type: RESET"
+                            className="w-full px-5 py-4 bg-gray-50 rounded-2xl text-sm font-bold border-2 border-gray-200 focus:border-red-400 focus:outline-none mb-4 uppercase tracking-widest"
                         />
                         {error && <p className="text-xs font-bold text-red-600 mb-4">{error}</p>}
                         <div className="flex gap-3">
