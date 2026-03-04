@@ -121,8 +121,8 @@ const SettingsPage = () => {
                             key={section.id}
                             onClick={() => setActiveSection(section.id)}
                             className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeSection === section.id
-                                    ? 'bg-gray-900 text-white shadow-lg'
-                                    : 'bg-white text-gray-500 border border-gray-100 shadow-sm'
+                                ? 'bg-gray-900 text-white shadow-lg'
+                                : 'bg-white text-gray-500 border border-gray-100 shadow-sm'
                                 }`}
                         >
                             <FontAwesomeIcon icon={section.icon} className="text-xs" />
@@ -143,33 +143,95 @@ const SettingsPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Desktop Sidebar Navigation (hidden on mobile) */}
                     <div className="hidden lg:block lg:col-span-1 space-y-4">
-                        <div className="bg-white rounded-[2.5rem] p-4 shadow-sm border border-gray-100">
-                            <div className="px-4 py-3 mb-2">
-                                <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none">Settings Menu</p>
-                            </div>
-                            <div className="space-y-2">
-                                {settingsSections.map((section) => (
-                                    <button
-                                        key={section.id}
-                                        onClick={() => setActiveSection(section.id)}
-                                        className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${activeSection === section.id ? 'bg-gray-900 text-white shadow-xl scale-[1.02]' : 'hover:bg-gray-50 text-gray-500'}`}
-                                    >
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeSection === section.id ? 'bg-white/10' : 'bg-gray-50'}`}>
-                                            <FontAwesomeIcon icon={section.icon} className={activeSection === section.id ? 'text-white' : 'text-gray-400 group-hover:text-gray-900'} />
-                                        </div>
-                                        <div className="text-left">
-                                            <p className="text-xs font-black uppercase tracking-tight leading-none mb-1">{section.label}</p>
-                                            <p className={`text-[8px] font-black uppercase tracking-widest ${activeSection === section.id ? 'text-white/70' : 'text-gray-500'}`}>{section.desc}</p>
-                                        </div>
-                                    </button>
-                                ))}
+
+                        {/* Mini Profile Card */}
+                        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-[2rem] p-6 shadow-xl border border-white/5 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#008069]/20 rounded-full -mr-16 -mt-16 blur-2xl" />
+                            <div className="relative z-10 flex items-center gap-4">
+                                <div className="w-14 h-14 bg-gradient-to-br from-[#008069] to-[#00a884] rounded-2xl flex items-center justify-center shadow-lg shadow-[#008069]/40 shrink-0">
+                                    <span className="text-xl font-black text-white">{user?.name?.charAt(0)}</span>
+                                </div>
+                                <div className="overflow-hidden">
+                                    <p className="text-white font-black text-sm truncate leading-tight">{user?.name}</p>
+                                    <span className="inline-block bg-[#008069]/30 border border-[#008069]/40 text-[#4ade80] text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg mt-1">
+                                        {user?.role || 'STAFF'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <button onClick={handleLogout} className="w-full bg-white text-red-600 py-5 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-sm border border-red-50 hover:bg-red-50 transition-all flex items-center justify-center gap-3">
-                            <FontAwesomeIcon icon={faSignOutAlt} />
-                            Logout
-                        </button>
+                        {/* Navigation Card */}
+                        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+                            <div className="px-5 pt-5 pb-2">
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Navigation</p>
+                            </div>
+                            <div className="p-3 space-y-1">
+                                {settingsSections.map((section) => {
+                                    const colorMap = {
+                                        blue: { bg: 'bg-blue-50', icon: 'text-blue-500', glow: 'shadow-blue-100' },
+                                        green: { bg: 'bg-green-50', icon: 'text-green-500', glow: 'shadow-green-100' },
+                                        purple: { bg: 'bg-purple-50', icon: 'text-purple-500', glow: 'shadow-purple-100' },
+                                        pink: { bg: 'bg-pink-50', icon: 'text-pink-500', glow: 'shadow-pink-100' },
+                                        gray: { bg: 'bg-gray-50', icon: 'text-gray-500', glow: 'shadow-gray-100' },
+                                    };
+                                    const c = colorMap[section.color] || colorMap.gray;
+                                    const isActive = activeSection === section.id;
+                                    return (
+                                        <button
+                                            key={section.id}
+                                            onClick={() => setActiveSection(section.id)}
+                                            className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-200 relative group ${isActive
+                                                    ? 'bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg'
+                                                    : 'hover:bg-gray-50'
+                                                }`}
+                                        >
+                                            {/* Active left bar */}
+                                            {isActive && (
+                                                <div className="absolute left-0 top-2 bottom-2 w-1 bg-gradient-to-b from-[#00a884] to-[#008069] rounded-full" />
+                                            )}
+                                            {/* Icon */}
+                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${isActive ? 'bg-white/10' : `${c.bg} shadow-sm ${c.glow}`
+                                                }`}>
+                                                <FontAwesomeIcon
+                                                    icon={section.icon}
+                                                    className={`text-sm ${isActive ? 'text-white' : c.icon}`}
+                                                />
+                                            </div>
+                                            {/* Label */}
+                                            <div className="text-left flex-1">
+                                                <p className={`text-xs font-black uppercase tracking-tight leading-none mb-0.5 ${isActive ? 'text-white' : 'text-gray-800'}`}>
+                                                    {section.label}
+                                                </p>
+                                                <p className={`text-[9px] font-bold uppercase tracking-wider ${isActive ? 'text-white/50' : 'text-gray-400'}`}>
+                                                    {section.desc}
+                                                </p>
+                                            </div>
+                                            {/* Arrow */}
+                                            <FontAwesomeIcon
+                                                icon={faChevronRight}
+                                                className={`text-[10px] transition-all ${isActive ? 'text-white/50' : 'text-gray-300 group-hover:text-gray-500 group-hover:translate-x-0.5'}`}
+                                            />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <div className="p-3 pt-1">
+                                <div className="h-px bg-gradient-to-r from-transparent via-gray-100 to-transparent mb-2" />
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-200 group hover:bg-red-50"
+                                >
+                                    <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-red-50 shrink-0">
+                                        <FontAwesomeIcon icon={faSignOutAlt} className="text-sm text-red-500" />
+                                    </div>
+                                    <div className="text-left flex-1">
+                                        <p className="text-xs font-black uppercase tracking-tight text-red-600">Sign Out</p>
+                                        <p className="text-[9px] font-bold uppercase tracking-wider text-red-400">End session</p>
+                                    </div>
+                                    <FontAwesomeIcon icon={faChevronRight} className="text-[10px] text-red-300 group-hover:translate-x-0.5 transition-transform" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Operational Content */}
