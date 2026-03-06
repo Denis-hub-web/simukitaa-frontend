@@ -33,7 +33,9 @@ import {
     faBullhorn,
     faUserCog,
     faFileAlt,
-    faWallet
+    faWallet,
+    faSignOutAlt,
+    faMobileAlt
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
