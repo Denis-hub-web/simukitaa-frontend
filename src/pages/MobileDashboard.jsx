@@ -52,14 +52,21 @@ const MobileDashboard = () => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [error, setError] = useState('');
+    const [showConfirm, setShowConfirm] = useState(false);
+
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
     const [notificationFilter, setNotificationFilter] = useState('all');
     const [showSaleModal, setShowSaleModal] = useState(false);
     const [showCustomerModal, setShowCustomerModal] = useState(false);
-    const [showProductModal, setShowProductModal] = useState(false);
+    const [personalExpenses, setPersonalExpenses] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
+    const [dateRange, setDateRange] = useState({
+        start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
+        end: new Date().toISOString().split('T')[0]
+    });
     const [selectedNotification, setSelectedNotification] = useState(null);
 
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
     const API_URL = (() => {
         const envUrl = import.meta.env.VITE_API_URL;
         if (envUrl) {
@@ -152,7 +159,6 @@ const MobileDashboard = () => {
         setSuccessMessage(msg);
         setShowSaleModal(false);
         setShowCustomerModal(false);
-        setShowProductModal(false);
         setTimeout(() => setSuccessMessage(''), 3000);
         loadDashboardData();
     };
@@ -189,7 +195,23 @@ const MobileDashboard = () => {
                                 </h1>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col md:flex-row items-center gap-3">
+                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/10">
+                                <input
+                                    type="date"
+                                    value={dateRange.start}
+                                    onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                                    className="bg-transparent text-white text-[10px] font-black uppercase outline-none"
+                                />
+                                <span className="text-white/40 text-[10px]">to</span>
+                                <input
+                                    type="date"
+                                    value={dateRange.end}
+                                    onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                                    className="bg-transparent text-white text-[10px] font-black uppercase outline-none"
+                                />
+                            </div>
+                            <button onClick={() => { localStorage.clear(); window.location.href = '/login'; }} className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-white hover:bg-red-500/40 transition-all border border-white/10 shadow-lg"><FontAwesomeIcon icon={faSignOutAlt} /></button>
                             <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-gray-400 shadow-lg border border-white relative hover:scale-105 transition-all">
                                 <FontAwesomeIcon icon={faBell} />
                                 {notifications.filter(n => !n.isRead).length > 0 && (
@@ -238,8 +260,8 @@ const MobileDashboard = () => {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="space-y-6"
                         >
-                            {/* CEO-Only Simplified Home: AI + Revenue Only */}
-                            {user?.role === 'CEO' ? (
+                            {/* CEO/Manager Home: AI + Revenue Only */}
+                            {(user?.role === 'CEO' || user?.role === 'MANAGER') ? (
                                 <>
                                     {/* Revenue Spotlight */}
                                     <div className="premium-card p-6 md:p-8">
@@ -269,7 +291,7 @@ const MobileDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* Daily Sheet Access for CEO */}
+                                    {/* Daily Sheet Access for Management */}
                                     <div className="mb-6">
                                         <button
                                             onClick={() => navigate('/daily-sheet')}
@@ -288,6 +310,25 @@ const MobileDashboard = () => {
                                         </button>
                                     </div>
 
+                                    {/* Analytics Portal for Mobile Management */}
+                                    <div className="mb-6">
+                                        <button
+                                            onClick={() => navigate('/analytics')}
+                                            className="w-full premium-card p-6 flex items-center justify-between group hover:shadow-lg transition-all bg-gradient-to-br from-blue-500/10 to-transparent border-blue-100"
+                                        >
+                                            <div className="flex items-center gap-6">
+                                                <div className="w-16 h-16 bg-blue-600 rounded-[1.5rem] flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                                                    <FontAwesomeIcon icon={faChartLine} className="text-2xl" />
+                                                </div>
+                                                <div className="text-left">
+                                                    <h3 className="text-xl font-black text-gray-900 tracking-tight leading-none mb-1">Advanced Analytics</h3>
+                                                    <p className="premium-label text-blue-600">Insights & Matrix Data</p>
+                                                </div>
+                                            </div>
+                                            <FontAwesomeIcon icon={faChevronRight} className="text-blue-300 group-hover:translate-x-1 transition-transform" />
+                                        </button>
+                                    </div>
+
                                     {/* AI Business Intelligence - Full Focus */}
                                     <div className="mb-6">
                                         <AIBusinessIntelligence />
@@ -295,8 +336,17 @@ const MobileDashboard = () => {
                                 </>
                             ) : (
                                 <>
-                                    {/* Non-CEO Users: Keep Original Layout */}
+                                    {/* Staff Users: Keep Original Layout with Analytics */}
                                     {/* Metrics Grid */}
+                                    <div className="mb-4">
+                                        <button
+                                            onClick={() => navigate('/analytics')}
+                                            className="w-full bg-blue-600 text-white rounded-2xl py-4 font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20"
+                                        >
+                                            <FontAwesomeIcon icon={faChartLine} />
+                                            View Performance Analytics
+                                        </button>
+                                    </div>
                                     {user?.role !== 'TECHNICIAN' && user?.role !== 'DELIVERY' && (
                                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                             {[
