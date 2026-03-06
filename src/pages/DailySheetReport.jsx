@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faCalendar, faDownload, faPrint, faArrowUp, faArrowDown,
     faMoneyBillWave, faWallet, faChartLine, faReceipt, faSpinner,
-    faChevronLeft, faChevronRight, faCrown, faShieldAlt, faFingerprint,
-    faBolt, faHistory
+    faChevronLeft, faChevronRight
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { API_URL } from '../utils/api';
@@ -13,9 +12,8 @@ import { API_URL } from '../utils/api';
 const DailySheetReport = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const isCEO = user?.role === 'CEO';
 
+    // Get local YYYY-MM-DD date
     const getLocalDate = () => {
         const now = new Date();
         const offset = now.getTimezoneOffset();
@@ -50,34 +48,50 @@ const DailySheetReport = () => {
         setSelectedDate(date.toISOString().split('T')[0]);
     };
 
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const handleExport = () => {
+        // Simple CSV export
+        if (!data) return;
+
+        let csv = `Daily Sheet Report - ${selectedDate}\n\n`;
+        csv += `SUMMARY\n`;
+        csv += `Total Revenue,${formatCurrency(data.summary.totalRevenue)}\n`;
+        csv += `Total Expenses,${formatCurrency(data.summary.totalExpenses)}\n`;
+        csv += `Gross Profit,${formatCurrency(data.summary.grossProfit)}\n`;
+        csv += `Net Profit,${formatCurrency(data.summary.netProfit)}\n`;
+        csv += `Profit Margin,${data.summary.profitMargin}%\n\n`;
+
+        csv += `SALES TRANSACTIONS\n`;
+        csv += `Time,Product,Staff,Amount,Profit,Payment Method\n`;
+        data.sales.transactions.forEach(t => {
+            csv += `${new Date(t.time).toLocaleString()},${t.productName},${t.staffName},${t.amount},${t.profit},${t.paymentMethod}\n`;
+        });
+
+        csv += `\nEXPENSES\n`;
+        csv += `Time,Category,Description,Amount,Payment Method\n`;
+        data.expenses.transactions.forEach(e => {
+            csv += `${new Date(e.time).toLocaleString()},${e.category},${e.description},${e.amount},${e.paymentMethod}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `daily-sheet-${selectedDate}.csv`;
+        a.click();
+    };
+
     const formatCurrency = (amount) => {
-        if (!isCEO) return '••••••';
-        return new Intl.NumberFormat('sw-TZ', {
-            style: 'currency', currency: 'TZS', minimumFractionDigits: 0
-        }).format(amount || 0);
-    };
-
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: { y: 0, opacity: 1 }
+        return `Tsh ${Number(amount || 0).toLocaleString()}`;
     };
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
-                <div className="text-center">
-                    <motion.div
-                        animate={{ rotate: 360, scale: [1, 1.1, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="w-16 h-16 border-4 border-[#00ffa3] border-t-transparent rounded-2xl mx-auto mb-8 shadow-[0_0_20px_rgba(0,255,163,0.3)]"
-                    />
-                    <p className="text-[#00ffa3] font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Scanning Daily Assets...</p>
-                </div>
+            <div className="min-h-screen flex items-center justify-center">
+                <FontAwesomeIcon icon={faSpinner} spin className="text-5xl text-blue-600" />
             </div>
         );
     }
@@ -87,218 +101,281 @@ const DailySheetReport = () => {
     const isProfitable = data.summary.netProfit >= 0;
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pb-32 pt-12 selection:bg-[#00ffa3] selection:text-black print:bg-white print:text-black">
-            <div className="max-w-7xl mx-auto px-6">
-                {/* Elite Header */}
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-3 md:p-6 print:p-8 print:bg-white">
+            {/* Header - Hide on print */}
+            <div className="print:hidden mb-6 md:mb-8">
                 <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    variants={containerVariants}
-                    className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-16 print:hidden"
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
                 >
-                    <motion.div variants={itemVariants}>
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="px-3 py-1 bg-[#00ffa3]/10 text-[#00ffa3] rounded-full text-[9px] font-black uppercase tracking-widest border border-[#00ffa3]/20">Daily Operations</span>
-                            <FontAwesomeIcon icon={faShieldAlt} className="text-[#00ffa3] text-[10px]" />
-                        </div>
-                        <h1 className="text-5xl font-black text-white tracking-tighter leading-none mb-2">Daily Sheet Report</h1>
-                        <p className="text-white/30 font-black uppercase tracking-[0.3em] text-[10px]">Operational Ledger & Financial Transparency</p>
-                    </motion.div>
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">📊 Daily Sheet Report</h1>
+                        <p className="text-gray-600 text-sm md:text-base">Complete daily business summary</p>
+                    </div>
 
-                    <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-4 bg-[#111]/80 backdrop-blur-3xl p-3 rounded-[2.5rem] border border-white/5 shadow-2xl">
-                        <div className="flex items-center gap-4 p-2">
-                            <button
-                                onClick={() => changeDate(-1)}
-                                className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:text-[#00ffa3] transition-colors border border-white/5"
-                            >
-                                <FontAwesomeIcon icon={faChevronLeft} />
-                            </button>
-                            <div className="flex items-center gap-3 px-6 py-4 bg-white/5 rounded-2xl border border-white/5">
-                                <FontAwesomeIcon icon={faCalendar} className="text-[#00ffa3] text-xs" />
-                                <input
-                                    type="date"
-                                    value={selectedDate}
-                                    onChange={(e) => setSelectedDate(e.target.value)}
-                                    className="bg-transparent text-white text-[11px] font-black uppercase outline-none"
-                                />
-                            </div>
-                            <button
-                                onClick={() => changeDate(1)}
-                                className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:text-[#00ffa3] transition-colors border border-white/5"
-                            >
-                                <FontAwesomeIcon icon={faChevronRight} />
-                            </button>
-                        </div>
-                        <div className="flex items-center gap-2 pr-2">
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => window.print()}
-                                className="w-14 h-14 bg-white/5 text-white/40 rounded-2xl flex items-center justify-center hover:text-white transition-all border border-white/5"
-                            >
-                                <FontAwesomeIcon icon={faPrint} />
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setSelectedDate(getLocalDate())}
-                                className="bg-[#00ffa3] text-black px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-[#00ffa3]/20"
-                            >
-                                Today
-                            </motion.button>
-                        </div>
-                    </motion.div>
-                </motion.div>
-
-                {/* Print Header */}
-                <div className="hidden print:block text-black mb-12 text-center">
-                    <h1 className="text-3xl font-black uppercase tracking-tighter mb-2">SimuKitaa Daily Sheet</h1>
-                    <p className="text-lg font-bold">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    <div className="h-1 w-24 bg-black mx-auto mt-4"></div>
-                </div>
-
-                {/* Tactical Metrics Grid */}
-                <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    variants={containerVariants}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
-                >
-                    {[
-                        { label: 'Calculated Revenue', value: formatCurrency(data.summary.totalRevenue), sub: `${data.sales.count} Closed Signals`, icon: faMoneyBillWave, color: '#3b82f6' },
-                        { label: 'Operational Expenses', value: formatCurrency(data.summary.totalExpenses), sub: `${data.expenses.count} Outflow Nodes`, icon: faWallet, color: '#f43f5e' },
-                        { label: 'Net Yield', value: formatCurrency(data.summary.netProfit), sub: isProfitable ? 'Positive Growth' : 'Deficit Detected', icon: isProfitable ? faArrowUp : faArrowDown, color: isProfitable ? '#00ffa3' : '#f59e0b' },
-                        { label: 'Efficiency Margin', value: isCEO ? `${data.summary.profitMargin}%` : '••••••', sub: 'Performance Scale', icon: faChartLine, color: '#a855f7' }
-                    ].map((s, i) => (
-                        <motion.div
-                            key={i}
-                            variants={itemVariants}
-                            whileHover={{ y: -5 }}
-                            className="bg-[#111]/60 backdrop-blur-3xl p-8 rounded-[3rem] border border-white/5 relative group overflow-hidden shadow-2xl print:bg-white print:text-black print:border-black print:rounded-2xl"
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                            onClick={handlePrint}
+                            className="bg-purple-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl shadow-lg font-bold flex items-center justify-center gap-2"
                         >
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-white/10 transition-colors print:hidden"></div>
-                            <div className="flex items-center justify-between mb-8">
-                                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/5 border border-white/5 print:border-black" style={{ color: s.color }}>
-                                    <FontAwesomeIcon icon={s.icon} className="text-2xl" />
-                                </div>
-                                <FontAwesomeIcon icon={faFingerprint} className="text-white/5 text-xl print:hidden" />
-                            </div>
-                            <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-1 print:text-gray-500">{s.label}</p>
-                            <h3 className="text-3xl font-black text-white tracking-tighter leading-none mb-2 print:text-black">
-                                {s.value}
-                            </h3>
-                            <p className="text-[9px] font-black text-white/10 uppercase tracking-widest print:text-gray-400">{s.sub}</p>
-                        </motion.div>
-                    ))}
+                            <FontAwesomeIcon icon={faPrint} />
+                            <span className="text-sm md:text-base">Print</span>
+                        </button>
+                        <button
+                            onClick={handleExport}
+                            className="bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl shadow-lg font-bold flex items-center justify-center gap-2"
+                        >
+                            <FontAwesomeIcon icon={faDownload} />
+                            <span className="text-sm md:text-base">Export CSV</span>
+                        </button>
+                    </div>
                 </motion.div>
 
-                {/* Categorical Pulse Matrix */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="bg-[#111]/40 backdrop-blur-2xl p-10 rounded-[3.5rem] border border-white/5 shadow-2xl print:bg-white print:border-black print:rounded-2xl"
-                    >
-                        <h2 className="text-xl font-black text-white mb-8 tracking-tighter uppercase print:text-black">Sales Spectrum</h2>
-                        <div className="space-y-4">
-                            {data.sales.byCategory.map((item, index) => (
-                                <div key={index} className="flex items-center justify-between p-6 bg-white/2 rounded-[2rem] border border-white/5 group hover:bg-white/5 transition-all print:border-gray-200">
-                                    <span className="font-black text-white/40 uppercase tracking-widest text-[10px] print:text-black">{item.category}</span>
-                                    <span className="font-black text-[#00ffa3] text-lg tracking-tighter print:text-black">{formatCurrency(item.total)}</span>
-                                </div>
-                            ))}
-                            {data.sales.byCategory.length === 0 && (
-                                <p className="text-white/20 text-center py-12 uppercase font-black text-[10px] tracking-[0.3em]">No Pulse Detected</p>
-                            )}
-                        </div>
-                    </motion.div>
+                {/* Date Picker */}
+                <div className="mt-4 md:mt-6 bg-white rounded-2xl p-4 md:p-6 shadow-lg">
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <button
+                            onClick={() => changeDate(-1)}
+                            className="w-10 h-10 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center"
+                        >
+                            <FontAwesomeIcon icon={faChevronLeft} />
+                        </button>
 
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="bg-[#111]/40 backdrop-blur-2xl p-10 rounded-[3.5rem] border border-white/5 shadow-2xl print:bg-white print:border-black print:rounded-2xl"
-                    >
-                        <h2 className="text-xl font-black text-white mb-8 tracking-tighter uppercase print:text-black">Expense Outflow</h2>
-                        <div className="space-y-4">
-                            {data.expenses.byCategory.map((item, index) => (
-                                <div key={index} className="flex items-center justify-between p-6 bg-white/2 rounded-[2rem] border border-white/5 group hover:bg-white/5 transition-all print:border-gray-200">
-                                    <span className="font-black text-white/40 uppercase tracking-widest text-[10px] print:text-black">{item.category}</span>
-                                    <span className="font-black text-[#f43f5e] text-lg tracking-tighter print:text-black">{formatCurrency(item.total)}</span>
-                                </div>
-                            ))}
-                            {data.expenses.byCategory.length === 0 && (
-                                <p className="text-white/20 text-center py-12 uppercase font-black text-[10px] tracking-[0.3em]">No Outflow Nodes</p>
-                            )}
+                        <div className="flex-1 relative">
+                            <FontAwesomeIcon icon={faCalendar} className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="w-full pl-10 md:pl-12 pr-3 md:pr-4 py-2 md:py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none text-sm md:text-base"
+                            />
                         </div>
-                    </motion.div>
+
+                        <button
+                            onClick={() => changeDate(1)}
+                            className="w-10 h-10 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center"
+                        >
+                            <FontAwesomeIcon icon={faChevronRight} />
+                        </button>
+
+                        <button
+                            onClick={() => setSelectedDate(getLocalDate())}
+                            className="px-3 md:px-4 py-2 md:py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors text-sm md:text-base whitespace-nowrap"
+                        >
+                            Today
+                        </button>
+                    </div>
                 </div>
+            </div>
 
-                {/* Comprehensive Operational Ledger */}
+            {/* Print Header */}
+            <div className="hidden print:block mb-8">
+                <h1 className="text-4xl font-black text-center mb-2">Daily Sheet Report</h1>
+                <p className="text-center text-lg text-gray-600">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
                 <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#111]/80 backdrop-blur-3xl rounded-[4.5rem] p-12 lg:p-16 border border-white/5 shadow-2xl relative overflow-hidden print:bg-white print:border-black print:rounded-2xl"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl md:rounded-3xl p-4 md:p-6 text-white shadow-xl print:shadow-none"
                 >
-                    <div className="flex items-center gap-4 mb-12 relative z-10">
-                        <div className="w-14 h-14 bg-[#00ffa3]/10 text-[#00ffa3] rounded-2xl flex items-center justify-center border border-[#00ffa3]/20 print:border-black print:text-black">
-                            <FontAwesomeIcon icon={faReceipt} className="text-2xl" />
-                        </div>
-                        <div>
-                            <h2 className="text-3xl font-black text-white tracking-tighter leading-none print:text-black uppercase">Transactional Ledger</h2>
-                            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] print:text-gray-400">Integrated Sequence Verification</p>
-                        </div>
-                        <span className="ml-auto bg-[#00ffa3]/10 text-[#00ffa3] px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-[#00ffa3]/20 print:hidden">
-                            {data.sales.transactions.length} LOGS
-                        </span>
+                    <div className="flex items-center gap-2 md:gap-3 mb-2">
+                        <FontAwesomeIcon icon={faMoneyBillWave} className="text-lg md:text-2xl" />
+                        <div className="text-xs md:text-sm font-medium opacity-90">Revenue</div>
                     </div>
+                    <div className="text-xl md:text-3xl font-black break-words">{formatCurrency(data.summary.totalRevenue)}</div>
+                    <div className="text-[10px] md:text-xs opacity-75 mt-1 md:mt-2">{data.sales.count} sales</div>
+                </motion.div>
 
-                    <div className="overflow-x-auto no-scrollbar relative z-10">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-white/5 print:border-black">
-                                    <th className="py-8 px-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em] print:text-black">Sequence</th>
-                                    <th className="py-8 px-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em] print:text-black">Asset Node</th>
-                                    <th className="py-8 px-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em] print:text-black">Personnel</th>
-                                    <th className="py-8 px-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em] text-right print:text-black">Magnitude</th>
-                                    <th className="py-8 px-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em] text-right print:text-black">Net Yield</th>
-                                    <th className="py-8 px-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em] print:text-black">Protocol</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/2 print:divide-gray-200">
-                                {data.sales.transactions.map((t, index) => (
-                                    <tr key={index} className="hover:bg-white/2 transition-colors group print:text-black">
-                                        <td className="py-8 px-4 text-white/40 text-[11px] font-black uppercase print:text-black">
-                                            {new Date(t.time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                                        </td>
-                                        <td className="py-8 px-4 font-black text-white tracking-tight uppercase text-xs print:text-black">{t.productName}</td>
-                                        <td className="py-8 px-4 text-xs font-black text-[#3b82f6] uppercase tracking-widest print:text-black">{t.staffName}</td>
-                                        <td className="py-8 px-4 text-right font-black text-white text-sm tracking-tighter print:text-black">{formatCurrency(t.amount)}</td>
-                                        <td className="py-8 px-4 text-right font-black text-[#00ffa3] text-sm tracking-tighter print:text-black">{formatCurrency(t.profit)}</td>
-                                        <td className="py-8 px-4">
-                                            <span className="px-4 py-2 bg-white/5 border border-white/5 rounded-xl text-[9px] font-black text-white/30 uppercase tracking-[0.2em] print:border-gray-200 print:text-black">
-                                                {t.paymentMethod}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {data.sales.transactions.length === 0 && (
-                                    <tr>
-                                        <td colSpan="6" className="py-32 text-center opacity-10">
-                                            <FontAwesomeIcon icon={faFingerprint} className="text-7xl mb-6" />
-                                            <p className="text-[10px] font-black uppercase tracking-[0.4em]">Integrated Logs Restricted</p>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl md:rounded-3xl p-4 md:p-6 text-white shadow-xl print:shadow-none"
+                >
+                    <div className="flex items-center gap-2 md:gap-3 mb-2">
+                        <FontAwesomeIcon icon={faWallet} className="text-lg md:text-2xl" />
+                        <div className="text-xs md:text-sm font-medium opacity-90">Expenses</div>
                     </div>
+                    <div className="text-xl md:text-3xl font-black break-words">{formatCurrency(data.summary.totalExpenses)}</div>
+                    <div className="text-[10px] md:text-xs opacity-75 mt-1 md:mt-2">{data.expenses.count} expenses</div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className={`bg-gradient-to-br ${isProfitable ? 'from-green-500 to-green-600' : 'from-orange-500 to-orange-600'} rounded-2xl md:rounded-3xl p-4 md:p-6 text-white shadow-xl print:shadow-none`}
+                >
+                    <div className="flex items-center gap-2 md:gap-3 mb-2">
+                        <FontAwesomeIcon icon={isProfitable ? faArrowUp : faArrowDown} className="text-lg md:text-2xl" />
+                        <div className="text-xs md:text-sm font-medium opacity-90">Net Profit</div>
+                    </div>
+                    <div className="text-xl md:text-3xl font-black break-words">{formatCurrency(data.summary.netProfit)}</div>
+                    <div className="text-[10px] md:text-xs opacity-75 mt-1 md:mt-2">{isProfitable ? 'Profitable' : 'Loss'}</div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl md:rounded-3xl p-4 md:p-6 text-white shadow-xl print:shadow-none"
+                >
+                    <div className="flex items-center gap-2 md:gap-3 mb-2">
+                        <FontAwesomeIcon icon={faChartLine} className="text-lg md:text-2xl" />
+                        <div className="text-xs md:text-sm font-medium opacity-90">Margin</div>
+                    </div>
+                    <div className="text-xl md:text-3xl font-black">{data.summary.profitMargin}%</div>
+                    <div className="text-[10px] md:text-xs opacity-75 mt-1 md:mt-2">Profit margin</div>
                 </motion.div>
             </div>
 
+            {/* Sales & Expenses Breakdown */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+                {/* Sales by Category */}
+                <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-xl print:break-inside-avoid">
+                    <h2 className="text-lg md:text-xl font-black text-gray-900 mb-3 md:mb-4">Sales by Category</h2>
+                    <div className="space-y-2 md:space-y-3">
+                        {data.sales.byCategory.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 md:p-3 bg-gray-50 rounded-xl">
+                                <span className="font-bold text-gray-700 text-sm md:text-base">{item.category}</span>
+                                <span className="font-black text-gray-900 text-sm md:text-base">{formatCurrency(item.total)}</span>
+                            </div>
+                        ))}
+                        {data.sales.byCategory.length === 0 && (
+                            <p className="text-gray-500 text-center py-4 text-sm md:text-base">No sales today</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Expenses by Category */}
+                <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-xl print:break-inside-avoid">
+                    <h2 className="text-lg md:text-xl font-black text-gray-900 mb-3 md:mb-4">Expenses by Category</h2>
+                    <div className="space-y-2 md:space-y-3">
+                        {data.expenses.byCategory.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 md:p-3 bg-gray-50 rounded-xl">
+                                <span className="font-bold text-gray-700 text-sm md:text-base">{item.category}</span>
+                                <span className="font-black text-red-600 text-sm md:text-base">{formatCurrency(item.total)}</span>
+                            </div>
+                        ))}
+                        {data.expenses.byCategory.length === 0 && (
+                            <p className="text-gray-500 text-center py-4 text-sm md:text-base">No expenses today</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Sales Transactions */}
+            <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-xl mb-6 md:mb-8 print:break-inside-avoid">
+                <div className="flex items-center gap-3 mb-3 md:mb-4">
+                    <FontAwesomeIcon icon={faReceipt} className="text-xl md:text-2xl text-blue-600" />
+                    <h2 className="text-lg md:text-xl font-black text-gray-900">Sales Transactions</h2>
+                    <span className="ml-auto bg-blue-100 text-blue-600 px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-bold">
+                        {data.sales.transactions.length} sales
+                    </span>
+                </div>
+
+                <div className="overflow-x-auto -mx-4 md:mx-0">
+                    <table className="w-full min-w-[600px]">
+                        <thead>
+                            <tr className="border-b-2 border-gray-200">
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Time</th>
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Product</th>
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Staff</th>
+                                <th className="text-right p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Amount</th>
+                                <th className="text-right p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Profit</th>
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Payment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.sales.transactions.map((t, index) => (
+                                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                                    <td className="p-2 md:p-3 text-gray-600 text-xs md:text-sm">
+                                        {new Date(t.time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                    </td>
+                                    <td className="p-2 md:p-3 font-bold text-gray-800 text-xs md:text-sm truncate max-w-[150px]">{t.productName}</td>
+                                    <td className="p-2 md:p-3 text-gray-700 text-xs md:text-sm">{t.staffName}</td>
+                                    <td className="p-2 md:p-3 text-right font-black text-gray-900 text-xs md:text-sm">{formatCurrency(t.amount)}</td>
+                                    <td className="p-2 md:p-3 text-right font-bold text-green-600 text-xs md:text-sm">{formatCurrency(t.profit)}</td>
+                                    <td className="p-2 md:p-3 text-xs md:text-sm">
+                                        <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-lg text-[10px] md:text-xs font-medium">
+                                            {t.paymentMethod}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                            {data.sales.transactions.length === 0 && (
+                                <tr>
+                                    <td colSpan="6" className="text-center p-6 md:p-8 text-gray-500 text-sm md:text-base">No sales transactions today</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Expenses Transactions */}
+            <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-xl print:break-inside-avoid">
+                <div className="flex items-center gap-3 mb-3 md:mb-4">
+                    <FontAwesomeIcon icon={faWallet} className="text-xl md:text-2xl text-red-600" />
+                    <h2 className="text-lg md:text-xl font-black text-gray-900">Expense Transactions</h2>
+                    <span className="ml-auto bg-red-100 text-red-600 px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-bold">
+                        {data.expenses.transactions.length} expenses
+                    </span>
+                </div>
+
+                <div className="overflow-x-auto -mx-4 md:mx-0">
+                    <table className="w-full min-w-[600px]">
+                        <thead>
+                            <tr className="border-b-2 border-gray-200">
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Time</th>
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Category</th>
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Description</th>
+                                <th className="text-right p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Amount</th>
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Payment</th>
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Recorded By</th>
+                                <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Recorded At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.expenses.transactions.map((e, index) => (
+                                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                                    <td className="p-2 md:p-3 text-gray-600 text-xs md:text-sm">
+                                        {new Date(e.time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                    </td>
+                                    <td className="p-2 md:p-3 font-bold text-gray-800 text-xs md:text-sm">{e.category}</td>
+                                    <td className="p-2 md:p-3 text-gray-700 text-xs md:text-sm truncate max-w-[200px]">{e.description}</td>
+                                    <td className="p-2 md:p-3 text-right font-black text-red-600 text-xs md:text-sm">{formatCurrency(e.amount)}</td>
+                                    <td className="p-2 md:p-3 text-xs md:text-sm">
+                                        <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] md:text-xs font-medium">
+                                            {e.paymentMethod}
+                                        </span>
+                                    </td>
+                                    <td className="p-2 md:p-3 text-gray-700 font-medium text-xs md:text-sm">
+                                        {e.recordedBy}
+                                    </td>
+                                    <td className="p-2 md:p-3 text-gray-500 text-xs md:text-sm">
+                                        {new Date(e.recordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </td>
+                                </tr>
+                            ))}
+                            {data.expenses.transactions.length === 0 && (
+                                <tr>
+                                    <td colSpan="5" className="text-center p-6 md:p-8 text-gray-500 text-sm md:text-base">No expense transactions today</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             {/* Print Footer */}
-            <div className="hidden print:block mt-12 pt-8 border-t border-gray-200 text-center text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
-                <p>Authentication Sig: {user?.name} | {new Date().toLocaleString()}</p>
-                <p className="mt-2 text-gray-200 tracking-[0.5em]">SimuKitaa Elite Business Matrix</p>
+            <div className="hidden print:block mt-8 pt-6 border-t-2 border-gray-200 text-center text-gray-600">
+                <p>Generated on {new Date().toLocaleString()}</p>
+                <p className="text-sm mt-2">SimuKitaa Business Management System</p>
             </div>
         </div>
     );

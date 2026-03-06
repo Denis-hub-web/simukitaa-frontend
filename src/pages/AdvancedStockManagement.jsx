@@ -174,7 +174,6 @@ const AdvancedStockManagement = () => {
     };
 
     const formatCurrency = (amount) => {
-        if (!isCEO) return '••••••';
         return new Intl.NumberFormat('sw-TZ', {
             style: 'currency',
             currency: 'TZS',
@@ -403,7 +402,7 @@ const AdvancedStockManagement = () => {
                                     <td className="px-6 py-6 text-right">
                                         <p className="font-black text-gray-900 tracking-tight">{formatCurrency(product.sellingPrice)}</p>
                                     </td>
-                                    {showBuyingPrice && isCEO && (
+                                    {showBuyingPrice && (
                                         <td className="px-6 py-6 text-right">
                                             <p className="text-[10px] font-black text-[#008069] uppercase tracking-tighter">
                                                 Margin: +{formatCurrency(product.sellingPrice - product.costPrice)}
@@ -468,7 +467,7 @@ const AdvancedStockManagement = () => {
                                 </div>
                             </div>
 
-                            {showBuyingPrice && isCEO && (
+                            {showBuyingPrice && (
                                 <div className="bg-[#008069]/5 rounded-2xl p-4 border border-[#008069]/10 mb-4 flex justify-between items-center">
                                     <span className="text-[10px] font-black text-[#00a884] uppercase tracking-widest">Potential Unit Profit</span>
                                     <span className="font-black text-[#008069]">{formatCurrency(product.sellingPrice - product.costPrice)}</span>

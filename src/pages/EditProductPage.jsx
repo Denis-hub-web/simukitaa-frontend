@@ -252,7 +252,7 @@ const EditProductPage = () => {
                                         <option value="Accessories">Accessories</option>
                                     </select>
                                 </div>
-                                {user.role === 'CEO' && formData.trackSerials && (
+                                {(user.role === 'CEO' || user.role === 'MANAGER') && formData.trackSerials && (
                                     <div className="md:col-span-2">
                                         <label className="block text-sm font-bold text-gray-700 mb-2">Default Buying Price (TZS)</label>
                                         <input
@@ -305,7 +305,7 @@ const EditProductPage = () => {
                         )}
 
                         {/* Pricing Information - Only for non-tracked products */}
-                        {user.role === 'CEO' && !formData.trackSerials && (
+                        {(user.role === 'CEO' || user.role === 'MANAGER') && !formData.trackSerials && (
                             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-100">
                                 <h3 className="text-lg font-black text-gray-900 mb-4">Pricing Information</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -338,7 +338,7 @@ const EditProductPage = () => {
                             </div>
                         )}
                         {/* Variant Pricing Matrix */}
-                        {user.role === 'CEO' && formData.trackSerials && formData.variantPricing.length > 0 && (
+                        {(user.role === 'CEO' || user.role === 'MANAGER') && formData.trackSerials && formData.variantPricing.length > 0 && (
                             <div className="bg-white rounded-3xl p-8 border-2 border-indigo-100 shadow-sm mt-6">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

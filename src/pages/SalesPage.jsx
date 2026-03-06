@@ -6,10 +6,11 @@ import {
     faCalendarAlt, faChevronRight, faPrint, faEllipsisV, faChartPie,
     faCashRegister, faExchangeAlt, faBox, faClock, faUserTie, faArrowUp,
     faDollarSign, faPercent, faShoppingCart, faFileInvoiceDollar, faRedo,
-    faArrowLeft, faSpinner, faShieldAlt, faFingerprint, faBolt, faCrown
+    faArrowLeft, faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+
 import { API_URL as API_BASE_URL } from '../utils/api';
 
 const SalesPage = () => {
@@ -17,12 +18,10 @@ const SalesPage = () => {
     const [loading, setLoading] = useState(true);
     const [sales, setSales] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [filterStatus, setFilterStatus] = useState('all');
     const [filterMethod, setFilterMethod] = useState('all');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const isCEO = user?.role === 'CEO';
 
     useEffect(() => {
         fetchSales();
@@ -44,10 +43,11 @@ const SalesPage = () => {
     };
 
     const formatCurrency = (amount) => {
-        if (!isCEO) return '••••••';
-        return new Intl.NumberFormat('sw-TZ', {
-            style: 'currency', currency: 'TZS', minimumFractionDigits: 0
-        }).format(amount || 0);
+        return new Intl.NumberFormat('en-TZ', {
+            style: 'currency',
+            currency: 'TZS',
+            maximumFractionDigits: 0
+        }).format(amount).replace('TSh', '').trim();
     };
 
     const formatDate = (dateString) => {
@@ -55,6 +55,7 @@ const SalesPage = () => {
         return {
             date: date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
             time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            raw: date.toISOString().split('T')[0],
             month: date.toLocaleString('default', { month: 'short' }),
             day: date.getDate()
         };
@@ -65,10 +66,14 @@ const SalesPage = () => {
             (sale.customer?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (sale.product?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (sale.staffName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (sale.serialNumber || '').toLowerCase().includes(searchQuery.toLowerCase());
+            (sale.serialNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (sale.storage || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (sale.color || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (sale.id || '').toLowerCase().includes(searchQuery.toLowerCase());
 
         const matchesMethod = filterMethod === 'all' || sale.paymentMethod === filterMethod;
 
+        // Date Range Logic
         let matchesDate = true;
         const saleDateObj = new Date(sale.saleDate);
         saleDateObj.setHours(0, 0, 0, 0);
@@ -88,29 +93,18 @@ const SalesPage = () => {
         return matchesSearch && matchesMethod && matchesDate;
     }).sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
 
-    const totalRevenue = filteredSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
-    const totalProfit = filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0);
-
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: { y: 0, opacity: 1 }
-    };
+    // Calculate Dashboard Stats
+    const totalRevenue = sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+    const totalProfit = sales.reduce((sum, s) => sum + (s.profit || 0), 0);
+    const tradeInCount = sales.filter(s => s.tradeInId).length;
+    const itemsSold = sales.length;
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
-                    <motion.div
-                        animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="w-16 h-16 border-4 border-[#00ffa3] border-t-transparent rounded-2xl mx-auto mb-8 shadow-[0_0_20px_rgba(0,255,163,0.3)]"
-                    />
-                    <p className="text-[#00ffa3] font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Decrypting Sales Matrix...</p>
+                    <FontAwesomeIcon icon={faSpinner} className="text-5xl text-blue-600 animate-spin mb-3" />
+                    <p className="text-gray-600 font-semibold">Loading sales...</p>
                 </div>
             </div>
         );
@@ -119,194 +113,318 @@ const SalesPage = () => {
     const paymentMethods = Array.from(new Set(sales.map(s => s.paymentMethod).filter(Boolean))).sort();
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pb-32 pt-12 selection:bg-[#00ffa3] selection:text-black">
-            <div className="max-w-[95%] mx-auto px-6">
-                {/* Elite Header */}
-                <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    variants={containerVariants}
-                    className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-16"
-                >
-                    <motion.div variants={itemVariants}>
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="px-3 py-1 bg-[#00ffa3]/10 text-[#00ffa3] rounded-full text-[9px] font-black uppercase tracking-widest border border-[#00ffa3]/20">Archive Terminal</span>
-                            <FontAwesomeIcon icon={faShieldAlt} className="text-[#00ffa3] text-[10px]" />
+        <div className="min-h-screen bg-gray-50" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+            {/* Modern Header */}
+            <div className="bg-white border-b border-gray-200">
+                <div className="max-w-[95%] mx-auto px-6 py-5">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors mobile-only"
+                            >
+                                <FontAwesomeIcon icon={faArrowLeft} className="text-gray-700 text-sm" />
+                            </button>
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Sales History</h1>
+                                <p className="text-sm text-gray-500 font-medium mt-0.5">{filteredSales.length} transactions • {itemsSold} total sales</p>
+                            </div>
                         </div>
-                        <h1 className="text-5xl font-black text-white tracking-tighter leading-none mb-2">Sales History</h1>
-                        <p className="text-white/30 font-black uppercase tracking-[0.3em] text-[10px]">{filteredSales.length} Transactions Found in Buffer</p>
-                    </motion.div>
-
-                    <div className="flex items-center gap-8">
-                        <div className="text-right">
-                            <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mb-1">Aggregate Revenue</p>
-                            <p className="text-3xl font-black text-white tracking-tighter">{formatCurrency(totalRevenue)}</p>
-                        </div>
-                        <div className="w-px h-12 bg-white/5" />
-                        <div className="text-right">
-                            <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mb-1">Operational Yield</p>
-                            <p className="text-3xl font-black text-[#00ffa3] tracking-tighter">{formatCurrency(totalProfit)}</p>
+                        <div className="flex items-center gap-6">
+                            <div className="text-right">
+                                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Revenue</p>
+                                <p className="text-xl font-bold text-gray-900">{formatCurrency(totalRevenue)} <span className="text-sm text-gray-500 font-normal">TSh</span></p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Net Profit</p>
+                                <p className="text-xl font-bold text-emerald-600">{formatCurrency(totalProfit)} <span className="text-sm text-gray-500 font-normal">TSh</span></p>
+                            </div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
+            </div>
 
-                {/* Filters Toolbar */}
-                <motion.div
-                    variants={itemVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="flex flex-wrap items-center gap-4 bg-[#111]/80 backdrop-blur-3xl p-4 rounded-[2.5rem] border border-white/5 shadow-2xl mb-12"
-                >
-                    <div className="flex-1 relative group min-w-[300px]">
-                        <FontAwesomeIcon icon={faSearch} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00ffa3] transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="SEARCH BY PRODUCT, SERIAL, CUSTOMER..."
-                            className="w-full pl-14 pr-6 py-4 bg-white/5 rounded-2xl border border-white/5 text-[11px] font-black uppercase tracking-widest focus:border-[#00ffa3]/40 outline-none transition-all"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-4 px-6 py-2 bg-white/5 rounded-2xl border border-white/5">
-                        <div className="flex items-center gap-3">
-                            <span className="text-[9px] font-black text-white/20 uppercase tracking-tighter">TEMPORAL</span>
+            {/* Filters Toolbar */}
+            <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
+                <div className="max-w-[95%] mx-auto px-6 py-4">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex-1 relative group min-w-[300px]">
+                            <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                             <input
-                                type="date"
-                                className="bg-transparent text-white text-[11px] font-black uppercase outline-none"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                            />
-                            <span className="text-white/10 mx-2 text-[10px]">→</span>
-                            <input
-                                type="date"
-                                className="bg-transparent text-white text-[11px] font-black uppercase outline-none"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
+                                type="text"
+                                placeholder="Search by ID, product, customer, serial..."
+                                className="w-full pl-12 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 px-6 py-4 bg-white/5 rounded-2xl border border-white/5">
-                        <FontAwesomeIcon icon={faFilter} className="text-[#00ffa3] text-xs" />
-                        <select
-                            value={filterMethod}
-                            onChange={(e) => setFilterMethod(e.target.value)}
-                            className="bg-transparent text-white text-[11px] font-black uppercase outline-none cursor-pointer"
+                        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-blue-500 uppercase tracking-tighter">From</span>
+                                <input
+                                    type="date"
+                                    className="bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 cursor-pointer outline-none p-0"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                            </div>
+                            <div className="w-px h-4 bg-gray-200" />
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-purple-500 uppercase tracking-tighter">To</span>
+                                <input
+                                    type="date"
+                                    className="bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 cursor-pointer outline-none p-0"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <FontAwesomeIcon icon={faFilter} className="text-purple-500" />
+                            <select
+                                value={filterMethod}
+                                onChange={(e) => setFilterMethod(e.target.value)}
+                                className="bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 cursor-pointer outline-none"
+                            >
+                                <option value="all">💳 All Methods</option>
+                                {paymentMethods.map(method => (
+                                    <option key={method} value={method}>
+                                        💳 {method.replace(/_/g, ' ')}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setStartDate('');
+                                setEndDate('');
+                                setFilterMethod('all');
+                                setSearchQuery('');
+                                fetchSales();
+                            }}
+                            className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-blue-500 transition-all"
                         >
-                            <option value="all" className="bg-[#111]">PROTOCOL: ALL</option>
-                            {paymentMethods.map(method => (
-                                <option key={method} value={method} className="bg-[#111]">
-                                    {method.replace(/_/g, ' ')}
-                                </option>
-                            ))}
-                        </select>
+                            <FontAwesomeIcon icon={faRedo} className={`${loading ? 'animate-spin' : ''} text-sm`} />
+                        </button>
                     </div>
+                </div>
+            </div>
 
-                    <motion.button
-                        whileHover={{ rotate: 180 }}
-                        onClick={() => {
-                            setStartDate('');
-                            setEndDate('');
-                            setFilterMethod('all');
-                            setSearchQuery('');
-                            fetchSales();
-                        }}
-                        className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-white/20 hover:text-[#00ffa3] border border-white/5 transition-all"
-                    >
-                        <FontAwesomeIcon icon={faRedo} className="text-sm" />
-                    </motion.button>
-                </motion.div>
+            {/* Payment Summary - Moved to Top */}
+            {filteredSales.length > 0 && (
+                <div className="max-w-[95%] mx-auto px-6 py-4">
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1 mb-4">Payment Summary</h3>
 
-                {/* Main Data Terminal */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#111]/40 backdrop-blur-3xl rounded-[4.5rem] p-12 lg:p-16 border border-white/5 shadow-2xl relative overflow-hidden"
-                >
-                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#00ffa3]/20 to-transparent"></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {(() => {
+                            // Calculate totals by payment method
+                            const methodTotals = {};
+                            filteredSales.forEach(sale => {
+                                const method = sale.paymentMethod || 'UNKNOWN';
+                                if (!methodTotals[method]) {
+                                    methodTotals[method] = { revenue: 0, profit: 0, count: 0 };
+                                }
+                                methodTotals[method].revenue += sale.totalAmount || 0;
+                                methodTotals[method].profit += sale.profit || 0;
+                                methodTotals[method].count += 1;
+                            });
 
-                    <div className="overflow-x-auto no-scrollbar relative z-10">
-                        <table className="w-full text-left border-collapse">
+                            const methodColors = {
+                                'CASH': { bg: 'bg-green-50', text: 'text-green-700', icon: '💵' },
+                                'TIGOPESA': { bg: 'bg-blue-50', text: 'text-blue-700', icon: '🔵' },
+                                'M_PESA': { bg: 'bg-red-50', text: 'text-red-700', icon: '🔴' },
+                                'AIRTEL_MONEY': { bg: 'bg-orange-50', text: 'text-orange-700', icon: '🟠' },
+                                'BANK': { bg: 'bg-purple-50', text: 'text-purple-700', icon: '🏦' },
+                                'UNKNOWN': { bg: 'bg-gray-50', text: 'text-gray-700', icon: '❓' }
+                            };
+
+                            return Object.entries(methodTotals).map(([method, totals]) => {
+                                const colors = methodColors[method] || methodColors['UNKNOWN'];
+                                return (
+                                    <div key={method} className={`${colors.bg} rounded-xl p-5 border border-gray-100 shadow-sm`}>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-lg">{colors.icon}</span>
+                                            <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                                {method.replace(/_/g, ' ')}
+                                            </p>
+                                        </div>
+                                        <p className={`text-2xl font-black ${colors.text}`}>
+                                            {formatCurrency(totals.revenue)} <span className="text-xs text-gray-500 font-normal">TSh</span>
+                                        </p>
+                                        <div className="flex items-center justify-between mt-2 text-xs">
+                                            <span className="text-gray-500 font-medium">{totals.count} transactions</span>
+                                            <span className="text-emerald-600 font-bold">+{formatCurrency(totals.profit)}</span>
+                                        </div>
+                                    </div>
+                                );
+                            });
+                        })()}
+
+                        {/* Grand Total Card */}
+                        <div className="bg-gray-900 rounded-xl p-5 text-white shadow-xl">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-lg">💰</span>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Grand Total</p>
+                            </div>
+                            <p className="text-2xl font-black">
+                                {formatCurrency(filteredSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0))}
+                                <span className="text-xs text-gray-500 font-normal ml-1">TSh</span>
+                            </p>
+                            <div className="flex items-center justify-between mt-2 text-xs">
+                                <span className="text-gray-400 font-medium">{filteredSales.length} sales</span>
+                                <span className="text-emerald-400 font-bold">
+                                    +{formatCurrency(filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0))}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Clean Table Container */}
+            <div className="max-w-[95%] mx-auto px-6 py-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            {/* Minimal Header */}
                             <thead>
-                                <tr className="border-b border-white/5">
-                                    <th className="py-8 px-4 text-[11px] font-black text-white/20 uppercase tracking-[0.3em]">Temporal Node</th>
-                                    <th className="py-8 px-4 text-[11px] font-black text-white/20 uppercase tracking-[0.3em]">Operational Unit</th>
-                                    <th className="py-8 px-4 text-[11px] font-black text-white/20 uppercase tracking-[0.3em]">Identifier</th>
-                                    <th className="py-8 px-4 text-[11px] font-black text-white/20 uppercase tracking-[0.3em]">Personnel</th>
-                                    <th className="py-8 px-4 text-[11px] font-black text-white/20 uppercase tracking-[0.3em] text-center">Protocol</th>
-                                    <th className="py-8 px-4 text-[11px] font-black text-white/20 uppercase tracking-[0.3em] text-right">Magnitude</th>
-                                    <th className="py-8 px-4 text-[11px] font-black text-white/20 uppercase tracking-[0.3em] text-right text-[#00ffa3]">Yield</th>
+                                <tr className="bg-gray-50 border-b border-gray-200">
+                                    <th className="px-5 py-3 text-left">
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</span>
+                                    </th>
+                                    <th className="px-5 py-3 text-left">
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Product</span>
+                                    </th>
+                                    <th className="px-5 py-3 text-left">
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Serial</span>
+                                    </th>
+                                    <th className="px-5 py-3 text-left">
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</span>
+                                    </th>
+                                    <th className="px-5 py-3 text-left">
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Staff</span>
+                                    </th>
+                                    <th className="px-5 py-3 text-center">
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Payment</span>
+                                    </th>
+                                    <th className="px-5 py-3 text-right">
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount (TSh)</span>
+                                    </th>
+                                    <th className="px-5 py-3 text-right">
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Profit</span>
+                                    </th>
                                 </tr>
                             </thead>
 
-                            <tbody className="divide-y divide-white/2">
+                            {/* Zebra Rows */}
+                            <tbody className="divide-y divide-gray-100">
                                 {filteredSales.map((sale, index) => {
+                                    const isEven = index % 2 === 0;
                                     const { month, day, time } = formatDate(sale.saleDate);
                                     const isTradeIn = !!sale.tradeInId;
 
                                     return (
                                         <tr
                                             key={sale.id}
-                                            className="hover:bg-white/2 transition-all group"
+                                            className={`
+                                                ${isEven ? 'bg-white' : 'bg-gray-50/50'}
+                                                ${isTradeIn ? 'bg-orange-50/20' : ''}
+                                                hover:bg-blue-50/30 transition-colors
+                                            `}
                                         >
-                                            <td className="py-10 px-4">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-xl bg-white/5 flex flex-col items-center justify-center text-center border border-white/5 shadow-2xl">
-                                                        <span className="text-[8px] text-[#00ffa3] font-black uppercase tracking-widest">{month}</span>
-                                                        <span className="text-lg font-black text-white leading-none">{day}</span>
+                                            {/* Date */}
+                                            <td className="px-5 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 rounded-xl bg-gray-50 flex flex-col items-center justify-center text-center border border-gray-100">
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase">{month}</span>
+                                                        <span className="text-lg font-black text-gray-900 leading-none">{day}</span>
                                                     </div>
-                                                    <div className="text-[10px] font-black text-white/20 uppercase tracking-widest">{time}</div>
+                                                    <div>
+                                                        <div className="text-xs font-bold text-gray-500">
+                                                            {time}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </td>
 
-                                            <td className="py-10 px-4">
-                                                <div className="font-black text-sm text-white tracking-tight uppercase group-hover:text-[#00ffa3] transition-colors">{sale.product?.name || 'Unknown Asset'}</div>
-                                                <div className="flex flex-wrap gap-2 mt-2">
+                                            {/* Product */}
+                                            <td className="px-5 py-3">
+                                                <div className="font-semibold text-sm text-gray-900">{sale.product?.name || 'Unknown'}</div>
+                                                <div className="flex flex-wrap gap-1 mt-1">
                                                     {sale.storage && (
-                                                        <span className="px-3 py-1 bg-white/5 text-white/40 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white/5">
+                                                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">
                                                             {sale.storage}
                                                         </span>
                                                     )}
                                                     {sale.color && (
-                                                        <span className="px-3 py-1 bg-white/5 text-white/40 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white/5">
+                                                        <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded text-[10px] font-bold border border-purple-100">
                                                             {sale.color}
                                                         </span>
                                                     )}
+                                                    {sale.simType && (
+                                                        <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[10px] font-bold border border-amber-100">
+                                                            {sale.simType.replace(/_/g, ' ')}
+                                                        </span>
+                                                    )}
                                                 </div>
-                                            </td>
-
-                                            <td className="py-10 px-4">
-                                                <div className="text-[11px] font-mono text-white/40 font-black tracking-widest">
-                                                    {sale.serialNumber || 'N/A'}
-                                                </div>
-                                                {isTradeIn && (
-                                                    <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-[#f59e0b]/10 text-[#f59e0b] rounded-lg text-[8px] font-black uppercase border border-[#f59e0b]/20">
-                                                        <FontAwesomeIcon icon={faExchangeAlt} />
-                                                        Exchanged
+                                                {sale.product?.trackSerials !== false && (
+                                                    <div className={`text-[10px] font-black mt-1 uppercase tracking-wider ${sale.condition === 'active' ? 'text-green-600' :
+                                                        sale.condition === 'used' ? 'text-amber-600' :
+                                                            'text-gray-500'
+                                                        }`}>
+                                                        {sale.condition || 'N/A'}
                                                     </div>
                                                 )}
                                             </td>
 
-                                            <td className="py-10 px-4">
-                                                <div className="text-xs font-black text-white/60 uppercase tracking-wider">{sale.staff?.name || sale.staffName || 'System'}</div>
-                                                <div className="text-[9px] text-white/10 font-bold uppercase mt-1">Operator</div>
+                                            {/* Serial */}
+                                            <td className="px-5 py-3">
+                                                <div className="text-xs font-mono text-gray-700 font-bold">
+                                                    {sale.serialNumber || 'N/A'}
+                                                </div>
+                                                {isTradeIn && (
+                                                    <div className="mt-1 inline-block px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-bold">
+                                                        <FontAwesomeIcon icon={faExchangeAlt} className="mr-1" />
+                                                        Trade-In
+                                                    </div>
+                                                )}
                                             </td>
 
-                                            <td className="py-10 px-4 text-center">
-                                                <span className="px-4 py-2 bg-white/5 border border-white/5 rounded-full text-[9px] font-black text-white/20 uppercase tracking-[0.2em] shadow-2xl group-hover:text-white transition-colors">
-                                                    {sale.paymentMethod?.replace(/_/g, ' ') || 'LEGACY'}
+                                            {/* Customer */}
+                                            <td className="px-5 py-3">
+                                                <div className="font-semibold text-sm text-gray-900">{sale.customer?.name || 'Walk-in'}</div>
+                                                <div className="text-xs text-gray-500 mt-0.5">{sale.customer?.phone || 'No Contact'}</div>
+                                            </td>
+
+                                            {/* Staff */}
+                                            <td className="px-5 py-3">
+                                                <div className="text-sm font-medium text-gray-800">{sale.staff?.name || sale.staffName || 'System'}</div>
+                                            </td>
+
+                                            {/* Payment Method */}
+                                            <td className="px-5 py-3 text-center">
+                                                <span className={`
+                                                    inline-block px-2 py-1 rounded text-[10px] font-bold uppercase
+                                                    ${sale.paymentMethod === 'CASH' ? 'bg-green-100 text-green-700' :
+                                                        sale.paymentMethod === 'TIGOPESA' ? 'bg-blue-100 text-blue-700' :
+                                                            sale.paymentMethod === 'AIRTEL_MONEY' ? 'bg-red-100 text-red-700' :
+                                                                sale.paymentMethod === 'M_PESA' ? 'bg-red-100 text-red-700' :
+                                                                    'bg-gray-100 text-gray-700'}
+                                                `}>
+                                                    {sale.paymentMethod?.replace(/_/g, ' ') || 'N/A'}
                                                 </span>
                                             </td>
 
-                                            <td className="py-10 px-4 text-right">
-                                                <div className="font-black text-base text-white tracking-tighter">
+                                            {/* Amount */}
+                                            <td className="px-5 py-3 text-right">
+                                                <div className="font-semibold text-base text-gray-900">
                                                     {formatCurrency(sale.totalAmount)}
                                                 </div>
                                             </td>
 
-                                            <td className="py-10 px-4 text-right">
-                                                <div className="font-black text-sm text-[#00ffa3] tracking-tighter">
+                                            {/* Profit */}
+                                            <td className="px-5 py-3 text-right">
+                                                <div className="font-semibold text-sm text-emerald-600">
                                                     +{formatCurrency(sale.profit || 0)}
                                                 </div>
                                             </td>
@@ -317,14 +435,83 @@ const SalesPage = () => {
                         </table>
 
                         {filteredSales.length === 0 && (
-                            <div className="py-40 text-center opacity-10">
-                                <FontAwesomeIcon icon={faFingerprint} className="text-8xl mb-10" />
-                                <h3 className="text-2xl font-black text-white uppercase tracking-[0.3em] mb-4">Search Sequence Failed</h3>
-                                <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.5em]">No data records match the current filter criteria</p>
+                            <div className="text-center py-16">
+                                <p className="text-gray-400 font-medium">No sales data available</p>
                             </div>
                         )}
                     </div>
-                </motion.div>
+                </div>
+
+                {/* Summary Footer - Payment Method Breakdown */}
+                {filteredSales.length > 0 && (
+                    <div className="mt-6 space-y-4">
+                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">Payment Summary</h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {(() => {
+                                // Calculate totals by payment method
+                                const methodTotals = {};
+                                filteredSales.forEach(sale => {
+                                    const method = sale.paymentMethod || 'UNKNOWN';
+                                    if (!methodTotals[method]) {
+                                        methodTotals[method] = { revenue: 0, profit: 0, count: 0 };
+                                    }
+                                    methodTotals[method].revenue += sale.totalAmount || 0;
+                                    methodTotals[method].profit += sale.profit || 0;
+                                    methodTotals[method].count += 1;
+                                });
+
+                                const methodColors = {
+                                    'CASH': { bg: 'bg-green-50', text: 'text-green-700', icon: '💵' },
+                                    'TIGOPESA': { bg: 'bg-blue-50', text: 'text-blue-700', icon: '🔵' },
+                                    'M_PESA': { bg: 'bg-red-50', text: 'text-red-700', icon: '🔴' },
+                                    'AIRTEL_MONEY': { bg: 'bg-orange-50', text: 'text-orange-700', icon: '🟠' },
+                                    'BANK': { bg: 'bg-purple-50', text: 'text-purple-700', icon: '🏦' },
+                                    'UNKNOWN': { bg: 'bg-gray-50', text: 'text-gray-700', icon: '❓' }
+                                };
+
+                                return Object.entries(methodTotals).map(([method, totals]) => {
+                                    const colors = methodColors[method] || methodColors['UNKNOWN'];
+                                    return (
+                                        <div key={method} className={`${colors.bg} rounded-xl p-5 border border-gray-100 shadow-sm`}>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-lg">{colors.icon}</span>
+                                                <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                                    {method.replace(/_/g, ' ')}
+                                                </p>
+                                            </div>
+                                            <p className={`text-2xl font-black ${colors.text}`}>
+                                                {formatCurrency(totals.revenue)} <span className="text-xs text-gray-500 font-normal">TSh</span>
+                                            </p>
+                                            <div className="flex items-center justify-between mt-2 text-xs">
+                                                <span className="text-gray-500 font-medium">{totals.count} transactions</span>
+                                                <span className="text-emerald-600 font-bold">+{formatCurrency(totals.profit)}</span>
+                                            </div>
+                                        </div>
+                                    );
+                                });
+                            })()}
+
+                            {/* Grand Total Card */}
+                            <div className="bg-gray-900 rounded-xl p-5 text-white shadow-xl">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-lg">💰</span>
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Grand Total</p>
+                                </div>
+                                <p className="text-2xl font-black">
+                                    {formatCurrency(filteredSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0))}
+                                    <span className="text-xs text-gray-500 font-normal ml-1">TSh</span>
+                                </p>
+                                <div className="flex items-center justify-between mt-2 text-xs">
+                                    <span className="text-gray-400 font-medium">{filteredSales.length} sales</span>
+                                    <span className="text-emerald-400 font-bold">
+                                        +{formatCurrency(filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0))}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -9,8 +9,7 @@ import {
     faHistory, faChartLine, faMoneyBillWave, faLightbulb, faExclamationTriangle,
     faCubes, faMicrochip, faShieldAlt, faBrain, faCalendarDay, faCircle, faChevronLeft,
     faTruck, faBriefcase, faPlusCircle, faCheckDouble,
-    faStar, faLayerGroup, faCogs, faKey, faSync, faCalculator,
-    faFingerprint, faBolt, faCrown
+    faStar, faLayerGroup, faCogs, faKey, faSync, faCalculator
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
@@ -59,6 +58,7 @@ const CEODataDashboard = () => {
         }
     }, [data, selectedDate, activeTab, userFilter]);
 
+    // Fetch users for filtering
     useEffect(() => {
         const fetchUsers = async () => {
             try {
@@ -127,10 +127,11 @@ const CEODataDashboard = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            setData(response.data.data.items || []);
+            setData(response.data.data.items);
             setStatistics(response.data.data.statistics);
             setExecutiveInsights(response.data.data.executiveInsights);
 
+            // Re-filter if in intelligence tab
             if (activeTab === 'intelligence') {
                 filterActivitiesForDate(selectedDate, userFilter);
             }
@@ -143,7 +144,9 @@ const CEODataDashboard = () => {
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('sw-TZ', {
-            style: 'currency', currency: 'TZS', minimumFractionDigits: 0
+            style: 'currency',
+            currency: 'TZS',
+            minimumFractionDigits: 0
         }).format(amount || 0);
     };
 
@@ -154,21 +157,19 @@ const CEODataDashboard = () => {
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
         const days = [];
-        for (let i = 0; i < firstDay; i++) days.push(null);
-        for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+        // Fill empty slots from previous month
+        for (let i = 0; i < firstDay; i++) {
+            days.push(null);
+        }
+        // Fill actual days
+        for (let i = 1; i <= daysInMonth; i++) {
+            days.push(new Date(year, month, i));
+        }
         return days;
     };
 
-    const getMonthName = (date) => date.toLocaleString('default', { month: 'long' });
-
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: { y: 0, opacity: 1 }
+    const getMonthName = (date) => {
+        return date.toLocaleString('default', { month: 'long' });
     };
 
     const renderActivityDetail = () => {
@@ -176,34 +177,35 @@ const CEODataDashboard = () => {
             <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex flex-col h-full bg-[#111]/60 backdrop-blur-3xl border-l border-white/5 w-full lg:w-[450px] shadow-2xl relative z-10"
+                className="flex flex-col h-full bg-white/60 backdrop-blur-3xl border-l border-white/40 w-full lg:w-[450px] shadow-2xl relative z-10"
             >
-                <div className="p-10 border-b border-white/5 bg-gradient-to-br from-blue-500/5 to-transparent">
+                {/* Executive Pulse Header */}
+                <div className="p-10 border-b border-gray-100/50 bg-gradient-to-br from-blue-50/50 to-transparent">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex flex-col">
-                            <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">History</p>
-                            <h3 className="text-3xl font-black text-white tracking-tighter uppercase">
+                            <p className="premium-label text-blue-600 mb-2">History</p>
+                            <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
                                 {selectedDate.toLocaleDateString('default', { day: 'numeric', month: 'long' })}
                             </h3>
                         </div>
                         <div className="flex flex-col items-end">
-                            <span className="text-3xl font-black text-white leading-none">
+                            <span className="text-3xl font-black text-gray-900 leading-none">
                                 {activitiesForDate.length}
                             </span>
-                            <span className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">Recorded</span>
+                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Recorded</span>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5 shadow-sm">
-                            <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Total Value</p>
-                            <p className="text-sm font-black text-white">
+                        <div className="premium-card p-4 border-white shadow-sm bg-white/40">
+                            <p className="premium-label text-[9px] mb-1">Total Value</p>
+                            <p className="text-sm font-black text-gray-900">
                                 {formatCurrency(activitiesForDate.reduce((acc, curr) => acc + (parseFloat(curr.value) || 0), 0))}
                             </p>
                         </div>
-                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5 shadow-sm">
-                            <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Activity Points</p>
-                            <p className="text-sm font-black text-blue-500">
+                        <div className="premium-card p-4 border-white shadow-sm bg-white/40">
+                            <p className="premium-label text-[9px] mb-1">Activity Points</p>
+                            <p className="text-sm font-black text-blue-600">
                                 {activitiesForDate.reduce((acc, curr) => acc + (curr.pulse || 10), 0)} P
                             </p>
                         </div>
@@ -211,16 +213,17 @@ const CEODataDashboard = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-8 space-y-8 no-scrollbar relative">
+                    {/* Timeline Connector */}
                     {activitiesForDate.length > 0 && (
-                        <div className="absolute left-[59px] top-10 bottom-10 w-[1px] bg-gradient-to-b from-blue-500/20 via-white/5 to-blue-500/20 rounded-full" />
+                        <div className="absolute left-[59px] top-10 bottom-10 w-0.5 bg-gradient-to-b from-blue-100 via-gray-100 to-blue-100 rounded-full" />
                     )}
 
                     {activitiesForDate.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-center opacity-10 py-24">
-                            <div className="w-24 h-24 bg-white/5 rounded-[2.5rem] flex items-center justify-center mb-6">
-                                <FontAwesomeIcon icon={faCalendarDay} className="text-4xl text-white" />
+                        <div className="h-full flex flex-col items-center justify-center text-center opacity-40 py-24">
+                            <div className="w-24 h-24 bg-gray-50 rounded-[2.5rem] flex items-center justify-center mb-6">
+                                <FontAwesomeIcon icon={faCalendarDay} className="text-4xl text-gray-200" />
                             </div>
-                            <p className="text-[10px] font-black text-white uppercase tracking-widest text-[10px]">No activity detected</p>
+                            <p className="premium-label">No activity found</p>
                         </div>
                     ) : (
                         activitiesForDate.map((activity, idx) => (
@@ -231,12 +234,13 @@ const CEODataDashboard = () => {
                                 transition={{ delay: idx * 0.05 }}
                                 className="relative z-10 flex gap-6 group"
                             >
+                                {/* Time Stamp & Icon Matrix */}
                                 <div className="flex flex-col items-center shrink-0">
-                                    <span className="text-[8px] font-black text-white/40 mb-3 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">
+                                    <span className="text-[9px] font-black text-gray-400 mb-3 bg-white px-3 py-1.5 rounded-xl shadow-sm border border-gray-100">
                                         {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                     <div
-                                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-6 ring-4 ring-[#050505]"
+                                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-6 ring-4 ring-white"
                                         style={{ backgroundColor: activity.color, boxShadow: `0 20px 40px ${activity.color}30` }}
                                     >
                                         <FontAwesomeIcon icon={
@@ -252,60 +256,62 @@ const CEODataDashboard = () => {
                                     </div>
                                 </div>
 
+                                {/* Activity Content */}
                                 <div
                                     onClick={() => {
                                         if (activity.type === 'repair') navigate(`/repairs/${activity.id.replace('repair-', '')}`);
                                     }}
-                                    className="flex-1 bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/5 hover:border-blue-500/40 cursor-pointer group/card transition-all"
+                                    className="flex-1 premium-card p-6 bg-white/70 backdrop-blur-md hover:bg-white cursor-pointer group/card border-white/60 hover:border-blue-200"
                                 >
                                     <div className="flex justify-between items-start mb-3">
-                                        <span className="text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border" style={{ color: activity.color, borderColor: `${activity.color}20`, backgroundColor: `${activity.color}08` }}>
+                                        <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border" style={{ color: activity.color, borderColor: `${activity.color}20`, backgroundColor: `${activity.color}08` }}>
                                             {activity.category}
                                         </span>
-                                        <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-white/20 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                                        <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-300 opacity-0 group-hover/card:opacity-100 transition-opacity">
                                             <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
                                         </div>
                                     </div>
 
-                                    <h4 className="text-[14px] font-black text-white leading-tight mb-1 uppercase tracking-tight">{activity.title}</h4>
-                                    <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-4 truncate">{activity.subtitle}</p>
+                                    <h4 className="text-[15px] font-black text-gray-900 leading-tight mb-1">{activity.title}</h4>
+                                    <p className="premium-label text-[9px] mb-4 truncate">{activity.subtitle}</p>
 
+                                    {/* Data Overview: Financial & Technical Insights */}
                                     <div className="grid grid-cols-2 gap-3 mb-6">
                                         {(activity.paymentMethod || activity.type === 'sale') && (
-                                            <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-                                                <p className="text-[7px] font-black text-white/20 uppercase tracking-widest mb-1 text-center">Channel</p>
-                                                <p className="text-[9px] font-black text-white text-center uppercase">{activity.paymentMethod || 'LIQUID'}</p>
+                                            <div className="bg-gray-50/50 rounded-2xl p-3 border border-gray-100/50">
+                                                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 text-center">Channel</p>
+                                                <p className="text-[10px] font-black text-gray-900 text-center">{activity.paymentMethod || 'LIQUID'}</p>
                                             </div>
                                         )}
                                         {activity.type === 'repair' && (
-                                            <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-                                                <p className="text-[7px] font-black text-white/20 uppercase tracking-widest mb-1 text-center">Diagnosis</p>
-                                                <p className="text-[9px] font-black text-indigo-400 text-center truncate uppercase">{activity.diagnosis || 'Standard'}</p>
+                                            <div className="bg-gray-50/50 rounded-2xl p-3 border border-gray-100/50">
+                                                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 text-center">Diagnosis</p>
+                                                <p className="text-[10px] font-black text-indigo-600 text-center truncate">{activity.diagnosis || 'Standard'}</p>
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                    <div className="flex items-center justify-between pt-4 border-t border-gray-100/50">
                                         <div className="flex flex-col">
                                             {activity.value ? (
                                                 <>
-                                                    <span className="text-[11px] font-black text-white leading-none mb-1">{formatCurrency(activity.value)}</span>
-                                                    <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest opacity-60">Revenue Captured</span>
+                                                    <span className="text-[12px] font-black text-gray-900 leading-none mb-1">{formatCurrency(activity.value)}</span>
+                                                    <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest opacity-60">Revenue Captured</span>
                                                 </>
                                             ) : (
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                                                    <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">Live Update</span>
+                                                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                                                    <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Live Update</span>
                                                 </div>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-[10px] font-black text-[#00ffa3] border border-white/5">
+                                            <div className="w-8 h-8 premium-btn-outline rounded-xl flex items-center justify-center text-[10px] shadow-sm bg-white border-gray-100">
                                                 {activity.actor?.charAt(0)}
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="text-[9px] font-black text-white tracking-widest leading-none mb-0.5 uppercase">{activity.actor}</span>
-                                                <span className="text-[7px] font-bold text-white/20 uppercase tracking-widest">{activity.actorRole}</span>
+                                                <span className="text-[10px] font-black text-gray-900 tracking-tighter leading-none mb-0.5">{activity.actor}</span>
+                                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">{activity.actorRole}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -324,32 +330,47 @@ const CEODataDashboard = () => {
 
         return (
             <div className="flex flex-col lg:flex-row h-full min-h-[700px] overflow-hidden">
-                <div className="flex-1 p-12 bg-white/2">
-                    <div className="flex flex-col md:flex-row items-center justify-between mb-16 gap-8">
+                {/* Main Calendar View */}
+                <div className="flex-1 p-12 bg-white/40">
+                    <div className="flex items-center justify-between mb-16">
                         <div className="flex items-center gap-8">
-                            <div className="w-20 h-20 bg-[#00ffa3]/10 text-[#00ffa3] rounded-3xl flex items-center justify-center shadow-2xl rotate-2 border border-[#00ffa3]/20">
-                                <FontAwesomeIcon icon={faCalendarAlt} className="text-3xl" />
+                            <div className="w-20 h-20 bg-[#0a0a0b] rounded-3xl flex items-center justify-center shadow-2xl rotate-2">
+                                <FontAwesomeIcon icon={faCalendarAlt} className="text-3xl text-white" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black text-blue-500 mb-2 uppercase tracking-[0.3em]">Temporal Grid</p>
-                                <h2 className="text-5xl font-black text-white tracking-tighter uppercase">
-                                    {getMonthName(viewingMonth)} <span className="text-white/10">{viewingMonth.getFullYear()}</span>
+                                <p className="premium-label text-blue-600 mb-2">Activity Calendar</p>
+                                <h2 className="text-5xl font-black text-gray-900 tracking-tighter">
+                                    {getMonthName(viewingMonth)} <span className="text-gray-200">{viewingMonth.getFullYear()}</span>
                                 </h2>
                             </div>
                         </div>
 
-                        <div className="flex gap-4 p-2 bg-[#111] rounded-3xl border border-white/5 shadow-inner">
+                        <div className="flex gap-4 p-2 bg-gray-50/50 rounded-3xl border border-gray-100 shadow-inner">
+                            <button
+                                onClick={() => setViewingMonth(prev => new Date(prev.getFullYear() - 1, prev.getMonth(), 1))}
+                                className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all active:scale-95"
+                            >
+                                <FontAwesomeIcon icon={faChevronLeft} className="scale-75 -mr-1 opacity-40" />
+                                <FontAwesomeIcon icon={faChevronLeft} className="scale-75" />
+                            </button>
                             <button
                                 onClick={() => setViewingMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-                                className="w-14 h-14 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-center text-white/40 hover:text-blue-500 transition-all active:scale-95"
+                                className="w-14 h-14 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all active:scale-95"
                             >
                                 <FontAwesomeIcon icon={faChevronLeft} />
                             </button>
                             <button
                                 onClick={() => setViewingMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                                className="w-14 h-14 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-center text-white/40 hover:text-blue-500 transition-all active:scale-95"
+                                className="w-14 h-14 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all active:scale-95"
                             >
                                 <FontAwesomeIcon icon={faChevronRight} />
+                            </button>
+                            <button
+                                onClick={() => setViewingMonth(prev => new Date(prev.getFullYear() + 1, prev.getMonth(), 1))}
+                                className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all active:scale-95"
+                            >
+                                <FontAwesomeIcon icon={faChevronRight} className="scale-75" />
+                                <FontAwesomeIcon icon={faChevronRight} className="scale-75 -ml-1 opacity-40" />
                             </button>
                         </div>
                     </div>
@@ -357,7 +378,7 @@ const CEODataDashboard = () => {
                     <div className="max-w-4xl mx-auto">
                         <div className="grid grid-cols-7 mb-10">
                             {dayNames.map(day => (
-                                <div key={day} className="text-center text-[10px] font-black text-white/20 uppercase tracking-[0.4em] py-4">
+                                <div key={day} className="text-center text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] py-4">
                                     {day}
                                 </div>
                             ))}
@@ -365,12 +386,13 @@ const CEODataDashboard = () => {
 
                         <div className="grid grid-cols-7 gap-6">
                             {days.map((date, idx) => {
-                                if (!date) return <div key={`empty-${idx}`} className="aspect-square bg-white/2 rounded-3xl" />;
+                                if (!date) return <div key={`empty-${idx}`} className="aspect-square bg-gray-50/10 rounded-3xl" />;
 
                                 const isSelected = date.toDateString() === selectedDate.toDateString();
                                 const isToday = date.toDateString() === new Date().toDateString();
                                 const dayActivities = data.filter(a => new Date(a.date).toDateString() === date.toDateString());
 
+                                // Heat-Aware intensity calculations
                                 const totalPulse = dayActivities.reduce((acc, curr) => acc + (curr.pulse || 10), 0);
                                 const intensity = Math.min(totalPulse, 100);
                                 const isBusy = totalPulse >= 50;
@@ -380,33 +402,46 @@ const CEODataDashboard = () => {
                                         key={idx}
                                         whileHover={{ scale: 1.05, y: -5 }}
                                         onClick={() => setSelectedDate(date)}
-                                        className={`aspect-square rounded-[2rem] p-6 cursor-pointer relative transition-all group border-2 ${isSelected ? 'bg-white border-white shadow-[0_0_30px_rgba(255,255,255,0.2)] scale-110 z-20' :
-                                            isToday ? 'bg-blue-600 border-blue-600 shadow-xl' :
-                                                'bg-[#111] border-transparent shadow-sm hover:shadow-2xl hover:border-white/20'
+                                        className={`aspect-square rounded-[2rem] p-6 cursor-pointer relative transition-all group border-2 ${isSelected ? 'bg-[#0a0a0b] border-[#0a0a0b] shadow-2xl scale-110 z-20' :
+                                            isToday ? 'bg-white border-blue-600 shadow-xl' :
+                                                'bg-white border-transparent shadow-sm hover:shadow-2xl hover:border-white'
                                             }`}
-                                        style={!isSelected && !isToday && dayActivities.length > 0 ? {
-                                            backgroundColor: `rgba(59, 130, 246, ${intensity / 100})`,
-                                            borderColor: isBusy ? 'rgba(59, 130, 246, 0.4)' : 'transparent'
+                                        style={!isSelected && dayActivities.length > 0 ? {
+                                            backgroundColor: `rgba(59, 130, 246, ${intensity / 500 + 0.05})`,
+                                            borderColor: isBusy ? 'rgba(59, 130, 246, 0.1)' : 'transparent'
                                         } : {}}
                                     >
-                                        <span className={`text-xl font-black leading-none ${isSelected ? 'text-black' : 'text-white'}`}>
+                                        <span className={`text-xl font-black leading-none ${isSelected ? 'text-white' : 'text-gray-900'}`}>
                                             {date.getDate()}
                                         </span>
 
                                         {dayActivities.length > 0 && (
-                                            <div className="absolute bottom-6 left-6 -space-x-2 overflow-hidden flex">
-                                                {dayActivities.slice(0, 3).map((a, i) => (
-                                                    <div
-                                                        key={a.id}
-                                                        className={`w-4 h-4 rounded-full border-2 ${isSelected ? 'border-white' : 'border-[#050505]'} shadow-sm`}
-                                                        style={{ backgroundColor: a.color, zIndex: 3 - i }}
-                                                    />
-                                                ))}
-                                            </div>
+                                            <>
+                                                {/* Desktop Dots */}
+                                                <div className="hidden lg:flex absolute bottom-6 left-6 -space-x-2 overflow-hidden">
+                                                    {dayActivities.slice(0, 3).map((a, i) => (
+                                                        <div
+                                                            key={a.id}
+                                                            className={`w-4 h-4 rounded-full border-2 ${isSelected ? 'border-[#0a0a0b]' : 'border-white'} shadow-sm`}
+                                                            style={{ backgroundColor: a.color, zIndex: 3 - i }}
+                                                        />
+                                                    ))}
+                                                    {dayActivities.length > 3 && (
+                                                        <div className={`w-4 h-4 rounded-full bg-gray-100 flex items-center justify-center border-2 ${isSelected ? 'border-[#0a0a0b]' : 'border-white'}`}>
+                                                            <span className="text-[7px] font-black text-gray-500">+{dayActivities.length - 3}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Mobile Red Badge */}
+                                                <div className="lg:hidden absolute top-2 right-2 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg scale-90">
+                                                    <span className="text-[8px] font-black text-white leading-none">{dayActivities.length}</span>
+                                                </div>
+                                            </>
                                         )}
 
-                                        {isBusy && !isSelected && !isToday && (
-                                            <div className="absolute top-6 right-6 w-2 h-2 bg-white rounded-full animate-ping" />
+                                        {isBusy && !isSelected && (
+                                            <div className="absolute top-6 right-6 w-2 h-2 bg-blue-600 rounded-full animate-ping shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
                                         )}
                                     </motion.div>
                                 );
@@ -415,328 +450,586 @@ const CEODataDashboard = () => {
                     </div>
                 </div>
 
+                {/* Right Tab Detail Flow */}
                 {renderActivityDetail()}
             </div>
         );
     };
 
-    if (loading && !data.length) {
-        return (
-            <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
-                <div className="text-center">
-                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} className="w-16 h-16 border-4 border-[#00ffa3] border-t-transparent rounded-2xl mx-auto mb-8 shadow-[0_0_20px_rgba(0,255,163,0.3)]" />
-                    <p className="text-[#00ffa3] font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Syncing Master Terminal...</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="min-h-screen bg-[#050505] text-white pb-32 pt-12 selection:bg-[#00ffa3] selection:text-black">
-            <div className="max-w-[95%] mx-auto px-6">
-                {/* Elite Header */}
-                <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    variants={containerVariants}
-                    className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-16"
-                >
-                    <motion.div variants={itemVariants} className="flex items-center gap-6">
-                        <motion.button
-                            whileHover={{ scale: 1.1, x: -5 }}
-                            whileTap={{ scale: 0.9 }}
+        <div className="premium-bg pb-24">
+            {/* Header */}
+            <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                    <div className="flex items-center gap-4">
+                        <button
                             onClick={() => navigate('/dashboard')}
-                            className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-white/40 hover:text-[#00ffa3] border border-white/5 transition-all"
+                            className="premium-card w-12 h-12 flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all"
                         >
                             <FontAwesomeIcon icon={faArrowLeft} />
-                        </motion.button>
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="px-3 py-1 bg-[#00ffa3]/10 text-[#00ffa3] rounded-full text-[9px] font-black uppercase tracking-widest border border-[#00ffa3]/20">Command Terminal</span>
-                                <FontAwesomeIcon icon={faFingerprint} className="text-[#00ffa3] text-[10px]" />
-                            </div>
-                            <h1 className="text-5xl font-black text-white tracking-tighter leading-none mb-1 uppercase">Master Records</h1>
-                            <p className="text-white/30 font-black uppercase tracking-[0.3em] text-[10px]">Strategic Asset Management & Intelligence</p>
-                        </div>
-                    </motion.div>
-
-                    <div className="flex items-center gap-4">
-                        <button onClick={loadData} className="px-6 py-3 bg-white/5 border border-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-[#00ffa3] transition-all">
-                            <FontAwesomeIcon icon={faSync} className="mr-2" /> Refresh Signal
                         </button>
-                        <button className="px-6 py-3 bg-[#00ffa3] text-black rounded-xl text-[10px] font-black uppercase tracking-widest shadow-[0_10px_30px_rgba(0,255,163,0.3)] hover:scale-105 transition-all">
-                            <FontAwesomeIcon icon={faDownload} className="mr-2" /> Extract Data
+                        <div>
+                            <p className="premium-label mb-0.5">Enterprise Intelligence</p>
+                            <h1 className="premium-h1">Master Records</h1>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button className="premium-btn-outline px-5 py-2.5 text-xs">
+                            <FontAwesomeIcon icon={faSync} className="mr-2" />
+                            Refresh
+                        </button>
+                        <button className="premium-btn-primary px-5 py-2.5 text-xs">
+                            <FontAwesomeIcon icon={faDownload} className="mr-2" />
+                            Export
                         </button>
                     </div>
-                </motion.div>
+                </div>
 
-                {/* Macro Statistics */}
+                {/* Stats */}
                 <AnimatePresence>
                     {statistics && (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                             {[
-                                { label: 'Trade Volume', value: statistics.tradeIns?.total, icon: faExchangeAlt, color: '#3b82f6' },
-                                { label: 'Aggregate Revenue', value: formatCurrency(statistics.sales?.revenue), icon: faMoneyBillWave, color: '#00ffa3' },
-                                { label: 'Operational Yield', value: formatCurrency(statistics.sales?.profit), icon: faChartLine, color: '#a855f7' },
-                                { label: 'Service Units', value: statistics.repairs?.total, icon: faTools, color: '#f59e0b' }
+                                { label: 'Trade Volume', value: statistics.tradeIns?.total, icon: faExchangeAlt, color: 'blue' },
+                                { label: 'Revenue', value: formatCurrency(statistics.sales?.revenue), icon: faMoneyBillWave, color: 'emerald' },
+                                { label: 'Profit', value: formatCurrency(statistics.sales?.profit), icon: faChartLine, color: 'blue' },
+                                { label: 'Repairs', value: statistics.repairs?.total, icon: faTools, color: 'orange' }
                             ].map((s, i) => (
                                 <motion.div
                                     key={i}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.05 }}
-                                    className="bg-[#111]/60 backdrop-blur-3xl p-8 rounded-[3rem] border border-white/5 relative overflow-hidden group shadow-2xl"
+                                    className="premium-card p-4 hover:shadow-md hover:-translate-y-0.5 transition-all group"
                                 >
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-white/10 transition-colors"></div>
-                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/5 border border-white/5 mb-6 text-white/40 group-hover:text-white transition-all" style={{ color: s.color }}>
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400 group-hover:text-blue-600 group-hover:bg-blue-50 transition-all mb-3">
                                         <FontAwesomeIcon icon={s.icon} className="text-sm" />
                                     </div>
-                                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-1">{s.label}</p>
-                                    <p className="text-2xl font-black text-white tracking-tighter truncate">{s.value}</p>
+                                    <p className="premium-caption text-gray-500 mb-1">{s.label}</p>
+                                    <p className="text-xl font-black text-gray-900 truncate">{s.value}</p>
                                 </motion.div>
                             ))}
                         </div>
                     )}
                 </AnimatePresence>
+            </div>
 
-                {/* Neural Intelligence Hub */}
-                <AnimatePresence>
-                    {executiveInsights && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-gradient-to-br from-[#111] to-[#0a0a0b] rounded-[4rem] p-10 md:p-14 border border-white/5 shadow-2xl relative overflow-hidden mb-12"
-                        >
-                            <div className="absolute top-0 right-0 w-[40%] h-full bg-blue-600/10 rounded-full blur-[120px] -mr-40" />
+            {/* Business Health Index */}
+            <AnimatePresence>
+                {executiveInsights && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="max-w-7xl mx-auto px-4 md:px-8 mt-8"
+                    >
+                        <div className="bg-[#0a0a0b] rounded-3xl p-6 md:p-8 text-white shadow-lg relative overflow-hidden border border-white/5">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full -mr-32 -mt-32 blur-3xl opacity-20" />
 
-                            <div className="relative z-10 flex flex-col lg:flex-row gap-12 items-center">
-                                <div className="flex items-center gap-8 lg:border-r lg:border-white/10 lg:pr-12">
-                                    <div className="w-24 h-24 bg-[#00ffa3]/10 text-[#00ffa3] rounded-[2rem] flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(0,255,163,0.1)] border border-[#00ffa3]/20">
-                                        <FontAwesomeIcon icon={faBrain} />
+                            <div className="relative z-10 flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center">
+                                <div className="flex items-center gap-4 md:gap-6 md:border-r md:border-white/10 md:pr-8">
+                                    <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shadow-lg">
+                                        <FontAwesomeIcon icon={faBrain} className="text-white" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500 mb-2">Neural Health Index</p>
-                                        <h3 className="text-6xl font-black text-white tracking-tighter leading-none">
-                                            {executiveInsights.healthScore}<span className="text-2xl text-white/20 ml-1">%</span>
+                                        <p className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-1">Health Score</p>
+                                        <h3 className="text-3xl md:text-4xl font-black text-white leading-none">
+                                            {executiveInsights.healthScore}<span className="text-xl text-white/40 ml-1">%</span>
                                         </h3>
                                     </div>
                                 </div>
 
-                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-12 w-full">
-                                    <div className="space-y-6">
-                                        <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.5em]">Convergence Signals</p>
-                                        <div className="space-y-3">
+                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                    <div className="space-y-3">
+                                        <p className="text-xs font-bold text-white/40 uppercase tracking-wider">Growth Signals</p>
+                                        <div className="space-y-2">
                                             {executiveInsights.growthSignals.map((signal, idx) => (
-                                                <div key={idx} className="flex items-center gap-4 group">
-                                                    <div className="w-1.5 h-1.5 bg-[#00ffa3] rounded-full group-hover:scale-150 transition-transform shadow-[0_0_10px_rgba(0,255,163,0.5)]" />
-                                                    <p className="text-xs font-black text-white/80 uppercase tracking-widest leading-loose">{signal}</p>
+                                                <div key={idx} className="flex items-center gap-3">
+                                                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                                                    <p className="text-xs font-semibold text-white/90">{signal}</p>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/5 relative overflow-hidden group">
-                                        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#00ffa3]/30 to-transparent"></div>
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <FontAwesomeIcon icon={faLightbulb} className="text-[#00ffa3] text-xs animate-pulse" />
-                                            <p className="text-[9px] font-black text-[#00ffa3] uppercase tracking-[0.4em]">Heuristic Insight</p>
+                                    <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <FontAwesomeIcon icon={faLightbulb} className="text-blue-400 text-xs" />
+                                            <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Insight</p>
                                         </div>
-                                        <p className="text-[13px] font-black leading-relaxed text-white/90 uppercase tracking-tight italic">"{executiveInsights.aiRecommendation}"</p>
+                                        <p className="text-sm font-medium leading-relaxed text-white/80 italic">"{executiveInsights.aiRecommendation}"</p>
                                     </div>
                                 </div>
                             </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                {/* Navigation Ecosystem */}
-                <div className="bg-[#111]/40 backdrop-blur-3xl p-3 rounded-[2.5rem] border border-white/5 mb-12 shadow-2xl sticky top-6 z-50">
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 mt-8">
+                {/* Navigation Tabs */}
+                <div className="premium-card p-2 mb-8 overflow-x-auto no-scrollbar">
+                    <div className="flex gap-2 min-w-max">
                         {tabs.map(tab => (
                             <button
                                 key={tab.id}
-                                onClick={() => tab.id === 'calculator' ? navigate('/stock-calculator') : setActiveTab(tab.id)}
-                                className={`px-8 py-4 rounded-2xl transition-all flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap ${activeTab === tab.id
-                                    ? 'bg-[#00ffa3] text-black shadow-[0_10px_20px_rgba(0,255,163,0.3)]'
-                                    : 'text-white/40 hover:text-white hover:bg-white/5'
+                                onClick={() => {
+                                    if (tab.id === 'calculator') {
+                                        navigate('/stock-calculator');
+                                    } else {
+                                        setActiveTab(tab.id);
+                                    }
+                                }}
+                                className={`px-5 py-3 rounded-xl transition-all flex items-center gap-3 text-xs font-bold uppercase tracking-wider ${activeTab === tab.id
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                                     }`}
                             >
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeTab === tab.id ? 'bg-black/10' : 'bg-white/5'}`}>
-                                    {tab.isLucide ? <Calculator className="w-4 h-4" /> : <FontAwesomeIcon icon={tab.icon} />}
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeTab === tab.id ? 'bg-white/20' : 'bg-gray-100'}`}>
+                                    {tab.isLucide ? (
+                                        <Calculator className="w-4 h-4" />
+                                    ) : (
+                                        <FontAwesomeIcon icon={tab.icon} className="text-sm" />
+                                    )}
                                 </div>
-                                <span>{tab.label}</span>
+                                <div className="text-left hidden md:block">
+                                    <p className="leading-none">{tab.label}</p>
+                                </div>
                             </button>
                         ))}
                     </div>
                 </div>
 
-                {/* Filter Matrix */}
-                <div className="bg-[#111]/80 backdrop-blur-3xl p-8 rounded-[3rem] border border-white/5 shadow-2xl mb-12 transition-all">
+                {/* Filter Ecosystem */}
+                <div className="premium-card p-8 mb-10 border-white/60">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        <div className="lg:col-span-2 relative group px-2">
-                            <FontAwesomeIcon icon={faSearch} className="absolute left-8 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00ffa3] transition-colors" />
+                        <div className="lg:col-span-2 relative group">
+                            <FontAwesomeIcon icon={faSearch} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
                             <input
                                 type="text"
-                                placeholder={`FILTER ${activeTab.toUpperCase()} RECORDS...`}
+                                placeholder={`Filter ${activeTab} records by identifier...`}
                                 value={filters.search}
                                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                                className="w-full pl-16 pr-8 py-5 bg-white/5 rounded-2xl border border-white/5 text-[11px] font-black uppercase tracking-widest focus:border-[#00ffa3]/40 outline-none transition-all"
+                                className="premium-input pl-16 pr-6 bg-gray-50/50 focus:bg-white"
                             />
                         </div>
-
-                        <div className="flex flex-wrap lg:flex-nowrap gap-4 px-2">
+                        <div className="flex gap-4 overflow-x-auto lg:overflow-visible no-scrollbar">
                             {activeTab === 'intelligence' && (
                                 <div className="relative flex-1 min-w-[200px]">
-                                    <FontAwesomeIcon icon={faUserShield} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none" />
+                                    <FontAwesomeIcon icon={faUserShield} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                     <select
                                         value={userFilter}
                                         onChange={(e) => setUserFilter(e.target.value)}
-                                        className="w-full pl-14 pr-10 py-5 bg-white/5 rounded-2xl border border-white/5 text-[10px] font-black uppercase tracking-widest focus:border-blue-500/40 outline-none appearance-none cursor-pointer text-white"
+                                        className="w-full pl-12 pr-10 py-4 bg-gray-50/50 rounded-[1.5rem] border-0 text-[10px] font-black uppercase tracking-widest focus:ring-4 focus:ring-blue-600/10 appearance-none cursor-pointer text-gray-700"
                                     >
-                                        <option value="all" className="bg-[#111]">ALL PERSONNEL</option>
+                                        <option value="all">All Staff</option>
                                         {users.map(u => (
-                                            <option key={u.id} value={u.id} className="bg-[#111]">{u.name.toUpperCase()} ({u.role})</option>
+                                            <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
                                         ))}
                                     </select>
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300">
+                                        <FontAwesomeIcon icon={faChevronRight} className="rotate-90 scale-75" />
+                                    </div>
                                 </div>
                             )}
-                            <div className="relative min-w-[150px] flex-1">
-                                <FontAwesomeIcon icon={faCalendarAlt} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" />
+                            <div className="relative flex-1 min-w-[140px]">
+                                <FontAwesomeIcon icon={faCalendarAlt} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                 <input
                                     type="date"
                                     value={filters.dateFrom}
                                     onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-                                    className="w-full pl-14 pr-4 py-5 bg-white/5 rounded-2xl border border-white/5 text-[11px] font-black text-white focus:border-blue-500/40 outline-none"
+                                    className="w-full pl-12 pr-4 py-4 bg-gray-50/50 rounded-[1.5rem] border-0 text-[10px] font-black uppercase tracking-widest focus:ring-4 focus:ring-blue-600/10 text-gray-700"
+                                />
+                            </div>
+                            <div className="relative flex-1 min-w-[140px]">
+                                <FontAwesomeIcon icon={faCalendarAlt} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                <input
+                                    type="date"
+                                    value={filters.dateTo}
+                                    onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                                    className="w-full pl-12 pr-4 py-4 bg-gray-50/50 rounded-[1.5rem] border-0 text-[10px] font-black uppercase tracking-widest focus:ring-4 focus:ring-blue-600/10 text-gray-700"
                                 />
                             </div>
                         </div>
-
-                        <motion.button
-                            whileTap={{ scale: 0.95 }}
+                        <button
                             onClick={() => {
                                 setFilters({ search: '', status: '', dateFrom: '', dateTo: '' });
                                 setUserFilter('all');
                             }}
-                            className="bg-white/5 border border-white/5 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:text-red-500 transition-all"
+                            className="premium-btn-primary py-4 text-[10px] shadow-lg"
                         >
-                            Reset Sequence
-                        </motion.button>
+                            Reset Filters
+                        </button>
                     </div>
                 </div>
 
-                {/* Champion Leaderboard Matrix */}
+                {/* 🏆 Wanakitaa Hall of Fame Widget */}
                 {activeTab === 'intelligence' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                         {[
-                            { label: 'Champion of Day', data: communityChampions.day, color: '#3b82f6' },
-                            { label: 'Hero of Week', data: communityChampions.week, color: '#6366f1' },
-                            { label: 'Legend of Month', data: communityChampions.month, color: '#a855f7' },
-                            { label: 'Titan of Year', data: communityChampions.year, color: '#f59e0b' }
+                            { label: 'Champion of the Day', data: communityChampions.day, color: 'blue' },
+                            { label: 'Hero of the Week', data: communityChampions.week, color: 'indigo' },
+                            { label: 'Legend of the Month', data: communityChampions.month, color: 'purple' },
+                            { label: 'Titan of the Year', data: communityChampions.year, color: 'amber' }
                         ].map((champion, idx) => (
                             <motion.div
                                 key={idx}
-                                variants={itemVariants}
-                                initial="hidden"
-                                animate="visible"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: idx * 0.1 }}
-                                className="bg-[#111]/40 p-8 flex flex-col items-center text-center relative overflow-hidden group hover:bg-[#111] transition-all border border-white/5 rounded-[3rem] shadow-2xl"
+                                className="premium-card p-6 flex flex-col items-center text-center relative overflow-hidden group hover:shadow-2xl transition-all border-white/60"
                             >
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/2 rounded-full -mr-16 -mt-16 group-hover:bg-white/5 transition-colors blur-2xl"></div>
-                                <div className="relative z-10 w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-black mb-6 shadow-2xl group-hover:rotate-12 transition-transform border border-white/10" style={{ backgroundColor: champion.color }}>
+                                <div className={`relative z-10 w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-black mb-4 shadow-lg group-hover:rotate-12 transition-transform bg-${champion.color}-600`}>
                                     {champion.data?.customerName?.charAt(0) || '?'}
                                 </div>
-                                <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] mb-2">{champion.label}</p>
-                                <h4 className="text-xl font-black text-white tracking-widest truncate w-full uppercase">{champion.data?.customerName || 'No Data Signal'}</h4>
-                                <p className="text-[10px] font-black text-blue-500 mt-2 uppercase tracking-tighter">{champion.data?.points || 0} Power Points</p>
+                                <h4 className="premium-label mb-2">{champion.label}</h4>
+                                <p className="premium-h2 mb-1 truncate w-full text-base">{champion.data?.customerName || 'No Data Yet'}</p>
+                                <p className="text-[11px] font-black text-blue-600 mt-1 uppercase tracking-tighter">{champion.data?.points || 0} Power Points</p>
+
+                                <div className="absolute top-4 right-6 text-gray-100 opacity-20 text-3xl">
+                                    <FontAwesomeIcon icon={faStar} />
+                                </div>
                             </motion.div>
                         ))}
                     </div>
                 )}
 
-                {/* Terminal Display */}
-                <div className="bg-[#111]/40 rounded-[4rem] border border-white/5 shadow-[0_40px_100px_rgba(0,0,0,0.5)] overflow-hidden relative min-h-[600px]">
-                    {activeTab === 'intelligence' ? (
+                {/* Intelligent Data Matrix */}
+                <div className="bg-white rounded-[3rem] shadow-sm border border-gray-100 overflow-hidden relative min-h-[400px]">
+                    {loading ? (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="text-center">
+                                <div className="w-12 h-12 border-4 border-[#008069] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Loading Data...</p>
+                            </div>
+                        </div>
+                    ) : activeTab === 'intelligence' ? (
                         renderCalendar()
                     ) : activeTab === 'tools' ? (
-                        <div className="p-16 lg:p-24">
-                            <div className="flex items-center gap-8 mb-16">
-                                <div className="w-20 h-20 bg-[#00ffa3]/10 text-[#00ffa3] rounded-[2.5rem] flex items-center justify-center border border-[#00ffa3]/20 shadow-2xl rotate-3">
-                                    <FontAwesomeIcon icon={faCogs} className="text-3xl" />
+                        <div className="p-12">
+                            <div className="flex items-center gap-8 mb-12">
+                                <div className="w-20 h-20 bg-[#0a0a0b] rounded-[2.5rem] flex items-center justify-center shadow-2xl rotate-3">
+                                    <FontAwesomeIcon icon={faCogs} className="text-3xl text-white" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-blue-500 mb-2 uppercase tracking-[0.4em]">Integrated Subsystems</p>
-                                    <h3 className="text-5xl font-black text-white tracking-tighter uppercase">Protocol Control</h3>
+                                    <p className="premium-label text-blue-600 mb-2">Access Management</p>
+                                    <h3 className="text-5xl font-black text-gray-900 tracking-tighter">Business Tools</h3>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {[
-                                    { label: 'WA TEMPLATES', desc: 'Real-time mobile vision & automated Swahili messaging.', path: '/settings/whatsapp', icon: faWhatsapp, bg: '#128c7e' },
-                                    { label: 'SUPPLIER HUB', desc: 'Logistics chain & relationship terminal management.', path: '/suppliers', icon: faTruck, bg: '#3b82f6' },
-                                    { label: 'STOCK MATRIX', desc: 'Serial tracking & inventory flow state monitoring.', path: '/stock-management', icon: faCubes, bg: '#f43f5e' }
-                                ].map((t, i) => (
-                                    <motion.button
-                                        key={i}
-                                        whileHover={{ y: -10, scale: 1.02 }}
-                                        onClick={() => navigate(t.path)}
-                                        className="bg-[#111] p-12 rounded-[3.5rem] hover:shadow-2xl transition-all text-left flex flex-col group relative overflow-hidden border border-white/5"
-                                    >
-                                        <div className="absolute top-0 right-0 w-48 h-48 bg-white/2 rounded-full -mr-24 -mt-24 group-hover:scale-150 transition-transform blur-3xl opacity-20" />
-                                        <div className="w-20 h-20 rounded-3xl flex items-center justify-center text-white text-3xl mb-10 shadow-2xl group-hover:rotate-6 transition-transform border border-white/5" style={{ backgroundColor: t.bg }}>
-                                            <FontAwesomeIcon icon={t.icon} />
+                                {/* WhatsApp Templates Card */}
+                                <motion.button
+                                    whileHover={{ y: -10, scale: 1.02 }}
+                                    onClick={() => navigate('/settings/whatsapp')}
+                                    className="premium-card p-10 hover:shadow-2xl transition-all text-left flex flex-col group relative overflow-hidden border-white"
+                                >
+                                    <div className="absolute top-0 right-0 w-48 h-48 bg-[#128c7e]/5 rounded-full -mr-24 -mt-24 group-hover:scale-150 transition-transform blur-3xl" />
+
+                                    <div className="w-16 h-16 bg-[#128c7e] rounded-3xl flex items-center justify-center text-white text-3xl mb-8 shadow-xl shadow-[#128c7e]/20 group-hover:rotate-6 transition-transform">
+                                        <FontAwesomeIcon icon={faWhatsapp} />
+                                    </div>
+
+                                    <h4 className="text-2xl font-black text-gray-900 tracking-tighter mb-3">WhatsApp Templates</h4>
+                                    <p className="premium-label text-sm leading-relaxed mb-8 opacity-70">Customize automated Swahili & English message templates with real-time mobile vision integration.</p>
+
+                                    <div className="mt-auto pt-8 border-t border-gray-100/50 flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#128c7e]">Open Portal</span>
+                                        <div className="w-10 h-10 bg-[#128c7e]/10 rounded-xl flex items-center justify-center text-[#128c7e] group-hover:translate-x-2 transition-transform">
+                                            <FontAwesomeIcon icon={faChevronRight} className="text-sm" />
                                         </div>
-                                        <h4 className="text-2xl font-black text-white tracking-widest mb-4 uppercase">{t.label}</h4>
-                                        <p className="text-[11px] font-black text-white/30 tracking-widest leading-loose mb-10 uppercase">{t.desc}</p>
-                                        <div className="mt-auto pt-8 border-t border-white/5 flex items-center justify-between">
-                                            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 group-hover:text-white transition-colors">Access Portal</span>
-                                            <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-white/20 group-hover:translate-x-2 group-hover:text-white transition-all">
-                                                <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
-                                            </div>
+                                    </div>
+                                </motion.button>
+
+                                {/* Supplier Management Card */}
+                                <motion.button
+                                    whileHover={{ y: -10, scale: 1.02 }}
+                                    onClick={() => navigate('/suppliers')}
+                                    className="premium-card p-10 hover:shadow-2xl transition-all text-left flex flex-col group relative overflow-hidden border-white"
+                                >
+                                    <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full -mr-24 -mt-24 group-hover:scale-150 transition-transform blur-3xl" />
+
+                                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl flex items-center justify-center text-white text-3xl mb-8 shadow-xl shadow-indigo-600/20 group-hover:rotate-6 transition-transform">
+                                        <FontAwesomeIcon icon={faTruck} />
+                                    </div>
+
+                                    <h4 className="text-2xl font-black text-gray-900 tracking-tighter mb-3">Supplier Network</h4>
+                                    <p className="premium-label text-sm leading-relaxed mb-8 opacity-70">Manage supplier relationships, contact details, and payment terms for stock procurement.</p>
+
+                                    <div className="mt-auto pt-8 border-t border-gray-100/50 flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Open Portal</span>
+                                        <div className="w-10 h-10 bg-indigo-600/10 rounded-xl flex items-center justify-center text-indigo-600 group-hover:translate-x-2 transition-transform">
+                                            <FontAwesomeIcon icon={faChevronRight} className="text-sm" />
                                         </div>
-                                    </motion.button>
-                                ))}
+                                    </div>
+                                </motion.button>
+
+                                {/* Stock Management Card */}
+                                <motion.button
+                                    whileHover={{ y: -10, scale: 1.02 }}
+                                    onClick={() => navigate('/stock-management')}
+                                    className="premium-card p-10 hover:shadow-2xl transition-all text-left flex flex-col group relative overflow-hidden border-white"
+                                >
+                                    <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-full -mr-24 -mt-24 group-hover:scale-150 transition-transform blur-3xl" />
+
+                                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-3xl flex items-center justify-center text-white text-3xl mb-8 shadow-xl shadow-blue-600/20 group-hover:rotate-6 transition-transform">
+                                        <FontAwesomeIcon icon={faCubes} />
+                                    </div>
+
+                                    <h4 className="text-2xl font-black text-gray-900 tracking-tighter mb-3">Stock Management</h4>
+                                    <p className="premium-label text-sm leading-relaxed mb-8 opacity-70">Manage product inventory, track devices with serial numbers, and monitor stock levels.</p>
+
+                                    <div className="mt-auto pt-8 border-t border-gray-100/50 flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Open Portal</span>
+                                        <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-600 group-hover:translate-x-2 transition-transform">
+                                            <FontAwesomeIcon icon={faChevronRight} className="text-sm" />
+                                        </div>
+                                    </div>
+                                </motion.button>
+
+                                {/* Stock Analytics Calculator Card */}
+                                <motion.button
+                                    whileHover={{ y: -10, scale: 1.02 }}
+                                    onClick={() => navigate('/stock-calculator')}
+                                    className="premium-card p-10 hover:shadow-2xl transition-all text-left flex flex-col group relative overflow-hidden border-white"
+                                >
+                                    <div className="absolute top-0 right-0 w-48 h-48 bg-violet-500/5 rounded-full -mr-24 -mt-24 group-hover:scale-150 transition-transform blur-3xl" />
+
+                                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-600 rounded-3xl flex items-center justify-center text-white text-3xl mb-8 shadow-xl shadow-indigo-600/20 group-hover:rotate-6 transition-transform">
+                                        <FontAwesomeIcon icon={faCalculator} />
+                                    </div>
+
+                                    <h4 className="text-2xl font-black text-gray-900 tracking-tighter mb-3">Stock Analytics</h4>
+                                    <p className="premium-label text-sm leading-relaxed mb-8 opacity-70">Run granular stock analytics with AI intelligence. Calculate value, quantity and trends.</p>
+
+                                    <div className="mt-auto pt-8 border-t border-gray-100/50 flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Launch Intelligence</span>
+                                        <div className="w-10 h-10 bg-indigo-600/10 rounded-xl flex items-center justify-center text-indigo-600 group-hover:translate-x-2 transition-transform">
+                                            <FontAwesomeIcon icon={faChevronRight} className="text-sm" />
+                                        </div>
+                                    </div>
+                                </motion.button>
+
+                            </div>
+                        </div>
+                    ) : data.length === 0 ? (
+                        <div className="absolute inset-0 flex items-center justify-center text-center p-20">
+                            <div>
+                                <FontAwesomeIcon icon={faHistory} className="text-4xl text-gray-100 mb-6" />
+                                <h3 className="text-xl font-black text-gray-900 mb-2">No Records Detected</h3>
+                                <p className="text-xs font-black text-gray-500 uppercase tracking-widest">Adjust filters to broaden registry scan</p>
                             </div>
                         </div>
                     ) : (
-                        <div className="p-16 lg:p-24 overflow-x-auto no-scrollbar">
-                            <table className="w-full text-left border-collapse min-w-[1000px]">
-                                <thead>
-                                    <tr className="border-b border-white/5">
-                                        <th className="py-8 px-4 text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Record Block</th>
-                                        <th className="py-8 px-4 text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Primary Actor</th>
-                                        <th className="py-8 px-4 text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">State Status</th>
-                                        <th className="py-8 px-4 text-[10px] font-black text-white/20 uppercase tracking-[0.4em] text-right">Value Flux</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/2">
-                                    {data.map((item, idx) => (
-                                        <tr key={idx} className="hover:bg-white/2 transition-colors group">
-                                            <td className="py-8 px-4">
-                                                <div className="text-xs font-black text-white tracking-tight uppercase group-hover:text-[#00ffa3] transition-colors">{item.name || item.title || 'Unknown Entity'}</div>
-                                                <div className="text-[9px] font-black text-white/20 uppercase mt-1 tracking-widest">{item.subtitle || item.id}</div>
-                                            </td>
-                                            <td className="py-8 px-4">
-                                                <div className="text-[10px] font-black text-[#a855f7] uppercase tracking-widest">{item.actor || 'System Engine'}</div>
-                                                <div className="text-[8px] font-bold text-white/10 mt-1 uppercase">Personnel ID</div>
-                                            </td>
-                                            <td className="py-8 px-4">
-                                                <span className="px-4 py-2 bg-white/5 border border-white/5 rounded-xl text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">{item.status || 'Verified'}</span>
-                                            </td>
-                                            <td className="py-8 px-4 text-right">
-                                                <div className="text-base font-black text-white tracking-tighter">{item.value ? formatCurrency(item.value) : '---'}</div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            {(!data || data.length === 0) && (
-                                <div className="py-40 text-center opacity-10">
-                                    <FontAwesomeIcon icon={faFingerprint} className="text-8xl mb-8" />
-                                    <p className="text-[10px] font-black uppercase tracking-[0.5em]">Zero Intersection Detected</p>
+                        <div className="premium-card overflow-hidden border-white/60 mb-10 shadow-xl mx-8">
+                            <div className="p-8 border-b border-gray-100/50 flex items-center justify-between bg-white">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+                                        <FontAwesomeIcon icon={tabs.find(t => t.id === activeTab)?.icon} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black text-gray-900 tracking-tight leading-none mb-1">
+                                            {tabs.find(t => t.id === activeTab)?.label} <span className="text-blue-600">Matrix</span>
+                                        </h3>
+                                        <p className="premium-label text-[10px] font-black uppercase tracking-widest opacity-60">Synchronized Signal Stream: {data.length} entries</p>
+                                    </div>
                                 </div>
-                            )}
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="bg-gray-50/50 border-b border-gray-100/50">
+                                            {activeTab === 'users' && (
+                                                <>
+                                                    <th className="px-8 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Operator Identity</th>
+                                                    <th className="px-6 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Access Layer</th>
+                                                    <th className="px-6 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Vital Status</th>
+                                                </>
+                                            )}
+                                            {activeTab === 'tradeIns' && (
+                                                <>
+                                                    <th className="px-8 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Origin Client</th>
+                                                    <th className="px-6 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Device Spec</th>
+                                                    <th className="px-6 py-5 text-center text-[9px] font-black text-gray-400 uppercase tracking-widest">Equity Value</th>
+                                                    <th className="px-8 py-5 text-right text-[9px] font-black text-gray-400 uppercase tracking-widest">Entry Status</th>
+                                                </>
+                                            )}
+                                            {activeTab === 'sales' && (
+                                                <>
+                                                    <th className="px-8 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Consumer / Agent</th>
+                                                    <th className="px-6 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Asset Transferred</th>
+                                                    <th className="px-6 py-5 text-center text-[9px] font-black text-gray-400 uppercase tracking-widest">Final Ledger</th>
+                                                    <th className="px-8 py-5 text-right text-[9px] font-black text-gray-400 uppercase tracking-widest">Payment Loop</th>
+                                                </>
+                                            )}
+                                            {activeTab === 'repairs' && (
+                                                <>
+                                                    <th className="px-8 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Service Client</th>
+                                                    <th className="px-6 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Technical Asset</th>
+                                                    <th className="px-6 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Anomaly Signature</th>
+                                                    <th className="px-8 py-5 text-right text-[9px] font-black text-gray-400 uppercase tracking-widest">Lifecycle</th>
+                                                </>
+                                            )}
+                                            {activeTab === 'products' && (
+                                                <>
+                                                    <th className="px-8 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Catalog Entry</th>
+                                                    <th className="px-6 py-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Market Health</th>
+                                                    <th className="px-6 py-5 text-center text-[9px] font-black text-gray-400 uppercase tracking-widest">Reserve</th>
+                                                    <th className="px-8 py-5 text-right text-[9px] font-black text-gray-400 uppercase tracking-widest">Liquidity Value</th>
+                                                </>
+                                            )}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50/50">
+                                        {data.map((item, index) => (
+                                            <motion.tr
+                                                key={index}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                transition={{ delay: index * 0.01 }}
+                                                className="hover:bg-blue-50/30 transition-colors group"
+                                            >
+                                                {activeTab === 'users' && (
+                                                    <>
+                                                        <td className="px-8 py-6">
+                                                            <p className="text-sm font-black text-gray-900 tracking-tight leading-none mb-1">{item.name}</p>
+                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.email}</p>
+                                                        </td>
+                                                        <td className="px-6 py-6">
+                                                            <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase tracking-widest border border-blue-100/50">
+                                                                {item.role}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-6">
+                                                            <span className={`px-4 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest border ${item.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100/50 shadow-sm' : 'bg-rose-50 text-rose-600 border-rose-100/50 shadow-sm'
+                                                                }`}>
+                                                                {item.isActive ? 'OPERATIONAL' : 'OFF-GRID'}
+                                                            </span>
+                                                        </td>
+                                                    </>
+                                                )}
+                                                {activeTab === 'tradeIns' && (
+                                                    <>
+                                                        <td className="px-8 py-6">
+                                                            <p className="text-sm font-black text-gray-900 tracking-tight leading-none mb-1">{item.customerName}</p>
+                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date(item.createdAt).toLocaleDateString()}</p>
+                                                        </td>
+                                                        <td className="px-6 py-6">
+                                                            <p className="text-xs font-black text-gray-900 leading-none mb-1">{item.deviceInfo?.brand} {item.deviceInfo?.model}</p>
+                                                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">{item.deviceInfo?.serial || 'SCAN_LOCK'}</p>
+                                                        </td>
+                                                        <td className="px-6 py-6 text-center">
+                                                            <p className="text-sm font-black text-emerald-600">{formatCurrency(item.approvedValue)}</p>
+                                                        </td>
+                                                        <td className="px-8 py-6 text-right">
+                                                            <span className={`px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border ${item.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100/50' : 'bg-amber-50 text-amber-600 border-amber-100/50 shadow-sm animate-pulse'
+                                                                }`}>
+                                                                {item.status}
+                                                            </span>
+                                                        </td>
+                                                    </>
+                                                )}
+                                                {activeTab === 'sales' && (
+                                                    <>
+                                                        <td className="px-8 py-6">
+                                                            <p className="text-sm font-black text-gray-900 tracking-tight leading-none mb-1">{item.customer?.name || 'GUEST'}</p>
+                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Agent: {item.staff?.name || 'SYS'}</p>
+                                                        </td>
+                                                        <td className="px-6 py-6">
+                                                            <p className="text-xs font-black text-gray-900">{item.product?.name || 'GENERIC_ASSET'}</p>
+                                                        </td>
+                                                        <td className="px-6 py-6 text-center">
+                                                            <p className="text-sm font-black text-gray-900">{formatCurrency(item.totalAmount)}</p>
+                                                        </td>
+                                                        <td className="px-8 py-6 text-right">
+                                                            {item.tradeInId ? (
+                                                                <span className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[8px] font-black uppercase tracking-widest border border-indigo-100/50 shadow-sm">
+                                                                    Network Credit
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] italic">Direct Node</span>
+                                                            )}
+                                                        </td>
+                                                    </>
+                                                )}
+                                                {activeTab === 'repairs' && (
+                                                    <>
+                                                        <td className="px-8 py-6">
+                                                            <p className="text-sm font-black text-gray-900 tracking-tight leading-none mb-1">{item.customerName || 'VERIFIED_CLIENT'}</p>
+                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Agent: {item.staffName}</p>
+                                                        </td>
+                                                        <td className="px-6 py-6">
+                                                            <p className="text-xs font-black text-gray-900 leading-none mb-1">{item.deviceType} {item.deviceModel}</p>
+                                                        </td>
+                                                        <td className="px-6 py-6">
+                                                            <p className="text-[10px] font-black text-gray-600 uppercase tracking-tighter line-clamp-1">{item.problemDescription}</p>
+                                                        </td>
+                                                        <td className="px-8 py-6 text-right">
+                                                            <span className={`px-5 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border ${item.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100/50' :
+                                                                item.status === 'in-progress' ? 'bg-blue-50 text-blue-600 border-blue-100/50 shadow-sm' :
+                                                                    'bg-amber-50 text-amber-600 border-amber-100/50 shadow-sm animate-pulse'
+                                                                }`}>
+                                                                {item.status}
+                                                            </span>
+                                                        </td>
+                                                    </>
+                                                )}
+                                                {activeTab === 'products' && (
+                                                    <>
+                                                        <td className="px-8 py-6">
+                                                            <p className="text-sm font-black text-gray-900 tracking-tight leading-none mb-1">{item.name}</p>
+                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.model} • {item.color}</p>
+                                                        </td>
+                                                        <td className="px-6 py-6 w-48">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                                                                    <div className="h-full bg-blue-600 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all" style={{ width: `${item.aiInsights?.healthScore || 0}%` }} />
+                                                                </div>
+                                                                <span className="text-[9px] font-black text-gray-400">{item.aiInsights?.healthScore || 0}%</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-6 text-center">
+                                                            <span className={`px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border ${item.quantity > 5 ? 'bg-emerald-50 text-emerald-600 border-emerald-100/50' :
+                                                                item.quantity > 0 ? 'bg-amber-50 text-amber-600 border-amber-100/50 shadow-sm' :
+                                                                    'bg-rose-50 text-rose-600 border-rose-100/50 shadow-sm'
+                                                                }`}>
+                                                                {item.quantity} units
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-8 py-6 text-right">
+                                                            <p className="text-sm font-black text-gray-900 leading-none mb-1">{formatCurrency(item.sellingPrice)}</p>
+                                                            <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">{item.aiInsights?.priceOptimization}</p>
+                                                        </td>
+                                                    </>
+                                                )}
+                                            </motion.tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </div>
+
+                {/* Ledger Insights */}
+                {!loading && data.length > 0 && (
+                    <div className="mt-8 bg-gray-900 rounded-[2.5rem] p-8 text-white flex flex-col md:flex-row items-center justify-between shadow-2xl">
+                        <div className="flex items-center gap-6 mb-4 md:mb-0">
+                            <div className="w-16 h-16 bg-white/10 rounded-[1.5rem] flex items-center justify-center text-2xl">
+                                <FontAwesomeIcon icon={faChartLine} />
+                            </div>
+                            <div>
+                                <h4 className="text-2xl font-black tracking-tighter leading-none mb-1">Sector Overview</h4>
+                                <p className="text-white font-black uppercase tracking-widest opacity-70 text-[10px]">Displaying top {data.length} records in current matrix</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="text-right">
+                                <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-1">Matrix Resolution</p>
+                                <p className="text-lg font-black leading-none">{data.length} Signals</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
