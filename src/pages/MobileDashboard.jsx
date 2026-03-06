@@ -302,7 +302,7 @@ const MobileDashboard = () => {
                                             { label: 'Repairs', value: metrics?.repairs?.total || 0, icon: faTools, color: 'text-purple-600', bg: 'bg-purple-50', onClick: () => navigate('/repairs') },
                                             { label: 'Customers', value: metrics?.customers?.count || 0, icon: faUsers, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                                             { label: 'Low Stock', value: metrics?.inventory?.lowStock || 0, icon: faExclamationTriangle, color: 'text-amber-600', bg: 'bg-amber-50', onClick: () => navigate('/stock-management'), restricted: true }
-                                        ].filter(s => !s.restricted || user?.role === 'CEO').map((s, i) => (
+                                        ].filter(s => !s.restricted || user?.role === 'CEO' || user?.role === 'MANAGER').map((s, i) => (
                                             <div key={i} onClick={s.onClick} className="bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col items-center text-center">
                                                 <div className={`w-12 h-12 ${s.bg} rounded-2xl flex items-center justify-center mb-3`}>
                                                     <FontAwesomeIcon icon={s.icon} className={s.color} />
@@ -377,7 +377,8 @@ const MobileDashboard = () => {
                             {[
                                 { title: 'New Sale', desc: 'Create Order', icon: faShoppingCart, color: 'text-emerald-500', bg: 'bg-emerald-50', link: '/sales/new' },
                                 { title: 'Expenses Today', desc: 'Record Costs', icon: faWallet, color: 'text-rose-500', bg: 'bg-rose-50', link: '/expenses' },
-                                { title: 'Stock Table', desc: 'Inventory Check', icon: faBoxOpen, color: 'text-blue-500', bg: 'bg-blue-50', link: '/stock-inventory', restricted: true },
+                                { title: 'Stock Management', desc: 'Add & Edit Stock', icon: faBoxOpen, color: 'text-blue-600', bg: 'bg-blue-50', link: '/stock-management', restricted: true },
+                                { title: 'Stock Table', desc: 'Inventory Check', icon: faCubes, color: 'text-blue-500', bg: 'bg-blue-50', link: '/stock-inventory', restricted: true },
                                 { title: 'Team Admin', desc: 'Staff Oversight', icon: faUserCog, color: 'text-green-500', bg: 'bg-green-50', link: '/team-management', restricted: true }
                             ].filter(t => !t.restricted || (user?.role === 'CEO' || user?.role === 'MANAGER')).map((t, i) => (
                                 <button key={i} onClick={() => navigate(t.link)} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-5 w-full text-left active:scale-95 transition-all">
