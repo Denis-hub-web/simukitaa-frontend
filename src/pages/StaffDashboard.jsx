@@ -5,7 +5,7 @@ import {
     faMoneyBillWave, faTools, faBoxOpen, faUsers,
     faCheckCircle, faClock, faMobileAlt, faUserPlus,
     faSearch, faCog, faSignOutAlt, faReceipt,
-    faArrowRight, faShieldAlt, faMicrochip, faHistory
+    faArrowRight, faShieldAlt, faMicrochip, faHistory, faChartLine, faCalendar
 } from '@fortawesome/free-solid-svg-icons';
 import { salesAPI, repairAPI, expenseAPI } from '../utils/api';
 import Modal from '../components/Modal';
@@ -126,6 +126,7 @@ const StaffDashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {[
                         { label: 'New Sale', desc: 'Create a new sale record', icon: faMoneyBillWave, color: 'green', action: () => setShowSaleModal(true) },
+                        { label: 'Analytics', desc: 'View performance data', icon: faChartLine, color: 'emerald', action: () => window.location.href = '/analytics' },
                         { label: 'New Repair', desc: 'Start a new repair record', icon: faTools, color: 'purple', action: () => setShowRepairModal(true) },
                         { label: 'New Customer', desc: 'Add a new customer profile', icon: faUserPlus, color: 'blue', action: () => setShowCustomerModal(true) }
                     ].map((item, i) => (

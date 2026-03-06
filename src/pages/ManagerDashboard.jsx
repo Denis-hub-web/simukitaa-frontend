@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faArrowLeft, faUsers, faChartLine, faTrophy,
     faMoneyBillWave, faStar, faBoxOpen, faLightbulb,
-    faShieldAlt, faUserTie, faChevronRight
+    faShieldAlt, faUserTie, faChevronRight, faCalendarAlt
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { API_URL } from '../utils/api';
@@ -19,6 +19,10 @@ const ManagerDashboard = () => {
     // Get user for role checking
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+    const [dateRange, setDateRange] = useState({
+        start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
+        end: new Date().toISOString().split('T')[0]
+    });
     const API_BASE_URL = API_URL;
 
     useEffect(() => {
@@ -92,21 +96,28 @@ const ManagerDashboard = () => {
                                 <h1 className="text-2xl font-black text-white tracking-tighter leading-tight">Team Management</h1>
                             </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col md:flex-row items-center gap-3">
+                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/10">
+                                <input
+                                    type="date"
+                                    value={dateRange.start}
+                                    onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                                    className="bg-transparent text-white text-[10px] font-black uppercase outline-none"
+                                />
+                                <span className="text-white/40 text-[10px]">to</span>
+                                <input
+                                    type="date"
+                                    value={dateRange.end}
+                                    onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                                    className="bg-transparent text-white text-[10px] font-black uppercase outline-none"
+                                />
+                            </div>
                             <button
-                                onClick={() => navigate('/technicians')}
-                                className="bg-white/10 backdrop-blur-md text-white px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 border border-white/10 hover:bg-white/20 transition-all"
+                                onClick={() => navigate('/analytics')}
+                                className="bg-white text-[#008069] px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all"
                             >
-                                <FontAwesomeIcon icon={faUserTie} />
-                                <span className="hidden sm:inline">Staff Directory</span>
-                            </button>
-                            <button
-                                onClick={generateAIRecommendations}
-                                disabled={generatingAI}
-                                className="bg-white text-[#008069] px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
-                            >
-                                <FontAwesomeIcon icon={faLightbulb} className={generatingAI ? 'animate-pulse' : ''} />
-                                <span className="hidden sm:inline">{generatingAI ? 'Analyzing...' : 'Strategic AI Insights'}</span>
+                                <FontAwesomeIcon icon={faChartLine} />
+                                <span>Advanced Reports</span>
                             </button>
                         </div>
                     </div>

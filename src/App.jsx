@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import AdvancedReportPage from './pages/AdvancedReportPage';
 import DesktopLayout from './layouts/DesktopLayout';
 import MobileDashboard from './pages/MobileDashboard';
 import CEOStockManagement from './pages/CEOStockManagement';
@@ -99,6 +100,7 @@ function App() {
                         <Route path="/reports" element={<ReportsPage />} />
                         <Route path="/expenses" element={<ExpensesPage />} />
                         <Route path="/daily-sheet" element={<DailySheetReport />} />
+                        <Route path="/analytics" element={<AdvancedReportPage />} />
                         <Route path="/tools" element={<ToolsPage />} />
                         <Route path="/" element={<Navigate to="/dashboard" />} />
                     </Route>

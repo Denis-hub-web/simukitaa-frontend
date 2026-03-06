@@ -44,15 +44,15 @@ const DesktopLayout = () => {
 
     const menuItems = [
         { icon: faHome, label: 'Dashboard', path: '/dashboard', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { icon: faMoneyBillWave, label: 'Sales History', path: '/sales', roles: ['CEO'] },
+        { icon: faMoneyBillWave, label: 'Sales History', path: '/sales', roles: ['CEO', 'MANAGER'] },
         { icon: faWallet, label: 'Expenses', path: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: faExchangeAlt, label: 'Trade-In Manager', path: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: faBoxOpen, label: 'Stock Management', path: '/stock-management', roles: ['CEO', 'MANAGER'] },
         { icon: faTruck, label: 'Supplier Network', path: '/suppliers', roles: ['CEO', 'MANAGER'] },
         { icon: faGem, label: 'Wanakitaa Hub', path: '/wanakitaa', roles: ['CEO', 'MANAGER'] },
-        { icon: faBullhorn, label: 'Campaigns', path: '/campaigns', roles: ['CEO'] },
+        { icon: faBullhorn, label: 'Campaigns', path: '/campaigns', roles: ['CEO', 'MANAGER'] },
         { icon: faEnvelope, label: 'Templates', path: '/notification-templates', roles: ['CEO'] },
-        { icon: faUserCog, label: 'Team Management', path: '/team-management', roles: ['CEO'] },
+        { icon: faUserCog, label: 'Team Management', path: '/team-management', roles: ['CEO', 'MANAGER'] },
         { icon: faCog, label: 'Settings', path: '/settings', roles: ['CEO', 'MANAGER', 'STAFF'] },
     ];
 
