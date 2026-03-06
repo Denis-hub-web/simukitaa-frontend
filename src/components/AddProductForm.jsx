@@ -160,22 +160,21 @@ const AddProductForm = ({ onSuccess, onCancel }) => {
                     </div>
 
                     {/* Financial Matrix */}
-                    <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-8 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6 relative overflow-hidden">
-                        <div className="absolute bottom-0 right-0 w-32 h-32 bg-[#00ffa3] rounded-full blur-3xl opacity-5 -mr-16 -mb-16" />
-
-                        <div className="space-y-2">
-                            <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] ml-1">Buying Price</label>
-                            <div className="flex items-center gap-3">
-                                <span className="text-lg font-black text-white/20">T$H</span>
-                                <input
-                                    type="number"
-                                    required
-                                    value={formData.costPrice}
-                                    onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
-                                    className="bg-transparent border-b border-white/10 focus:border-[#00ffa3] py-2 w-full text-xl font-black text-white outline-none transition-all"
-                                />
+                        {((user?.role === 'CEO' || user?.role === 'MANAGER')) && (
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] ml-1">Buying Price</label>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-lg font-black text-white/20">T$H</span>
+                                    <input
+                                        type="number"
+                                        required
+                                        value={formData.costPrice}
+                                        onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
+                                        className="bg-transparent border-b border-white/10 focus:border-[#00ffa3] py-2 w-full text-xl font-black text-white outline-none transition-all"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <div className="space-y-2">
                             <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] ml-1">Selling Price</label>
@@ -271,45 +270,45 @@ const AddProductForm = ({ onSuccess, onCancel }) => {
                         {loading ? 'ADDING...' : 'ADD PRODUCT'}
                     </button>
                 </div>
-            </form>
+            </form >
 
-            <AnimatePresence>
-                {showConfirm && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-[#0a0a0c]/90 backdrop-blur-xl flex items-center justify-center z-[200] p-6"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            className="bg-[#0a0a0c] border border-white/10 rounded-[3rem] p-12 max-w-sm w-full shadow-2xl overflow-hidden relative"
+    <AnimatePresence>
+        {showConfirm && (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-[#0a0a0c]/90 backdrop-blur-xl flex items-center justify-center z-[200] p-6"
+            >
+                <motion.div
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    className="bg-[#0a0a0c] border border-white/10 rounded-[3rem] p-12 max-w-sm w-full shadow-2xl overflow-hidden relative"
+                >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#00ffa3] rounded-full blur-3xl opacity-10 -mr-16 -mt-16" />
+                    <h3 className="text-3xl font-black text-white mb-4 tracking-tighter uppercase leading-none">Confirm Add</h3>
+                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] leading-relaxed mb-10">
+                        Confirm adding {formData.quantity} product(s) to inventory. This action cannot be undone.
+                    </p>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => setShowConfirm(false)}
+                            className="flex-1 py-5 bg-white/5 text-white/20 rounded-2xl font-black text-[9px] uppercase tracking-widest"
                         >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#00ffa3] rounded-full blur-3xl opacity-10 -mr-16 -mt-16" />
-                            <h3 className="text-3xl font-black text-white mb-4 tracking-tighter uppercase leading-none">Confirm Add</h3>
-                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] leading-relaxed mb-10">
-                                Confirm adding {formData.quantity} product(s) to inventory. This action cannot be undone.
-                            </p>
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={() => setShowConfirm(false)}
-                                    className="flex-1 py-5 bg-white/5 text-white/20 rounded-2xl font-black text-[9px] uppercase tracking-widest"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={confirmSubmit}
-                                    className="flex-[2] py-5 bg-[#00ffa3] text-black rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-lg"
-                                >
-                                    Confirm
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+                            Cancel
+                        </button>
+                        <button
+                            onClick={confirmSubmit}
+                            className="flex-[2] py-5 bg-[#00ffa3] text-black rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-lg"
+                        >
+                            Confirm
+                        </button>
+                    </div>
+                </motion.div>
+            </motion.div>
+        )}
+    </AnimatePresence>
+        </div >
     );
 };
 
