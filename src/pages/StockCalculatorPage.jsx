@@ -52,6 +52,9 @@ const StockCalculatorPage = () => {
     });
     const [results, setResults] = useState(null);
 
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isCEO = user?.role === 'CEO';
+
     useEffect(() => {
         fetchOptions();
     }, [mode]);
@@ -258,16 +261,16 @@ const StockCalculatorPage = () => {
                                                     <span className="text-gray-500 text-[10px] uppercase font-black tracking-wider">Units</span>
                                                     <span className="text-5xl font-black bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent leading-none drop-shadow-glow">{results.quantity}</span>
                                                     <span className="text-gray-500 text-[10px] uppercase font-black ml-6 tracking-wider">Cost</span>
-                                                    <span className="text-xl font-black bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent leading-none">Tsh {results.totalCost.toLocaleString()}</span>
+                                                    <span className="text-xl font-black bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent leading-none">{isCEO ? 'Tsh ' + results.totalCost.toLocaleString() : '••••••'}</span>
                                                     <span className="text-gray-500 text-[10px] uppercase font-black ml-6 tracking-wider">Value</span>
-                                                    <span className="text-xl font-black bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent leading-none">Tsh {results.totalValue.toLocaleString()}</span>
+                                                    <span className="text-xl font-black bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent leading-none">{isCEO ? 'Tsh ' + results.totalValue.toLocaleString() : '••••••'}</span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <span className="text-gray-500 text-[10px] uppercase font-black tracking-wider">Revenue</span>
-                                                    <span className="text-4xl font-black bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent leading-none drop-shadow-glow">Tsh {results.revenue.toLocaleString()}</span>
+                                                    <span className="text-4xl font-black bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent leading-none drop-shadow-glow">{isCEO ? 'Tsh ' + results.revenue.toLocaleString() : '••••••'}</span>
                                                     <span className="text-gray-500 text-[10px] uppercase font-black ml-6 tracking-wider">Profit</span>
-                                                    <span className="text-xl font-black bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent leading-none">Tsh {results.profit.toLocaleString()}</span>
+                                                    <span className="text-xl font-black bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent leading-none">{isCEO ? 'Tsh ' + results.profit.toLocaleString() : '••••••'}</span>
                                                     <span className="text-gray-500 text-[10px] uppercase font-black ml-6 tracking-wider">Units</span>
                                                     <span className="text-xl font-black bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent leading-none">{results.quantity}</span>
                                                 </>

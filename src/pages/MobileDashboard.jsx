@@ -4,38 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faHome,
-    faChartLine,
-    faBoxOpen,
-    faUsers,
-    faCog,
-    faBell,
-    faSearch,
-    faPlus,
-    faTools,
-    faExchangeAlt,
-    faMoneyBillWave,
-    faChevronRight,
-    faUserPlus,
-    faClock,
-    faArrowUp,
-    faExclamationTriangle,
-    faEllipsisH,
-    faArrowRight,
-    faCheckCircle,
-    faTruck,
-    faCompass,
-    faBrain,
-    faGem,
-    faShoppingCart,
-    faCubes,
-    faEnvelope,
-    faBullhorn,
-    faUserCog,
-    faFileAlt,
-    faWallet,
-    faSignOutAlt,
-    faMobileAlt
+    faHome, faChartLine, faBoxOpen, faUsers, faCog, faBell, faSearch, faPlus,
+    faTools, faExchangeAlt, faMoneyBillWave, faChevronRight, faUserPlus,
+    faClock, faArrowUp, faExclamationTriangle, faEllipsisH, faArrowRight,
+    faCheckCircle, faTruck, faCompass, faBrain, faGem, faShoppingCart,
+    faCubes, faEnvelope, faBullhorn, faUserCog, faFileAlt, faWallet,
+    faSignOutAlt, faMobileAlt, faBolt, faFingerprint, faCrown, faShieldAlt
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
@@ -55,34 +29,21 @@ const MobileDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [error, setError] = useState('');
-    const [showConfirm, setShowConfirm] = useState(false);
 
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const [notificationFilter, setNotificationFilter] = useState('all');
     const [showSaleModal, setShowSaleModal] = useState(false);
     const [showCustomerModal, setShowCustomerModal] = useState(false);
     const [showProductModal, setShowProductModal] = useState(false);
-    const [personalExpenses, setPersonalExpenses] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
     const [dateRange, setDateRange] = useState({
         start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
         end: new Date().toISOString().split('T')[0]
     });
-    const [selectedNotification, setSelectedNotification] = useState(null);
 
     const API_URL = (() => {
-        const envUrl = import.meta.env.VITE_API_URL;
-        if (envUrl) {
-            const cleaned = envUrl.replace(/\/+$/, '');
-            return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`;
-        }
-
         const hostname = window.location.hostname;
-        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
-
-        if (isLocal) return 'http://localhost:5000/api';
-
-        // PRODUCTION: Use the dedicated API subdomain (Cloudflare → Render)
+        if (hostname === 'localhost' || hostname === '127.0.0.1') return 'http://localhost:5000/api';
         return 'https://api.simukitaa.com/api';
     })();
 
@@ -99,7 +60,6 @@ const MobileDashboard = () => {
                 axios.get(`${API_URL}/dashboard/metrics`, { headers: { Authorization: `Bearer ${token}` } }),
                 axios.get(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
-
             setMetrics(metricsRes.data.data);
             setNotifications(Array.isArray(notifRes.data.data.notifications) ? notifRes.data.data.notifications : []);
         } catch (error) {
@@ -109,52 +69,10 @@ const MobileDashboard = () => {
         }
     };
 
-    const markAsRead = async (notifId) => {
-        try {
-            const token = localStorage.getItem('token');
-            await axios.put(`${API_URL}/notifications/${notifId}/read`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            loadDashboardData();
-        } catch (error) {
-            console.error('Failed to mark read:', error);
-        }
-    };
-
-    const handleNotificationClick = async (notif) => {
-        if (!notif.isRead) {
-            await markAsRead(notif.id);
-        }
-
-        // Dynamic navigation based on metadata
-        if (notif.metadata?.repairId) {
-            navigate(`/repairs/${notif.metadata.repairId}`);
-        } else if (notif.metadata?.tradeInId) {
-            navigate(`/trade-ins/view/${notif.metadata.tradeInId}`);
-        } else if (notif.metadata?.saleId) {
-            handleSuccess(`Viewing Sale: ${notif.metadata.saleId}`);
-        } else if (notif.metadata?.deliveryId) {
-            navigate(`/deliveries/${notif.metadata.deliveryId}`);
-        }
-    };
-    const markAllRead = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            await axios.put(`${API_URL}/notifications/mark-all-read`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            loadDashboardData();
-            handleSuccess('All signals cleared.');
-        } catch (error) {
-            console.error('Failed to mark all read:', error);
-        }
-    };
-
     const formatCurrency = (amount) => {
+        if (user?.role === 'MANAGER') return '••••••';
         return new Intl.NumberFormat('sw-TZ', {
-            style: 'currency',
-            currency: 'TZS',
-            minimumFractionDigits: 0
+            style: 'currency', currency: 'TZS', minimumFractionDigits: 0
         }).format(amount || 0);
     };
 
@@ -162,98 +80,87 @@ const MobileDashboard = () => {
         setSuccessMessage(msg);
         setShowSaleModal(false);
         setShowCustomerModal(false);
+        setShowProductModal(false);
         setTimeout(() => setSuccessMessage(''), 3000);
         loadDashboardData();
     };
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#efeff4] flex items-center justify-center">
+            <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-[#008069] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-500 font-black uppercase tracking-widest text-[10px]">Loading Mobile Dashboard...</p>
+                    <motion.div
+                        animate={{ rotate: 360, scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="w-16 h-16 border-4 border-[#00ffa3] border-t-transparent rounded-[1.5rem] mx-auto mb-8 shadow-[0_0_20px_rgba(0,255,163,0.2)]"
+                    />
+                    <p className="text-[#00ffa3] font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Syncing Elite Assets...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="premium-bg pb-8 md:pb-12">
-            {/* Premium Header */}
-            <div className="relative overflow-hidden pb-12 pt-8 mobile-only">
-                <div className="max-w-6xl mx-auto px-4 relative z-10">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="premium-icon-box bg-white overflow-hidden p-1 transition-transform hover:scale-110">
-                                <img
-                                    src="/img/IMG_2989.jpeg"
-                                    alt="Simukitaa"
-                                    className="w-full h-full object-cover rounded-2xl"
-                                />
-                            </div>
-                            <div>
-                                <p className="premium-label mb-0.5">Dashboard</p>
-                                <h1 className="premium-h1">
-                                    {user?.name?.split(' ')[0] || 'Member'}
-                                </h1>
+        <div className="min-h-screen bg-[#050505] text-white pb-32">
+            {/* Elite Mobile Header */}
+            <div className="relative pt-8 pb-12 overflow-hidden px-6">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#00ffa3]/5 rounded-full blur-[100px] -mr-32 -mt-32"></div>
+
+                <div className="flex items-center justify-between mb-10">
+                    <div className="flex items-center gap-4">
+                        <div className="relative group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-[#00ffa3] to-blue-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                            <div className="relative w-14 h-14 bg-[#111] rounded-2xl border border-white/5 flex items-center justify-center shadow-2xl overflow-hidden">
+                                <img src="/img/IMG_2989.jpeg" className="w-full h-full object-cover" alt="Elite" />
+                                <div className="absolute bottom-0 w-full h-1 bg-[#00ffa3]"></div>
                             </div>
                         </div>
-                        <div className="flex flex-col md:flex-row items-center gap-3">
-                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/10">
-                                <input
-                                    type="date"
-                                    value={dateRange.start}
-                                    onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                                    className="bg-transparent text-white text-[10px] font-black uppercase outline-none"
-                                />
-                                <span className="text-white/40 text-[10px]">to</span>
-                                <input
-                                    type="date"
-                                    value={dateRange.end}
-                                    onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                                    className="bg-transparent text-white text-[10px] font-black uppercase outline-none"
-                                />
+                        <div>
+                            <div className="flex items-center gap-2 mb-0.5">
+                                <span className="w-1.5 h-1.5 bg-[#00ffa3] rounded-full animate-ping"></span>
+                                <p className="text-white/30 font-black uppercase tracking-[0.2em] text-[9px]">Elite Terminal</p>
                             </div>
-                            <button onClick={() => { localStorage.clear(); window.location.href = '/login'; }} className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-white hover:bg-red-500/40 transition-all border border-white/10 shadow-lg"><FontAwesomeIcon icon={faSignOutAlt} /></button>
-                            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-gray-400 shadow-lg border border-white relative hover:scale-105 transition-all">
-                                <FontAwesomeIcon icon={faBell} />
-                                {notifications.filter(n => !n.isRead).length > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
-                                        {notifications.filter(n => !n.isRead).length}
-                                    </span>
-                                )}
-                            </div>
-                            {!['TECHNICIAN', 'DELIVERY'].includes(user?.role) && (
-                                <button
-                                    onClick={() => navigate('/sales/new')}
-                                    className="w-12 h-12 premium-btn-primary flex items-center justify-center"
-                                >
-                                    <FontAwesomeIcon icon={faPlus} className="text-lg" />
-                                </button>
+                            <h1 className="text-2xl font-black tracking-tighter">{user?.name?.split(' ')[0]}</h1>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setActiveTab('updates')}
+                            className="relative w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 hover:bg-white/10 transition-all"
+                        >
+                            <FontAwesomeIcon icon={faBell} className="text-white/40" />
+                            {notifications.filter(n => !n.isRead).length > 0 && (
+                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#00ffa3] text-black text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#050505]">
+                                    {notifications.filter(n => !n.isRead).length}
+                                </span>
                             )}
-                        </div>
+                        </button>
+                        <button
+                            onClick={() => { localStorage.clear(); window.location.href = '/login'; }}
+                            className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 hover:bg-red-500/20 hover:text-red-500 transition-all"
+                        >
+                            <FontAwesomeIcon icon={faSignOutAlt} className="text-white/20" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                    <div className="relative group">
+                        <FontAwesomeIcon icon={faSearch} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 z-10" />
+                        <input
+                            type="text"
+                            placeholder="Find Asset or Record..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-[#111] border border-white/5 rounded-[2rem] py-5 px-14 text-white placeholder:text-white/10 text-sm font-bold focus:border-[#00ffa3]/30 outline-none transition-all shadow-2xl"
+                        />
                     </div>
                 </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="max-w-6xl mx-auto px-4 -mt-4 relative z-10 md:mt-8">
-                <div className="mb-8 mobile-only">
-                    <div className="relative group">
-                        <FontAwesomeIcon
-                            icon={faSearch}
-                            className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors z-10 pointer-events-none"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Find inventory, orders, customers..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="premium-input !pl-14 shadow-xl border-white relative z-0"
-                        />
-                    </div>
-                </div>
-
+            {/* Main Luxury Content */}
+            <div className="px-6 relative z-10">
                 <AnimatePresence mode="wait">
                     {activeTab === 'home' && (
                         <motion.div
@@ -263,204 +170,111 @@ const MobileDashboard = () => {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="space-y-6"
                         >
-                            {/* CEO/Manager Home: AI + Revenue Only */}
+                            {/* Management View */}
                             {(user?.role === 'CEO' || user?.role === 'MANAGER') ? (
                                 <>
-                                    {/* Revenue Spotlight */}
-                                    <div className="premium-card p-6 md:p-8">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none"></div>
-                                        <div className="relative z-10">
-                                            <div className="flex justify-between items-start mb-4 md:mb-6">
-                                                <div>
-                                                    <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Revenue Today</p>
-                                                    <h3 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tighter">
-                                                        {formatCurrency((metrics?.sales?.today?.revenue || 0) + (metrics?.repairs?.today?.revenue || 0))}
-                                                    </h3>
-                                                </div>
-                                                <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 shadow-inner">
-                                                    <FontAwesomeIcon icon={faChartLine} className="text-xl md:text-2xl" />
-                                                </div>
+                                    <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] p-8 rounded-[3rem] border border-white/5 relative overflow-hidden shadow-2xl">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#00ffa3]/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                                        <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] mb-4">Tactical Revenue</p>
+                                        <div className="flex justify-between items-end mb-8">
+                                            <h3 className="text-4xl font-black tracking-tighter">
+                                                {formatCurrency((metrics?.sales?.today?.revenue || 0) + (metrics?.repairs?.today?.revenue || 0))}
+                                            </h3>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[10px] font-black text-[#00ffa3] bg-[#00ffa3]/10 px-3 py-1 rounded-full border border-[#00ffa3]/20">+18%</span>
+                                                <p className="text-[9px] text-white/20 mt-1 uppercase font-black">24h Pulse</p>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-3 md:gap-4">
-                                                <div className="bg-white/50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-white/50 shadow-sm">
-                                                    <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Sales</p>
-                                                    <p className="text-base md:text-lg font-black text-gray-800">{formatCurrency(metrics?.sales?.today?.revenue || 0)}</p>
-                                                </div>
-                                                <div className="bg-white/50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-white/50 shadow-sm">
-                                                    <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Repairs Rev</p>
-                                                    <p className="text-base md:text-lg font-black text-gray-900">{formatCurrency(metrics?.repairs?.today?.revenue || 0)}</p>
-                                                </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-white/2 p-4 rounded-2xl border border-white/5">
+                                                <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Total Signals</p>
+                                                <p className="text-lg font-black text-[#00ffa3]">{metrics?.sales?.today?.count || 0}</p>
+                                            </div>
+                                            <div className="bg-white/2 p-4 rounded-2xl border border-white/5">
+                                                <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Repairs In</p>
+                                                <p className="text-lg font-black text-blue-500">{metrics?.repairs?.pending || 0}</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Daily Sheet Access for Management */}
-                                    <div className="mb-6">
+                                    <div className="grid grid-cols-1 gap-4">
                                         <button
                                             onClick={() => navigate('/daily-sheet')}
-                                            className="w-full premium-card p-6 flex items-center justify-between group hover:shadow-lg transition-all bg-gradient-to-br from-emerald-500/10 to-transparent border-emerald-100"
+                                            className="bg-[#111] p-6 rounded-[2.5rem] border border-white/5 flex items-center justify-between group active:scale-95 transition-all shadow-xl"
                                         >
                                             <div className="flex items-center gap-6">
-                                                <div className="w-16 h-16 bg-emerald-500 rounded-[1.5rem] flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
-                                                    <FontAwesomeIcon icon={faFileAlt} className="text-2xl" />
+                                                <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-white/20 group-hover:text-[#00ffa3] transition-colors border border-white/5">
+                                                    <FontAwesomeIcon icon={faFileAlt} className="text-xl" />
                                                 </div>
                                                 <div className="text-left">
-                                                    <h3 className="text-xl font-black text-gray-900 tracking-tight leading-none mb-1">Daily Sheet</h3>
-                                                    <p className="premium-label text-emerald-600">Financial Audit & Performance</p>
+                                                    <h4 className="text-lg font-black tracking-tight">Daily Sheet</h4>
+                                                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest leading-none">Financial Oversight</p>
                                                 </div>
                                             </div>
-                                            <FontAwesomeIcon icon={faChevronRight} className="text-emerald-300 group-hover:translate-x-1 transition-transform" />
+                                            <FontAwesomeIcon icon={faArrowRight} className="text-white/10" />
                                         </button>
-                                    </div>
 
-                                    {/* Analytics Portal for Mobile Management */}
-                                    <div className="mb-6">
                                         <button
                                             onClick={() => navigate('/analytics')}
-                                            className="w-full premium-card p-6 flex items-center justify-between group hover:shadow-lg transition-all bg-gradient-to-br from-blue-500/10 to-transparent border-blue-100"
+                                            className="bg-[#111] p-6 rounded-[2.5rem] border border-white/5 flex items-center justify-between group active:scale-95 transition-all shadow-xl"
                                         >
                                             <div className="flex items-center gap-6">
-                                                <div className="w-16 h-16 bg-blue-600 rounded-[1.5rem] flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
-                                                    <FontAwesomeIcon icon={faChartLine} className="text-2xl" />
+                                                <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-white/20 group-hover:text-blue-500 transition-colors border border-white/5">
+                                                    <FontAwesomeIcon icon={faChartLine} className="text-xl" />
                                                 </div>
                                                 <div className="text-left">
-                                                    <h3 className="text-xl font-black text-gray-900 tracking-tight leading-none mb-1">Advanced Analytics</h3>
-                                                    <p className="premium-label text-blue-600">Insights & Matrix Data</p>
+                                                    <h4 className="text-lg font-black tracking-tight">Intelligence</h4>
+                                                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest leading-none">Advanced Analytics</p>
                                                 </div>
                                             </div>
-                                            <FontAwesomeIcon icon={faChevronRight} className="text-blue-300 group-hover:translate-x-1 transition-transform" />
+                                            <FontAwesomeIcon icon={faArrowRight} className="text-white/10" />
                                         </button>
                                     </div>
 
-                                    {/* AI Business Intelligence - Full Focus */}
-                                    <div className="mb-6">
-                                        <AIBusinessIntelligence />
-                                    </div>
+                                    <AIBusinessIntelligence />
                                 </>
                             ) : (
                                 <>
-                                    {/* Staff Users: Keep Original Layout with Analytics */}
-                                    {/* Metrics Grid */}
-                                    <div className="mb-4">
-                                        <button
-                                            onClick={() => navigate('/analytics')}
-                                            className="w-full bg-blue-600 text-white rounded-2xl py-4 font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20"
-                                        >
-                                            <FontAwesomeIcon icon={faChartLine} />
-                                            View Performance Analytics
-                                        </button>
-                                    </div>
-                                    {user?.role !== 'TECHNICIAN' && user?.role !== 'DELIVERY' && (
-                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                            {[
-                                                { label: 'Orders', value: metrics?.sales?.today?.count || 0, icon: faBoxOpen, color: 'text-blue-600', bg: 'bg-blue-50', onClick: () => navigate('/sales'), restricted: true },
-                                                { label: 'Repairs', value: metrics?.repairs?.total || 0, icon: faTools, color: 'text-purple-600', bg: 'bg-purple-50', onClick: () => navigate('/repairs') },
-                                                { label: 'Customers', value: metrics?.customers?.count || 124, icon: faUsers, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                                                { label: 'Low Stock', value: metrics?.inventory?.lowStock || 0, icon: faExclamationTriangle, color: 'text-amber-600', bg: 'bg-amber-50', onClick: () => navigate('/stock-management'), restricted: true }
-                                            ].filter(stat => !stat.restricted || user?.role === 'CEO').map((stat, i) => (
-                                                <div key={i} onClick={stat.onClick} className={`premium-card p-5 hover:shadow-md hover:-translate-y-0.5 transition-all ${stat.onClick ? 'cursor-pointer' : ''}`}>
-                                                    <div className={`w-12 h-12 ${stat.bg} rounded-2xl flex items-center justify-center mb-3 shadow-sm transition-transform group-hover:scale-110`}>
-                                                        <FontAwesomeIcon icon={stat.icon} className={`${stat.color} text-lg`} />
-                                                    </div>
-                                                    <p className="text-2xl font-black text-gray-900 tracking-tight">{stat.value}</p>
-                                                    <p className="premium-label tracking-wider mb-0">{stat.label}</p>
+                                    {/* Staff Quick Pulse */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {[
+                                            { label: 'My Sales', value: metrics?.sales?.today?.count || 0, icon: faBolt, color: '#00ffa3' },
+                                            { label: 'Pending Repairs', value: metrics?.repairs?.pending || 0, icon: faTools, color: '#a855f7' },
+                                        ].map((stat, i) => (
+                                            <div key={i} className="bg-[#111] p-6 rounded-[2.5rem] border border-white/5 shadow-2xl">
+                                                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-white/5 border border-white/5" style={{ color: stat.color }}>
+                                                    <FontAwesomeIcon icon={stat.icon} />
                                                 </div>
+                                                <p className="text-2xl font-black tracking-tighter">{stat.value}</p>
+                                                <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em]">{stat.label}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="bg-[#111] p-8 rounded-[3rem] border border-white/5 shadow-2xl">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <h3 className="text-xl font-black tracking-tight">Command Center</h3>
+                                            <span className="text-[9px] font-black text-white/10 uppercase tracking-widest">Active Ops</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {[
+                                                { label: 'Sale', icon: faShoppingCart, action: () => navigate('/sales/new'), color: '#00ffa3' },
+                                                { label: 'Repair', icon: faTools, action: () => navigate('/repair-form'), color: '#a855f7' },
+                                                { label: 'Customer', icon: faUserPlus, action: () => setShowCustomerModal(true), color: '#3b82f6' },
+                                                { label: 'Analytics', icon: faChartLine, action: () => navigate('/analytics'), color: '#ec4899' }
+                                            ].map((action, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={action.action}
+                                                    className="bg-white/2 p-6 rounded-[2rem] border border-white/5 flex flex-col items-center gap-3 active:scale-95 transition-all group"
+                                                >
+                                                    <div className="text-2xl transition-transform group-hover:scale-110" style={{ color: action.color }}>
+                                                        <FontAwesomeIcon icon={action.icon} />
+                                                    </div>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{action.label}</span>
+                                                </button>
                                             ))}
                                         </div>
-                                    )}
-
-                                    {/* Quick Actions for Non-CEO */}
-                                    <div className="premium-card p-6">
-                                        <div className="flex items-center justify-between mb-6">
-                                            <h2 className="premium-h3 text-gray-900">Quick Actions</h2>
-                                            <p className="premium-caption text-gray-500">Fast access</p>
-                                        </div>
-
-                                        {/* Role-Based Quick Actions */}
-                                        {user?.role === 'TECHNICIAN' ? (
-                                            <button
-                                                onClick={() => navigate('/technician-dashboard')}
-                                                className="w-full premium-card p-5 hover:shadow-lg transition-all group flex items-center gap-4 bg-blue-50/50 border-blue-100"
-                                            >
-                                                <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                                                    <FontAwesomeIcon icon={faTools} className="text-white text-xl" />
-                                                </div>
-                                                <div className="flex-1 text-left">
-                                                    <p className="font-bold text-gray-900 mb-1">My Tasks</p>
-                                                    <p className="premium-caption text-blue-600">Active Assignments</p>
-                                                </div>
-                                                <FontAwesomeIcon icon={faChevronRight} className="text-blue-300" />
-                                            </button>
-                                        ) : user?.role === 'DELIVERY' ? (
-                                            <button
-                                                onClick={() => navigate('/deliveries')}
-                                                className="w-full premium-card p-5 hover:shadow-lg transition-all group flex items-center gap-4 bg-emerald-50/50 border-emerald-100"
-                                            >
-                                                <div className="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                                                    <FontAwesomeIcon icon={faTruck} className="text-white text-xl" />
-                                                </div>
-                                                <div className="flex-1 text-left">
-                                                    <p className="font-bold text-gray-900 mb-1">My Deliveries</p>
-                                                    <p className="premium-caption text-emerald-600">Active Routes</p>
-                                                </div>
-                                                <FontAwesomeIcon icon={faChevronRight} className="text-emerald-300" />
-                                            </button>
-                                        ) : (
-                                            <div className="space-y-4">
-                                                {/* Primary Actions Grid */}
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <button
-                                                        onClick={() => navigate('/sales/new')}
-                                                        className="premium-card p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all group text-center flex flex-col items-center gap-3"
-                                                    >
-                                                        <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                                            <FontAwesomeIcon icon={faShoppingCart} className="text-emerald-600 text-2xl" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-bold text-gray-900 text-sm mb-1">New Sale</p>
-                                                            <p className="premium-caption text-gray-500">Quick Sale</p>
-                                                        </div>
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() => navigate('/repair-form')}
-                                                        className="premium-card p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all group text-center flex flex-col items-center gap-3"
-                                                    >
-                                                        <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                                            <FontAwesomeIcon icon={faTools} className="text-purple-600 text-2xl" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-bold text-gray-900 text-sm mb-1">Repair</p>
-                                                            <p className="premium-caption text-gray-500">New Job</p>
-                                                        </div>
-                                                    </button>
-                                                </div>
-
-                                                {/* Management Features - Manager/Staff */}
-                                                {['MANAGER', 'STAFF'].includes(user?.role) && (
-                                                    <div className="space-y-3">
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            {user?.role === 'MANAGER' && (
-                                                                <>
-                                                                    <button
-                                                                        onClick={() => navigate('/wanakitaa')}
-                                                                        className="premium-card p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all group flex items-center gap-3 bg-[#008069] border-[#008069]"
-                                                                    >
-                                                                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                                            <FontAwesomeIcon icon={faGem} className="text-white text-lg" />
-                                                                        </div>
-                                                                        <div className="flex-1 text-left">
-                                                                            <p className="font-bold text-white text-xs mb-0.5">Wanakitaa</p>
-                                                                            <p className="text-[10px] text-white/60 font-semibold">Hub</p>
-                                                                        </div>
-                                                                    </button>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
                                     </div>
                                 </>
                             )}
@@ -469,55 +283,44 @@ const MobileDashboard = () => {
 
                     {activeTab === 'updates' && (
                         <motion.div key="updates" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}>
-                            <div className="premium-card">
-                                <div className="p-6 border-b border-gray-100 bg-white/50 backdrop-blur-sm flex items-center justify-between">
-                                    <div className="flex flex-col">
-                                        <p className="premium-label mb-0">Notification Feed</p>
-                                        {notifications.some(n => !n.isRead) && (
-                                            <button onClick={markAllRead} className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1 hover:underline text-left">Clear signals</button>
-                                        )}
+                            <div className="bg-[#111] rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl min-h-[60vh]">
+                                <div className="p-8 border-b border-white/5 flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-xl font-black tracking-tight mb-0.5">Signal Log</h3>
+                                        <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em]">Operational Pulse</p>
                                     </div>
-                                    <div className="flex bg-gray-100/50 p-1 rounded-xl">
+                                    <div className="flex bg-[#050505] p-1.5 rounded-2xl border border-white/5">
                                         {['all', 'unread'].map(f => (
                                             <button
                                                 key={f}
                                                 onClick={() => setNotificationFilter(f)}
-                                                className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${notificationFilter === f ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400'}`}
+                                                className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${notificationFilter === f ? 'bg-[#00ffa3] text-black shadow-lg shadow-[#00ffa3]/20' : 'text-white/20'}`}
                                             >
                                                 {f}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
-                                <div className="divide-y divide-gray-50 max-h-[60vh] overflow-y-auto no-scrollbar">
+                                <div className="divide-y divide-white/2 max-h-[60vh] overflow-y-auto no-scrollbar">
                                     {notifications.length === 0 ? (
-                                        <div className="p-20 text-center">
-                                            <div className="w-16 h-16 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                                                <FontAwesomeIcon icon={faBell} className="text-gray-200 text-2xl" />
-                                            </div>
-                                            <p className="premium-label">All quiet / No new updates</p>
+                                        <div className="py-32 text-center opacity-20">
+                                            <FontAwesomeIcon icon={faBell} className="text-5xl mb-6" />
+                                            <p className="text-[10px] uppercase font-black tracking-[0.3em]">No Pulse Detected</p>
                                         </div>
                                     ) : (
                                         notifications
                                             .filter(n => notificationFilter === 'all' || !n.isRead)
                                             .map((notif, i) => (
-                                                <div
-                                                    key={notif.id}
-                                                    onClick={() => handleNotificationClick(notif)}
-                                                    className={`p-5 flex items-start gap-4 hover:bg-white/80 transition-all cursor-pointer group relative ${!notif.isRead ? 'bg-blue-50/50' : ''}`}
-                                                >
-                                                    {!notif.isRead && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>}
-                                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm ${notif.type === 'sale' ? 'bg-green-100 text-green-600' : notif.type === 'repair' ? 'bg-purple-100 text-purple-600' : (notif.type === 'delivery_assigned' || notif.type === 'delivery_assigned_ceo') ? 'bg-indigo-100 text-indigo-600' : 'bg-blue-100 text-blue-600'}`}>
-                                                        <FontAwesomeIcon icon={notif.type === 'sale' ? faMoneyBillWave : notif.type === 'repair' ? faTools : (notif.type === 'delivery_assigned' || notif.type === 'delivery_assigned_ceo') ? faTruck : faBell} />
+                                                <div key={notif.id} className="p-8 flex items-start gap-6 hover:bg-white/2 active:bg-white/5 transition-all">
+                                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-[#151515] border border-white/5 ${!notif.isRead ? 'border-[#00ffa3]/30 text-[#00ffa3]' : 'text-white/20'}`}>
+                                                        <FontAwesomeIcon icon={notif.type === 'sale' ? faMoneyBillWave : notif.type === 'repair' ? faTools : faBolt} className="text-xl" />
                                                     </div>
                                                     <div className="flex-1">
-                                                        <div className="flex justify-between items-start mb-1">
-                                                            <span className={`text-[9px] font-black uppercase tracking-widest ${notif.type === 'sale' ? 'text-green-500' : 'text-blue-500'}`}>{notif.type.replace(/_/g, ' ')}</span>
-                                                            <span className="text-[9px] font-bold text-gray-400">
-                                                                {notif.createdAt ? new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sync...'}
-                                                            </span>
+                                                        <div className="flex justify-between items-center mb-2">
+                                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">{notif.type.replace(/_/g, ' ')}</span>
+                                                            <span className="text-[9px] font-bold text-white/10">{new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                         </div>
-                                                        <p className={`text-sm leading-snug whitespace-pre-line break-words ${!notif.isRead ? 'font-bold text-gray-900' : 'font-medium text-gray-500'}`}>{notif.message}</p>
+                                                        <p className="text-sm font-bold text-white/80 leading-snug">{notif.message}</p>
                                                     </div>
                                                 </div>
                                             ))
@@ -528,35 +331,30 @@ const MobileDashboard = () => {
                     )}
 
                     {activeTab === 'tools' && (
-                        <motion.div key="tools" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="grid grid-cols-1 gap-4">
+                        <motion.div key="tools" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-4">
                             {[
-                                // Primary Actions (For All Roles)
-                                { title: 'New Sale', desc: 'Record a Product Sale', icon: faShoppingCart, color: 'text-emerald-500', bg: 'bg-emerald-50', link: '/sales/new', roles: ['CEO', 'MANAGER', 'STAFF'], category: 'primary' },
-
-                                // Management Tools (CEO/Manager)
-                                { title: 'Expenses', desc: 'Record & Track Costs', icon: faWallet, color: 'text-rose-500', bg: 'bg-rose-50', link: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'], category: 'management' },
-                                { title: 'Trade-In Manager', desc: 'Approve & Add to Stock', icon: faExchangeAlt, color: 'text-indigo-500', bg: 'bg-indigo-50', link: '/trade-ins', roles: ['CEO', 'MANAGER'], category: 'management' },
-                                { title: 'Stock Management', desc: 'Add & Organize Inventory', icon: faBoxOpen, color: 'text-blue-500', bg: 'bg-blue-50', link: '/stock-management', roles: ['CEO', 'MANAGER'], category: 'management' },
-                                { title: 'Supplier Network', desc: 'Procurement Partners', icon: faTruck, color: 'text-indigo-500', bg: 'bg-indigo-50', link: '/suppliers', roles: ['CEO', 'MANAGER'], category: 'management' },
-
-                                // Sales & Operations
-                                { title: 'Sales History', desc: 'Transactional Ledger', icon: faMoneyBillWave, color: 'text-emerald-500', bg: 'bg-emerald-50', link: '/sales', roles: ['CEO'], category: 'operations' },
-                                { title: 'Wanakitaa Hub', desc: 'Loyalty & Community', icon: faGem, color: 'text-purple-500', bg: 'bg-purple-50', link: '/wanakitaa', roles: ['CEO', 'MANAGER'], category: 'operations' },
-
-                                // Communications (CEO/Manager)
-                                { title: 'Campaigns', desc: 'Bulk Customer Messaging', icon: faBullhorn, color: 'text-purple-500', bg: 'bg-purple-50', link: '/campaigns', roles: ['CEO'], category: 'comms' },
-                                { title: 'Notification Templates', desc: 'Customize Messages', icon: faEnvelope, color: 'text-blue-500', bg: 'bg-blue-50', link: '/notification-templates', roles: ['CEO'], category: 'comms' },
-                                { title: 'Team Management', desc: 'Staff & Permissions', icon: faUserCog, color: 'text-green-500', bg: 'bg-green-50', link: '/team-management', roles: ['CEO'], category: 'comms' }
-                            ].filter(tool => !tool.roles || tool.roles.includes(user?.role)).map((tool, i) => (
-                                <button key={i} onClick={() => navigate(tool.link)} className="premium-card p-5 md:p-6 flex items-center gap-4 md:gap-5 hover:scale-[1.02] transition-all text-left group">
-                                    <div className={`w-12 h-12 md:w-14 md:h-14 ${tool.bg} rounded-xl md:rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform`}>
-                                        <FontAwesomeIcon icon={tool.icon} className={`${tool.color} text-lg md:text-xl`} />
+                                { title: 'New Sale', desc: 'Secure Ledger Entry', icon: faShoppingCart, color: '#00ffa3', link: '/sales/new', roles: ['CEO', 'MANAGER', 'STAFF'] },
+                                { title: 'Expenses', desc: 'Capital Outflow', icon: faWallet, color: '#f43f5e', link: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'] },
+                                { title: 'Intelligence', desc: 'Neural Data Processing', icon: faBrain, color: '#3b82f6', link: '/analytics', roles: ['CEO', 'MANAGER'] },
+                                { title: 'Stock Matrix', desc: 'Inventory Alignment', icon: faBoxOpen, color: '#a855f7', link: '/stock-management', roles: ['CEO', 'MANAGER'] },
+                                { title: 'Network', desc: 'Supply Chain Operations', icon: faCompass, color: '#00ffa3', link: '/suppliers', roles: ['CEO', 'MANAGER'] },
+                                { title: 'Team Elite', desc: 'Staff Hierarchy Control', icon: faUserCog, color: '#00ffa3', link: '/team-management', roles: ['CEO'] }
+                            ].filter(tool => tool.roles.includes(user?.role)).map((tool, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => navigate(tool.link)}
+                                    className="w-full bg-[#111] p-6 rounded-[2.5rem] border border-white/5 flex items-center justify-between group active:scale-[0.98] transition-all shadow-xl"
+                                >
+                                    <div className="flex items-center gap-6">
+                                        <div className="w-14 h-14 bg-[#151515] rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 border border-white/5" style={{ color: tool.color }}>
+                                            <FontAwesomeIcon icon={tool.icon} className="text-xl" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h4 className="text-lg font-black tracking-tight">{tool.title}</h4>
+                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">{tool.desc}</p>
+                                        </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-bold text-gray-900 mb-1">{tool.title}</h3>
-                                        <p className="premium-caption text-blue-600">{tool.desc}</p>
-                                    </div>
-                                    <FontAwesomeIcon icon={faChevronRight} className="text-blue-300" />
+                                    <FontAwesomeIcon icon={faChevronRight} className="text-white/10" />
                                 </button>
                             ))}
                         </motion.div>
@@ -570,64 +368,50 @@ const MobileDashboard = () => {
                 </AnimatePresence>
             </div>
 
-            {/* Bottom Navigation */}
-            {/* Premium Navigation Bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-8 mobile-only">
-                <div className="max-w-xl mx-auto bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/40 p-2 flex items-center justify-between">
+            {/* Glassmorphic Global Bottom Nav */}
+            <div className="fixed bottom-0 left-0 right-0 z-[100] px-6 pb-10">
+                <div className="max-w-xl mx-auto bg-[#111]/80 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-2.5 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                     {[
-                        { id: 'updates', icon: faBell, label: 'Notifications' },
-                        { id: 'tools', icon: faBoxOpen, label: 'Tools', hidden: user?.role === 'TECHNICIAN' },
-                        { id: 'home', icon: faHome, label: 'Home' },
-                        { id: 'calculator', icon: 'lucide-calculator', label: 'Calculator', isLucide: true, hidden: user?.role !== 'CEO' },
-                        { id: 'settings', icon: faCog, label: 'Settings' }
+                        { id: 'updates', icon: faBolt, label: 'Pulse' },
+                        { id: 'tools', icon: faCubes, label: 'Tactical' },
+                        { id: 'home', icon: faHome, label: 'Elite' },
+                        { id: 'calculator', icon: 'lucide-calculator', label: 'Quantum', isLucide: true, hidden: user?.role !== 'CEO' },
+                        { id: 'settings', icon: faCog, label: 'Cipher' }
                     ].filter(t => !t.hidden).map(tab => (
                         <button
                             key={tab.id}
-                            onClick={() => {
-                                if (tab.id === 'calculator') {
-                                    navigate('/stock-calculator');
-                                } else {
-                                    setActiveTab(tab.id);
-                                }
-                            }}
-                            className={`flex-1 flex flex-col items-center gap-1 py-4 rounded-[2rem] transition-all duration-300 ${activeTab === tab.id ? 'premium-btn-primary shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
+                            onClick={() => tab.id === 'calculator' ? navigate('/stock-calculator') : setActiveTab(tab.id)}
+                            className={`flex-1 flex flex-col items-center gap-1.5 py-4 rounded-[2.2rem] transition-all duration-500 ${activeTab === tab.id ? 'bg-[#00ffa3] text-black shadow-[0_10px_20px_rgba(0,255,163,0.3)]' : 'text-white/20'}`}
                         >
                             {tab.isLucide ? (
-                                <Calculator className={activeTab === tab.id ? 'w-5 h-5' : 'w-4 h-4'} />
+                                <Calculator className={activeTab === tab.id ? 'w-5 h-5' : 'w-4 h-4'} strokeWidth={3} />
                             ) : (
                                 <FontAwesomeIcon icon={tab.icon} className={activeTab === tab.id ? 'text-xl' : 'text-lg'} />
                             )}
-                            <span className={`text-[9px] font-black uppercase tracking-widest ${activeTab === tab.id ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>{tab.label}</span>
+                            <span className={`text-[8px] font-black uppercase tracking-[0.2em] ${activeTab === tab.id ? 'opacity-100 block' : 'opacity-0 h-0 hidden'}`}>{tab.label}</span>
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* Premium Success Toast */}
+            {/* Elite Success Toast */}
             <AnimatePresence>
                 {successMessage && (
-                    <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }} className="fixed bottom-32 left-8 right-8 z-[100] bg-white/90 backdrop-blur-xl text-gray-900 px-6 py-5 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex items-center gap-4 border border-white/20">
-                        <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg"><FontAwesomeIcon icon={faCheckCircle} className="text-xl" /></div>
+                    <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }} className="fixed bottom-36 left-8 right-8 z-[200] bg-[#111]/90 backdrop-blur-2xl border border-[#00ffa3]/20 p-8 rounded-[3rem] shadow-2xl flex items-center gap-6">
+                        <div className="w-16 h-16 bg-[#00ffa3] rounded-2xl flex items-center justify-center text-black shadow-lg shadow-[#00ffa3]/20"><FontAwesomeIcon icon={faCheckCircle} className="text-2xl" /></div>
                         <div>
-                            <p className="text-sm font-black tracking-tight">{successMessage}</p>
-                            <p className="premium-label mb-0 text-emerald-500">System Verified</p>
+                            <p className="text-lg font-black tracking-tighter">{successMessage}</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00ffa3]">Signal Verified</p>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Modals */}
-            {showSaleModal && (
-                <ConversationalSaleForm onSuccess={() => handleSuccess('Sale recorded')} onCancel={() => setShowSaleModal(false)} />
-            )}
-            <Modal isOpen={showCustomerModal} onClose={() => setShowCustomerModal(false)} title="Register Customer">
-                <AddCustomerForm onSuccess={() => handleSuccess('Customer added')} onCancel={() => setShowCustomerModal(false)} />
+            {/* Modals triggered from components */}
+            <Modal isOpen={showCustomerModal} onClose={() => setShowCustomerModal(false)} title="Elite Customer Entry">
+                <AddCustomerForm onSuccess={() => handleSuccess('Client Registered')} onCancel={() => setShowCustomerModal(false)} />
             </Modal>
-
-            <Modal isOpen={showProductModal} onClose={() => setShowProductModal(false)} title="Catalog Update">
-                <AddProductForm onSuccess={() => handleSuccess('Product added')} onCancel={() => setShowProductModal(false)} />
-            </Modal>
-        </div >
+        </div>
     );
 };
 
