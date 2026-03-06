@@ -75,42 +75,36 @@ const StaffDashboard = () => {
 
     return (
         <div className="min-h-screen bg-[#efeff4] pb-24">
-            {/* Premium Global Header */}
-            <div className="bg-gradient-to-r from-[#008069] via-[#00a884] to-[#008069] relative overflow-hidden pb-12 pt-4 shadow-xl">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24 blur-2xl"></div>
-
+            {/* Classic Global Header */}
+            <div className="bg-[#008069] relative overflow-hidden pb-12 pt-4 shadow-xl">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
                 <div className="max-w-6xl mx-auto px-4 relative z-10">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white border border-white/10 shadow-lg">
-                                <FontAwesomeIcon icon={faMobileAlt} className="text-2xl" />
+                            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-white">
+                                <FontAwesomeIcon icon={faMobileAlt} className="text-xl" />
                             </div>
-                            <div>
-                                <p className="text-white font-black uppercase tracking-[0.2em] opacity-90 text-[10px]">Staff Portal</p>
-                                <h1 className="text-2xl font-black text-white tracking-tighter leading-tight">Staff Portal</h1>
-                            </div>
+                            <h1 className="text-xl font-black text-white tracking-tighter uppercase">Staff Portal</h1>
                         </div>
-                        <div className="flex gap-2 items-center">
-                            <button className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-white hover:bg-white/20 transition-all border border-white/10 shadow-lg"><FontAwesomeIcon icon={faSearch} /></button>
-                            <div className="flex flex-col md:flex-row items-center gap-3">
-                                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/10">
-                                    <input
-                                        type="date"
-                                        value={dateRange.start}
-                                        onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                                        className="bg-transparent text-white text-[10px] font-black uppercase outline-none"
-                                    />
-                                    <span className="text-white/40 text-[10px]">to</span>
-                                    <input
-                                        type="date"
-                                        value={dateRange.end}
-                                        onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                                        className="bg-transparent text-white text-[10px] font-black uppercase outline-none"
-                                    />
-                                </div>
+                        <div className="flex gap-4 items-center">
+                            <div className="flex items-center gap-2 bg-white/10 rounded-xl p-2">
+                                <input
+                                    type="date"
+                                    value={dateRange.start}
+                                    onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                                    className="bg-transparent text-white text-[10px] font-black uppercase outline-none"
+                                />
+                                <span className="text-white/40 text-[10px]">to</span>
+                                <input
+                                    type="date"
+                                    value={dateRange.end}
+                                    onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                                    className="bg-transparent text-white text-[10px] font-black uppercase outline-none"
+                                />
                             </div>
-                            <button onClick={() => { localStorage.clear(); window.location.href = '/login'; }} className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-white hover:bg-red-500/40 transition-all border border-white/10 shadow-lg"><FontAwesomeIcon icon={faSignOutAlt} /></button>
+                            <button onClick={() => { localStorage.clear(); window.location.href = '/login'; }} className="text-white opacity-60 hover:opacity-100 transition-opacity">
+                                <FontAwesomeIcon icon={faSignOutAlt} />
+                            </button>
                         </div>
                     </div>
 
@@ -126,8 +120,8 @@ const StaffDashboard = () => {
 
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                         {[
-                            { label: 'My Sales (Selected Range)', value: stats?.sales?.today?.count || 0, icon: faMoneyBillWave, color: 'emerald' },
-                            { label: 'My Expenses (Total)', value: personalExpenses?.total?.toLocaleString() + ' /=' || '0', icon: faReceipt, color: 'blue' },
+                            { label: 'My Sales', value: stats?.sales?.today?.count || 0, icon: faMoneyBillWave, color: 'emerald' },
+                            { label: 'My Expenses', value: personalExpenses?.total?.toLocaleString() + ' /=' || '0', icon: faReceipt, color: 'blue' },
                             { label: 'Repairs in Hand', value: stats?.repairs?.inProgress || 0, icon: faTools, color: 'purple' }
                         ].map((s, i) => (
                             <div key={i} className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10 shadow-lg">
@@ -144,10 +138,9 @@ const StaffDashboard = () => {
 
             <div className="max-w-6xl mx-auto px-4 -mt-6 relative z-10">
                 {/* Action Center */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {[
                         { label: 'New Sale', desc: 'Create a new sale record', icon: faMoneyBillWave, color: 'green', action: () => setShowSaleModal(true) },
-                        { label: 'Analytics', desc: 'View performance data', icon: faChartLine, color: 'emerald', action: () => window.location.href = '/analytics' },
                         { label: 'New Repair', desc: 'Start a new repair record', icon: faTools, color: 'purple', action: () => setShowRepairModal(true) },
                         { label: 'New Customer', desc: 'Add a new customer profile', icon: faUserPlus, color: 'blue', action: () => setShowCustomerModal(true) }
                     ].map((item, i) => (
@@ -156,19 +149,18 @@ const StaffDashboard = () => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={item.action}
-                            className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-100 hover:shadow-2xl transition-all group relative overflow-hidden text-left"
+                            className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 hover:shadow-2xl transition-all group relative overflow-hidden text-left"
                         >
                             <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-full -mr-16 -mt-16 blur-2xl opacity-50 group-hover:opacity-100 transition-opacity" />
-                            <div className={`w-16 h-16 rounded-[1.5rem] mb-8 flex items-center justify-center text-3xl shadow-inner transform group-hover:rotate-12 transition-transform ${item.color === 'green' ? 'bg-green-50 text-green-600' :
-                                    item.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' :
-                                        item.color === 'purple' ? 'bg-purple-50 text-purple-600' :
-                                            'bg-blue-50 text-blue-600'
+                            <div className={`w-14 h-14 rounded-2xl mb-6 flex items-center justify-center text-2xl shadow-inner transform group-hover:rotate-12 transition-transform ${item.color === 'green' ? 'bg-green-50 text-green-600' :
+                                item.color === 'purple' ? 'bg-purple-50 text-purple-600' :
+                                    'bg-blue-50 text-blue-600'
                                 }`}>
                                 <FontAwesomeIcon icon={item.icon} />
                             </div>
-                            <h4 className="text-xl font-black text-gray-900 tracking-tight mb-2">{item.label}</h4>
-                            <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-relaxed">{item.desc}</p>
-                            <div className="mt-8 flex items-center gap-2 text-[10px] font-black text-gray-200 uppercase tracking-widest group-hover:text-gray-900 transition-colors">
+                            <h4 className="text-lg font-black text-gray-900 tracking-tight mb-1">{item.label}</h4>
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{item.desc}</p>
+                            <div className="mt-6 flex items-center gap-2 text-[10px] font-black text-gray-300 uppercase tracking-widest group-hover:text-[#008069] transition-colors">
                                 <span>Continue</span>
                                 <FontAwesomeIcon icon={faArrowRight} className="text-[8px]" />
                             </div>
@@ -176,102 +168,68 @@ const StaffDashboard = () => {
                     ))}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-8">
-                        {/* Summary Card */}
-                        <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-gray-100 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -mr-32 -mt-32 opacity-30" />
-                            <div className="relative z-10">
-                                <h3 className="text-2xl font-black text-gray-900 tracking-tighter mb-6">Device Stats</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Stock Level</p>
-                                        <p className="text-3xl font-black text-gray-900 leading-none">Healthy</p>
-                                    </div>
-                                    <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Queue Status</p>
-                                        <p className="text-3xl font-black text-gray-900 leading-none">Optimal</p>
-                                    </div>
-                                </div>
-                            </div>
+                {/* Activity Feed */}
+                <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-2xl font-black text-gray-900 tracking-tighter mb-1 uppercase">Activity Feed</h2>
+                            <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Recent updates and actions</p>
+                        </div>
+                        <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300">
+                            <FontAwesomeIcon icon={faHistory} />
                         </div>
                     </div>
 
-                    {/* Activity Feed */}
-                    <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-gray-100">
-                        <div className="flex items-center justify-between mb-8">
-                            <div>
-                                <h2 className="text-2xl font-black text-gray-900 tracking-tighter mb-1">Activity Feed</h2>
-                                <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Recent updates and actions</p>
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-6 p-6 bg-gray-50/50 rounded-[2rem] border border-gray-100 group transition-all">
+                            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#008069] shadow-inner shrink-0 group-hover:scale-110 transition-transform">
+                                <FontAwesomeIcon icon={faMicrochip} />
                             </div>
-                            <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300">
-                                <FontAwesomeIcon icon={faHistory} />
+                            <div className="flex-1">
+                                <p className="text-sm font-black text-gray-900 group-hover:text-[#008069] transition-colors uppercase">System Online</p>
+                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">All systems are running correctly</p>
                             </div>
+                            <p className="text-[10px] font-black text-gray-300 uppercase">Now</p>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-6 p-6 bg-gray-50/50 rounded-[2rem] border border-gray-100 group transition-all">
-                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#008069] shadow-inner shrink-0 group-hover:scale-110 transition-transform">
-                                    <FontAwesomeIcon icon={faMicrochip} />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-black text-gray-900 group-hover:text-[#008069] transition-colors">System Online</p>
-                                    <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">All systems are running correctly</p>
-                                </div>
-                                <p className="text-[10px] font-black text-gray-300 uppercase">Now</p>
-                            </div>
-
-                            <div className="text-center py-10 opacity-20">
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No recent activity</p>
-                            </div>
+                        <div className="text-center py-10 opacity-20">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No recent activity</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Premium Toast notification */}
+            {/* Success Toast */}
             <AnimatePresence>
                 {successMessage && (
                     <motion.div
-                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 50, scale: 0.9 }}
-                        className="fixed bottom-10 left-10 right-10 md:left-auto md:right-10 md:w-96 bg-gray-900/90 backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] shadow-2xl flex items-center gap-4 z-[100]"
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 50 }}
+                        className="fixed bottom-10 right-10 bg-gray-900/95 text-white px-8 py-6 rounded-[2rem] shadow-2xl flex items-center gap-4 z-50"
                     >
-                        <div className="w-12 h-12 bg-green-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0">
-                            <FontAwesomeIcon icon={faCheckCircle} className="text-xl" />
+                        <div className="w-12 h-12 bg-[#008069] rounded-2xl flex items-center justify-center text-2xl shadow-lg">
+                            <FontAwesomeIcon icon={faCheckCircle} />
                         </div>
                         <div>
-                            <p className="text-xs font-black text-white uppercase tracking-widest mb-1">Action Successful</p>
-                            <p className="text-[10px] font-bold text-white/60 leading-tight uppercase">{successMessage}</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest mb-1">Success</p>
+                            <p className="text-xs font-bold text-white/60 leading-tight uppercase">{successMessage}</p>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
             {/* Modals */}
-            {showSaleModal && (
-                <ConversationalSaleForm
-                    onSuccess={() => handleSuccess('Sale recorded')}
-                    onCancel={() => setShowSaleModal(false)}
-                />
-            )}
-
-            <Modal isOpen={showCustomerModal} onClose={() => setShowCustomerModal(false)} title="Register Customer">
-                <AddCustomerForm
-                    onSuccess={() => handleSuccess('Customer added')}
-                    onCancel={() => setShowCustomerModal(false)}
-                />
+            {showSaleModal && <ConversationalSaleForm onSuccess={() => handleSuccess('Sale recorded')} onCancel={() => setShowSaleModal(false)} />}
+            <Modal isOpen={showCustomerModal} onClose={() => setShowCustomerModal(false)} title="New Customer">
+                <AddCustomerForm onSuccess={() => handleSuccess('Customer added')} onCancel={() => setShowCustomerModal(false)} />
             </Modal>
-
-            <Modal isOpen={showRepairModal} onClose={() => setShowRepairModal(false)} title="New Repair Job">
-                <CreateRepairForm
-                    onSuccess={() => handleSuccess('Repair job created')}
-                    onCancel={() => setShowRepairModal(false)}
-                />
+            <Modal isOpen={showRepairModal} onClose={() => setShowRepairModal(false)} title="New Repair">
+                <CreateRepairForm onSuccess={() => handleSuccess('Repair record created')} onCancel={() => setShowRepairModal(false)} />
             </Modal>
         </div>
     );
 };
 
 export default StaffDashboard;
+

@@ -9,6 +9,9 @@ import axios from 'axios';
 import { API_URL as API_BASE_URL } from '../utils/api';
 
 const AdvancedReportPage = () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isCEO = user?.role === 'CEO';
+
     const [loading, setLoading] = useState(true);
     const [dateRange, setDateRange] = useState({
         start: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
@@ -147,8 +150,12 @@ const AdvancedReportPage = () => {
                                 <th className="py-6 px-8 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Date/Staff</th>
                                 <th className="py-6 px-8 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Products Sold</th>
                                 <th className="py-6 px-8 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">P. Method</th>
-                                <th className="py-6 px-8 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">Revenue</th>
-                                <th className="py-6 px-8 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">Profit</th>
+                                {isCEO && (
+                                    <>
+                                        <th className="py-6 px-8 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">Revenue</th>
+                                        <th className="py-6 px-8 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">Profit</th>
+                                    </>
+                                )}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -176,15 +183,19 @@ const AdvancedReportPage = () => {
                                     <td className="py-6 px-8">
                                         <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-[9px] font-black text-gray-600 uppercase tracking-widest shadow-sm">{sale.paymentMethod}</span>
                                     </td>
-                                    <td className="py-6 px-8 text-right">
-                                        <span className="text-xs font-black text-gray-900">TSh {(sale.totalAmount || 0).toLocaleString()}</span>
-                                    </td>
-                                    <td className="py-6 px-8 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <span className="text-xs font-black text-emerald-600">+TSh {(sale.profit || 0).toLocaleString()}</span>
-                                            <FontAwesomeIcon icon={faArrowUp} className="text-[8px] text-emerald-400" />
-                                        </div>
-                                    </td>
+                                    {isCEO && (
+                                        <>
+                                            <td className="py-6 px-8 text-right">
+                                                <span className="text-xs font-black text-gray-900">TSh {(sale.totalAmount || 0).toLocaleString()}</span>
+                                            </td>
+                                            <td className="py-6 px-8 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <span className="text-xs font-black text-emerald-600">+TSh {(sale.profit || 0).toLocaleString()}</span>
+                                                    <FontAwesomeIcon icon={faArrowUp} className="text-[8px] text-emerald-400" />
+                                                </div>
+                                            </td>
+                                        </>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>

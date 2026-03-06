@@ -15,6 +15,8 @@ import { API_URL as API_BASE_URL } from '../utils/api';
 
 const SalesPage = () => {
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isCEO = user?.role === 'CEO';
     const [loading, setLoading] = useState(true);
     const [sales, setSales] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -130,16 +132,18 @@ const SalesPage = () => {
                                 <p className="text-sm text-gray-500 font-medium mt-0.5">{filteredSales.length} transactions • {itemsSold} total sales</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-6">
-                            <div className="text-right">
-                                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Revenue</p>
-                                <p className="text-xl font-bold text-gray-900">{formatCurrency(totalRevenue)} <span className="text-sm text-gray-500 font-normal">TSh</span></p>
+                        {isCEO && (
+                            <div className="flex items-center gap-6">
+                                <div className="text-right">
+                                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Revenue</p>
+                                    <p className="text-xl font-bold text-gray-900">{formatCurrency(totalRevenue)} <span className="text-sm text-gray-500 font-normal">TSh</span></p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Net Profit</p>
+                                    <p className="text-xl font-bold text-emerald-600">{formatCurrency(totalProfit)} <span className="text-sm text-gray-500 font-normal">TSh</span></p>
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Net Profit</p>
-                                <p className="text-xl font-bold text-emerald-600">{formatCurrency(totalProfit)} <span className="text-sm text-gray-500 font-normal">TSh</span></p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -211,7 +215,7 @@ const SalesPage = () => {
             </div>
 
             {/* Payment Summary - Moved to Top */}
-            {filteredSales.length > 0 && (
+            {isCEO && filteredSales.length > 0 && (
                 <div className="max-w-[95%] mx-auto px-6 py-4">
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1 mb-4">Payment Summary</h3>
 
@@ -307,12 +311,16 @@ const SalesPage = () => {
                                     <th className="px-5 py-3 text-center">
                                         <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Payment</span>
                                     </th>
-                                    <th className="px-5 py-3 text-right">
-                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount (TSh)</span>
-                                    </th>
-                                    <th className="px-5 py-3 text-right">
-                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Profit</span>
-                                    </th>
+                                    {isCEO && (
+                                        <>
+                                            <th className="px-5 py-3 text-right">
+                                                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount (TSh)</span>
+                                            </th>
+                                            <th className="px-5 py-3 text-right">
+                                                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Profit</span>
+                                            </th>
+                                        </>
+                                    )}
                                 </tr>
                             </thead>
 
@@ -404,30 +412,34 @@ const SalesPage = () => {
                                             {/* Payment Method */}
                                             <td className="px-5 py-3 text-center">
                                                 <span className={`
-                                                    inline-block px-2 py-1 rounded text-[10px] font-bold uppercase
-                                                    ${sale.paymentMethod === 'CASH' ? 'bg-green-100 text-green-700' :
+                                                     inline-block px-2 py-1 rounded text-[10px] font-bold uppercase
+                                                     ${sale.paymentMethod === 'CASH' ? 'bg-green-100 text-green-700' :
                                                         sale.paymentMethod === 'TIGOPESA' ? 'bg-blue-100 text-blue-700' :
                                                             sale.paymentMethod === 'AIRTEL_MONEY' ? 'bg-red-100 text-red-700' :
                                                                 sale.paymentMethod === 'M_PESA' ? 'bg-red-100 text-red-700' :
                                                                     'bg-gray-100 text-gray-700'}
-                                                `}>
+                                                 `}>
                                                     {sale.paymentMethod?.replace(/_/g, ' ') || 'N/A'}
                                                 </span>
                                             </td>
 
-                                            {/* Amount */}
-                                            <td className="px-5 py-3 text-right">
-                                                <div className="font-semibold text-base text-gray-900">
-                                                    {formatCurrency(sale.totalAmount)}
-                                                </div>
-                                            </td>
+                                            {isCEO && (
+                                                <>
+                                                    {/* Amount */}
+                                                    <td className="px-5 py-3 text-right">
+                                                        <div className="font-semibold text-base text-gray-900">
+                                                            {formatCurrency(sale.totalAmount)}
+                                                        </div>
+                                                    </td>
 
-                                            {/* Profit */}
-                                            <td className="px-5 py-3 text-right">
-                                                <div className="font-semibold text-sm text-emerald-600">
-                                                    +{formatCurrency(sale.profit || 0)}
-                                                </div>
-                                            </td>
+                                                    {/* Profit */}
+                                                    <td className="px-5 py-3 text-right">
+                                                        <div className="font-semibold text-sm text-emerald-600">
+                                                            +{formatCurrency(sale.profit || 0)}
+                                                        </div>
+                                                    </td>
+                                                </>
+                                            )}
                                         </tr>
                                     );
                                 })}
@@ -443,7 +455,7 @@ const SalesPage = () => {
                 </div>
 
                 {/* Summary Footer - Payment Method Breakdown */}
-                {filteredSales.length > 0 && (
+                {isCEO && filteredSales.length > 0 && (
                     <div className="mt-6 space-y-4">
                         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">Payment Summary</h3>
 

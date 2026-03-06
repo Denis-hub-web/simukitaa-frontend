@@ -10,6 +10,8 @@ import { API_URL as API_BASE_URL } from '../utils/api';
 const StockInventoryTable = () => {
     const [inventory, setInventory] = useState([]);
     const [loading, setLoading] = useState(true);
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isCEO = user?.role === 'CEO';
     // Modal functionality disabled
 
     const navigate = useNavigate();
@@ -90,12 +92,14 @@ const StockInventoryTable = () => {
                                 <p className="text-sm text-gray-500 font-medium mt-0.5">{inventory.length} variants • {totalStock} units in stock</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-6">
-                            <div className="text-right">
-                                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Value</p>
-                                <p className="text-xl font-bold text-gray-900">{totalValue.toLocaleString()} <span className="text-sm text-gray-500 font-normal">TSh</span></p>
+                        {isCEO && (
+                            <div className="flex items-center gap-6">
+                                <div className="text-right">
+                                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Value</p>
+                                    <p className="text-xl font-bold text-gray-900">{totalValue.toLocaleString()} <span className="text-sm text-gray-500 font-normal">TSh</span></p>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -123,9 +127,11 @@ const StockInventoryTable = () => {
                                     <th className="px-5 py-3 text-center">
                                         <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Sold</span>
                                     </th>
-                                    <th className="px-5 py-3 text-right">
-                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Value (TSh)</span>
-                                    </th>
+                                    {isCEO && (
+                                        <th className="px-5 py-3 text-right">
+                                            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Value (TSh)</span>
+                                        </th>
+                                    )}
                                 </tr>
                             </thead>
 
@@ -180,20 +186,21 @@ const StockInventoryTable = () => {
                                             {/* Sold - Static Display */}
                                             <td className="px-5 py-3 text-center">
                                                 <span className={`
-                                                    inline-flex items-center justify-center w-12 h-12 rounded-lg
-                                                    ${item.sold > 0 ? 'bg-blue-50 text-blue-700' : 'bg-gray-50 text-gray-400'}
-                                                    font-bold text-base
-                                                `}>
+                                                     inline-flex items-center justify-center w-12 h-12 rounded-lg
+                                                     ${item.sold > 0 ? 'bg-blue-50 text-blue-700' : 'bg-gray-50 text-gray-400'}
+                                                     font-bold text-base
+                                                 `}>
                                                     {item.sold}
                                                 </span>
                                             </td>
 
-                                            {/* Value */}
-                                            <td className="px-5 py-3 text-right">
-                                                <div className="font-semibold text-base text-gray-900">
-                                                    {item.stockValue.toLocaleString()}
-                                                </div>
-                                            </td>
+                                            {isCEO && (
+                                                <td className="px-5 py-3 text-right">
+                                                    <div className="font-semibold text-base text-gray-900">
+                                                        {item.stockValue.toLocaleString()}
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tr>
                                     );
                                 })}

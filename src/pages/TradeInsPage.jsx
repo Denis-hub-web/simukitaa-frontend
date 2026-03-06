@@ -282,7 +282,7 @@ const TradeInsPage = () => {
                                             <div className="flex flex-col">
                                                 <span className="text-indigo-400 text-[10px] font-black uppercase tracking-widest">Recommended Offer</span>
                                                 <span className="text-indigo-600 font-black text-xl">
-                                                    TSh {(item.approvedValue || item.valuation?.recommendedOffer || 0).toLocaleString()}
+                                                    {userRole === 'CEO' ? `TSh ${(item.approvedValue || item.valuation?.recommendedOffer || 0).toLocaleString()}` : '***'}
                                                 </span>
                                             </div>
                                             <div className="h-10 w-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">

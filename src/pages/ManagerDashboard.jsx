@@ -77,27 +77,23 @@ const ManagerDashboard = () => {
 
     return (
         <div className="min-h-screen bg-[#efeff4] pb-24">
-            {/* Premium Global Header */}
-            <div className="bg-gradient-to-r from-[#008069] via-[#00a884] to-[#008069] relative overflow-hidden pb-12 pt-4 shadow-xl">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24 blur-2xl"></div>
+            {/* Classic Global Header */}
+            <div className="bg-[#008069] relative overflow-hidden pb-12 pt-4 shadow-xl">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
 
                 <div className="max-w-6xl mx-auto px-4 relative z-10">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => navigate('/dashboard')}
-                                className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white hover:bg-white/30 transition-all border border-white/10 shadow-lg"
+                                className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-white"
                             >
                                 <FontAwesomeIcon icon={faArrowLeft} />
                             </button>
-                            <div>
-                                <p className="white font-black uppercase tracking-[0.2em] opacity-90 text-[10px]">Operations Center</p>
-                                <h1 className="text-2xl font-black text-white tracking-tighter leading-tight">Team Management</h1>
-                            </div>
+                            <h1 className="text-xl font-black text-white tracking-tighter uppercase">Team Management</h1>
                         </div>
                         <div className="flex flex-col md:flex-row items-center gap-3">
-                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/10">
+                            <div className="flex items-center gap-2 bg-white/10 rounded-xl p-2">
                                 <input
                                     type="date"
                                     value={dateRange.start}
@@ -122,13 +118,13 @@ const ManagerDashboard = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         {[
                             { label: 'Team Size', value: teamData?.team?.length || 0, icon: faUsers, color: 'blue' },
                             { label: 'Sales Revenue', value: formatCurrency(teamData?.totalTeamRevenue || 0), icon: faMoneyBillWave, color: 'green', restricted: true },
                             { label: 'Team Expenses', value: formatCurrency(teamData?.totalTeamExpenses || 0), icon: faMoneyBillWave, color: 'red', restricted: true },
                             { label: 'Top Performer', value: teamData?.topPerformer?.name?.split(' ')[0] || 'N/A', icon: faTrophy, color: 'amber' }
-                        ].filter(s => !s.restricted || (user?.role === 'CEO' || user?.role === 'MANAGER')).map((s, i) => (
+                        ].filter(s => !s.restricted || user?.role === 'CEO').map((s, i) => (
                             <div key={i} className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10 shadow-lg">
                                 <div className="flex items-center gap-3 mb-2">
                                     <FontAwesomeIcon icon={s.icon} className="text-white/80 text-[10px]" />
@@ -142,35 +138,31 @@ const ManagerDashboard = () => {
             </div>
 
             <div className="max-w-6xl mx-auto px-4 -mt-6 relative z-10">
-                {/* Elite Performer Highlight */}
+                {/* Performance Highlights */}
                 <AnimatePresence>
                     {teamData?.topPerformer && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-100 mb-8 relative overflow-hidden group"
+                            className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 mb-8 relative overflow-hidden group"
                         >
                             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50 group-hover:opacity-100 transition-opacity" />
                             <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                                <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-[2rem] flex items-center justify-center shadow-2xl transform group-hover:rotate-12 transition-transform">
-                                    <FontAwesomeIcon icon={faTrophy} className="text-white text-4xl" />
+                                <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-xl transform group-hover:rotate-12 transition-transform">
+                                    <FontAwesomeIcon icon={faTrophy} className="text-white text-3xl" />
                                 </div>
                                 <div className="flex-1 text-center md:text-left">
                                     <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
-                                        <h3 className="text-2xl font-black text-gray-900 tracking-tighter">Top Team Performer</h3>
-                                        <span className="px-3 py-1 bg-amber-50 text-amber-700 rounded-lg text-[10px] font-black uppercase tracking-widest border border-amber-100">Top Agent</span>
+                                        <h3 className="text-xl font-black text-gray-900 tracking-tighter uppercase">Top Performer</h3>
+                                        <span className="px-3 py-1 bg-amber-50 text-amber-700 rounded-lg text-[8px] font-black uppercase border border-amber-100">Top Agent</span>
                                     </div>
-                                    <p className="text-xl font-black text-gray-800 mb-2">{teamData.topPerformer.name}</p>
+                                    <p className="text-lg font-black text-gray-800 mb-2">{teamData.topPerformer.name}</p>
                                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
                                         <div className="flex items-center gap-2">
                                             <FontAwesomeIcon icon={faBoxOpen} className="text-gray-300 text-xs" />
                                             <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{teamData.topPerformer.salesCount} Sales</p>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <FontAwesomeIcon icon={faBoxOpen} className="text-gray-300 text-xs" />
-                                            <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{teamData.topPerformer.salesCount} Sales</p>
-                                        </div>
-                                        {(user?.role === 'CEO' || user?.role === 'MANAGER') && (
+                                        {user?.role === 'CEO' && (
                                             <div className="flex items-center gap-2">
                                                 <FontAwesomeIcon icon={faChartLine} className="text-green-500 text-xs" />
                                                 <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">{formatCurrency(teamData.topPerformer.revenue)}</p>
@@ -178,18 +170,18 @@ const ManagerDashboard = () => {
                                         )}
                                     </div>
                                 </div>
-                                <button className="px-8 py-4 bg-gray-900 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">View Performance Details</button>
+                                <button className="px-6 py-3 bg-gray-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 transition-colors">Performance Details</button>
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* Performance Matrix */}
-                <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-gray-100">
-                    <div className="flex items-center justify-between mb-10">
+                {/* Team Grid */}
+                <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h2 className="text-2xl font-black text-gray-900 tracking-tighter mb-1">Team Performance Dashboard</h2>
-                            <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Real-time performance metrics</p>
+                            <h2 className="text-2xl font-black text-gray-900 tracking-tighter mb-1 uppercase">Team Performance</h2>
+                            <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Real-time metrics</p>
                         </div>
                         <div className="flex items-center gap-2 text-xs font-black text-[#008069] uppercase tracking-widest">
                             <span className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
@@ -204,60 +196,45 @@ const ManagerDashboard = () => {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: index * 0.1 }}
-                                className="group p-6 rounded-[2rem] hover:bg-gray-50/80 transition-all border-2 border-transparent hover:border-gray-100 flex flex-col md:flex-row items-center gap-6"
+                                className="group p-6 rounded-[1.5rem] hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100 flex flex-col md:flex-row items-center gap-6"
                             >
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${index === 0 ? 'bg-amber-50 text-amber-600' :
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${index === 0 ? 'bg-amber-50 text-amber-600' :
                                     index === 1 ? 'bg-gray-50 text-gray-400' :
                                         index === 2 ? 'bg-orange-50 text-orange-600' :
                                             'bg-white text-gray-200 border border-gray-100'
                                     }`}>
-                                    {index < 3 ? (
-                                        <FontAwesomeIcon icon={faTrophy} className="text-xl" />
-                                    ) : (
-                                        <span className="font-black text-xs">#{index + 1}</span>
-                                    )}
+                                    {index < 3 ? <FontAwesomeIcon icon={faTrophy} /> : <span className="font-black text-[10px]">#{index + 1}</span>}
                                 </div>
 
-                                <div className="flex-1 w-full">
+                                <div className="flex-1 w-full text-center md:text-left">
                                     <div className="flex flex-col md:flex-row justify-between mb-4">
-                                        <div className="text-center md:text-left mb-4 md:mb-0">
-                                            <h3 className="text-lg font-black text-gray-900 tracking-tight leading-none mb-1 group-hover:text-[#008069] transition-colors">{member.name}</h3>
-                                            <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{member.role}</p>
+                                        <div>
+                                            <h3 className="text-lg font-black text-gray-900 tracking-tight leading-none mb-1 uppercase group-hover:text-[#008069] transition-colors">{member.name}</h3>
+                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{member.role}</p>
                                         </div>
-                                        <div className="text-center md:text-right">
-                                            {(user?.role === 'CEO' || user?.role === 'MANAGER') && (
+                                        <div className="md:text-right">
+                                            {user?.role === 'CEO' && (
                                                 <p className="text-lg font-black text-gray-900 leading-none mb-1">{formatCurrency(member.revenue)}</p>
                                             )}
-                                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{member.salesCount} Sales Completed</p>
+                                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{member.salesCount} Sales</p>
                                         </div>
                                     </div>
 
-                                    {member.salesCount > 0 && (user?.role === 'CEO' || user?.role === 'MANAGER') && (
-                                        <div className="bg-gray-100/50 rounded-full h-2 overflow-hidden relative">
+                                    {member.salesCount > 0 && user?.role === 'CEO' && (
+                                        <div className="bg-gray-100 rounded-full h-1.5 overflow-hidden">
                                             <motion.div
                                                 initial={{ width: 0 }}
                                                 animate={{ width: `${Math.min((member.revenue / (teamData.totalTeamRevenue || 1)) * 100, 100)}%` }}
-                                                transition={{ duration: 1, ease: "easeOut" }}
-                                                className={`absolute inset-y-0 left-0 rounded-full ${index === 0 ? 'bg-gradient-to-r from-amber-400 to-orange-500' :
-                                                    'bg-gradient-to-r from-[#008069] to-[#00a884]'
-                                                    }`}
+                                                className={`h-full rounded-full ${index === 0 ? 'bg-amber-400' : 'bg-[#008069]'}`}
                                             />
                                         </div>
                                     )}
                                 </div>
-                                <div className="shrink-0 flex items-center justify-center w-12 h-12 bg-white rounded-2xl border border-gray-100 group-hover:bg-[#008069] group-hover:text-white transition-all cursor-pointer shadow-sm">
-                                    <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
+                                <div className="shrink-0 w-10 h-10 bg-white rounded-xl border border-gray-100 flex items-center justify-center group-hover:bg-[#008069] group-hover:text-white transition-all cursor-pointer">
+                                    <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
                                 </div>
                             </motion.div>
                         ))}
-
-                        {(!teamData?.team || teamData.team.length === 0) && (
-                            <div className="py-20 text-center">
-                                <FontAwesomeIcon icon={faUsers} className="text-6xl text-gray-100 mb-6" />
-                                <h3 className="text-xl font-black text-gray-900 mb-2">No Performance Data</h3>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No personnel records found for the current period</p>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
@@ -266,3 +243,4 @@ const ManagerDashboard = () => {
 };
 
 export default ManagerDashboard;
+

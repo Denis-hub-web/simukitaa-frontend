@@ -41,7 +41,7 @@ const ReportsPage = () => {
     const [error, setError] = useState('');
     const [report, setReport] = useState(null);
 
-    const canAccess = useMemo(() => ['CEO', 'MANAGER'].includes(user?.role), [user?.role]);
+    const canAccess = useMemo(() => user?.role === 'CEO', [user?.role]);
 
     const loadReport = async () => {
         if (!canAccess) return;

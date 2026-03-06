@@ -179,83 +179,85 @@ const Dashboard = () => {
                 ))}
             </div>
 
-            {/* Hourly Sales Chart */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white rounded-[3rem] p-10 shadow-sm border border-gray-100"
-            >
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="w-14 h-14 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl flex items-center justify-center text-2xl text-green-600">
-                        <FontAwesomeIcon icon={faChartBar} />
+            {/* Hourly Sales Chart - CEO Only */}
+            {user?.role === 'CEO' && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-white rounded-[3rem] p-10 shadow-sm border border-gray-100"
+                >
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-14 h-14 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl flex items-center justify-center text-2xl text-green-600">
+                            <FontAwesomeIcon icon={faChartBar} />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">Sales Today</h2>
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hourly breakdown - Last 24 hours</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">Sales Today</h2>
-                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hourly breakdown - Last 24 hours</p>
-                    </div>
-                </div>
 
-                <div className="w-full h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={hourlySales}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                            <XAxis
-                                dataKey="hour"
-                                stroke="#888"
-                                fontSize={11}
-                                fontWeight="bold"
-                                tick={{ fill: '#888' }}
-                            />
-                            <YAxis
-                                stroke="#888"
-                                fontSize={11}
-                                fontWeight="bold"
-                                tick={{ fill: '#888' }}
-                            />
-                            <Tooltip
-                                contentStyle={{
-                                    background: 'white',
-                                    border: '2px solid #e5e7eb',
-                                    borderRadius: '16px',
-                                    padding: '12px',
-                                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
-                                }}
-                                labelStyle={{ fontWeight: 'bold', color: '#111', marginBottom: '4px' }}
-                                formatter={(value, name) => {
-                                    if (name === 'sales') return [value + ' sales', 'Sales Count'];
-                                    if (name === 'revenue') return ['TZS ' + value.toLocaleString(), 'Revenue'];
-                                    return [value, name];
-                                }}
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey="sales"
-                                stroke="#10b981"
-                                strokeWidth={3}
-                                dot={{ fill: '#10b981', r: 5, strokeWidth: 2, stroke: '#fff' }}
-                                activeDot={{ r: 7, strokeWidth: 2 }}
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
+                    <div className="w-full h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={hourlySales}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                <XAxis
+                                    dataKey="hour"
+                                    stroke="#888"
+                                    fontSize={11}
+                                    fontWeight="bold"
+                                    tick={{ fill: '#888' }}
+                                />
+                                <YAxis
+                                    stroke="#888"
+                                    fontSize={11}
+                                    fontWeight="bold"
+                                    tick={{ fill: '#888' }}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        background: 'white',
+                                        border: '2px solid #e5e7eb',
+                                        borderRadius: '16px',
+                                        padding: '12px',
+                                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                                    }}
+                                    labelStyle={{ fontWeight: 'bold', color: '#111', marginBottom: '4px' }}
+                                    formatter={(value, name) => {
+                                        if (name === 'sales') return [value + ' sales', 'Sales Count'];
+                                        if (name === 'revenue') return ['TZS ' + value.toLocaleString(), 'Revenue'];
+                                        return [value, name];
+                                    }}
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="sales"
+                                    stroke="#10b981"
+                                    strokeWidth={3}
+                                    dot={{ fill: '#10b981', r: 5, strokeWidth: 2, stroke: '#fff' }}
+                                    activeDot={{ r: 7, strokeWidth: 2 }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
 
-                {/* Chart Summary */}
-                <div className="mt-6 pt-6 border-t-2 border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p className="text-sm font-bold text-gray-500 mb-1">Total Sales Today</p>
-                        <p className="text-2xl font-black text-green-600">
-                            {hourlySales.reduce((sum, h) => sum + h.sales, 0)} Sales
-                        </p>
+                    {/* Chart Summary */}
+                    <div className="mt-6 pt-6 border-t-2 border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-bold text-gray-500 mb-1">Total Sales Today</p>
+                            <p className="text-2xl font-black text-green-600">
+                                {hourlySales.reduce((sum, h) => sum + h.sales, 0)} Sales
+                            </p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm font-bold text-gray-500 mb-1">Total Revenue</p>
+                            <p className="text-2xl font-black text-gray-900">
+                                TZS {hourlySales.reduce((sum, h) => sum + h.revenue, 0).toLocaleString()}
+                            </p>
+                        </div>
                     </div>
-                    <div className="text-right">
-                        <p className="text-sm font-bold text-gray-500 mb-1">Total Revenue</p>
-                        <p className="text-2xl font-black text-gray-900">
-                            TZS {hourlySales.reduce((sum, h) => sum + h.revenue, 0).toLocaleString()}
-                        </p>
-                    </div>
-                </div>
-            </motion.div>
+                </motion.div>
+            )}
 
             {/* AI Business Intelligence - CEO Only */}
             {user?.role === 'CEO' && (

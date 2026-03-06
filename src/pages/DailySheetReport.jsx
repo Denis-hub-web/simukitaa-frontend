@@ -10,6 +10,8 @@ import axios from 'axios';
 import { API_URL } from '../utils/api';
 
 const DailySheetReport = () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isCEO = user?.role === 'CEO';
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -186,7 +188,7 @@ const DailySheetReport = () => {
                         <FontAwesomeIcon icon={faMoneyBillWave} className="text-lg md:text-2xl" />
                         <div className="text-xs md:text-sm font-medium opacity-90">Revenue</div>
                     </div>
-                    <div className="text-xl md:text-3xl font-black break-words">{formatCurrency(data.summary.totalRevenue)}</div>
+                    <div className="text-xl md:text-3xl font-black break-words">{isCEO ? formatCurrency(data.summary.totalRevenue) : '***'}</div>
                     <div className="text-[10px] md:text-xs opacity-75 mt-1 md:mt-2">{data.sales.count} sales</div>
                 </motion.div>
 
@@ -200,7 +202,7 @@ const DailySheetReport = () => {
                         <FontAwesomeIcon icon={faWallet} className="text-lg md:text-2xl" />
                         <div className="text-xs md:text-sm font-medium opacity-90">Expenses</div>
                     </div>
-                    <div className="text-xl md:text-3xl font-black break-words">{formatCurrency(data.summary.totalExpenses)}</div>
+                    <div className="text-xl md:text-3xl font-black break-words">{isCEO ? formatCurrency(data.summary.totalExpenses) : '***'}</div>
                     <div className="text-[10px] md:text-xs opacity-75 mt-1 md:mt-2">{data.expenses.count} expenses</div>
                 </motion.div>
 
@@ -214,7 +216,7 @@ const DailySheetReport = () => {
                         <FontAwesomeIcon icon={isProfitable ? faArrowUp : faArrowDown} className="text-lg md:text-2xl" />
                         <div className="text-xs md:text-sm font-medium opacity-90">Net Profit</div>
                     </div>
-                    <div className="text-xl md:text-3xl font-black break-words">{formatCurrency(data.summary.netProfit)}</div>
+                    <div className="text-xl md:text-3xl font-black break-words">{isCEO ? formatCurrency(data.summary.netProfit) : '***'}</div>
                     <div className="text-[10px] md:text-xs opacity-75 mt-1 md:mt-2">{isProfitable ? 'Profitable' : 'Loss'}</div>
                 </motion.div>
 
@@ -228,7 +230,7 @@ const DailySheetReport = () => {
                         <FontAwesomeIcon icon={faChartLine} className="text-lg md:text-2xl" />
                         <div className="text-xs md:text-sm font-medium opacity-90">Margin</div>
                     </div>
-                    <div className="text-xl md:text-3xl font-black">{data.summary.profitMargin}%</div>
+                    <div className="text-xl md:text-3xl font-black">{isCEO ? `${data.summary.profitMargin}%` : '***'}</div>
                     <div className="text-[10px] md:text-xs opacity-75 mt-1 md:mt-2">Profit margin</div>
                 </motion.div>
             </div>
@@ -242,7 +244,7 @@ const DailySheetReport = () => {
                         {data.sales.byCategory.map((item, index) => (
                             <div key={index} className="flex items-center justify-between p-2 md:p-3 bg-gray-50 rounded-xl">
                                 <span className="font-bold text-gray-700 text-sm md:text-base">{item.category}</span>
-                                <span className="font-black text-gray-900 text-sm md:text-base">{formatCurrency(item.total)}</span>
+                                <span className="font-black text-gray-900 text-sm md:text-base">{isCEO ? formatCurrency(item.total) : '***'}</span>
                             </div>
                         ))}
                         {data.sales.byCategory.length === 0 && (
@@ -258,7 +260,7 @@ const DailySheetReport = () => {
                         {data.expenses.byCategory.map((item, index) => (
                             <div key={index} className="flex items-center justify-between p-2 md:p-3 bg-gray-50 rounded-xl">
                                 <span className="font-bold text-gray-700 text-sm md:text-base">{item.category}</span>
-                                <span className="font-black text-red-600 text-sm md:text-base">{formatCurrency(item.total)}</span>
+                                <span className="font-black text-red-600 text-sm md:text-base">{isCEO ? formatCurrency(item.total) : '***'}</span>
                             </div>
                         ))}
                         {data.expenses.byCategory.length === 0 && (
@@ -285,8 +287,12 @@ const DailySheetReport = () => {
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Time</th>
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Product</th>
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Staff</th>
-                                <th className="text-right p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Amount</th>
-                                <th className="text-right p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Profit</th>
+                                {isCEO && (
+                                    <>
+                                        <th className="text-right p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Amount</th>
+                                        <th className="text-right p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Profit</th>
+                                    </>
+                                )}
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Payment</th>
                             </tr>
                         </thead>
@@ -298,8 +304,12 @@ const DailySheetReport = () => {
                                     </td>
                                     <td className="p-2 md:p-3 font-bold text-gray-800 text-xs md:text-sm truncate max-w-[150px]">{t.productName}</td>
                                     <td className="p-2 md:p-3 text-gray-700 text-xs md:text-sm">{t.staffName}</td>
-                                    <td className="p-2 md:p-3 text-right font-black text-gray-900 text-xs md:text-sm">{formatCurrency(t.amount)}</td>
-                                    <td className="p-2 md:p-3 text-right font-bold text-green-600 text-xs md:text-sm">{formatCurrency(t.profit)}</td>
+                                    {isCEO && (
+                                        <>
+                                            <td className="p-2 md:p-3 text-right font-black text-gray-900 text-xs md:text-sm">{formatCurrency(t.amount)}</td>
+                                            <td className="p-2 md:p-3 text-right font-bold text-green-600 text-xs md:text-sm">{formatCurrency(t.profit)}</td>
+                                        </>
+                                    )}
                                     <td className="p-2 md:p-3 text-xs md:text-sm">
                                         <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-lg text-[10px] md:text-xs font-medium">
                                             {t.paymentMethod}
@@ -334,7 +344,7 @@ const DailySheetReport = () => {
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Time</th>
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Category</th>
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Description</th>
-                                <th className="text-right p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Amount</th>
+                                {isCEO && <th className="text-right p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Amount</th>}
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Payment</th>
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Recorded By</th>
                                 <th className="text-left p-2 md:p-3 font-black text-gray-700 text-xs md:text-sm">Recorded At</th>
@@ -348,7 +358,7 @@ const DailySheetReport = () => {
                                     </td>
                                     <td className="p-2 md:p-3 font-bold text-gray-800 text-xs md:text-sm">{e.category}</td>
                                     <td className="p-2 md:p-3 text-gray-700 text-xs md:text-sm truncate max-w-[200px]">{e.description}</td>
-                                    <td className="p-2 md:p-3 text-right font-black text-red-600 text-xs md:text-sm">{formatCurrency(e.amount)}</td>
+                                    {isCEO && <td className="p-2 md:p-3 text-right font-black text-red-600 text-xs md:text-sm">{formatCurrency(e.amount)}</td>}
                                     <td className="p-2 md:p-3 text-xs md:text-sm">
                                         <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] md:text-xs font-medium">
                                             {e.paymentMethod}
