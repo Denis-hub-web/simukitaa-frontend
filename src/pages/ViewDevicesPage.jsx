@@ -19,6 +19,10 @@ const ViewDevicesPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [editingDeviceId, setEditingDeviceId] = useState(null);
     const [editPrice, setEditPrice] = useState('');
+    const [editCondition, setEditCondition] = useState('nonActive');
+    const [editSimType, setEditSimType] = useState('PHYSICAL_SIM');
+    const [editStorage, setEditStorage] = useState('');
+    const [editColor, setEditColor] = useState('');
     const [editIsLocked, setEditIsLocked] = useState(false);
     const [updating, setUpdating] = useState(false);
     const [suppliers, setSuppliers] = useState([]);
@@ -98,32 +102,61 @@ const ViewDevicesPage = () => {
         }
     };
 
-    const handleUpdatePrice = async () => {
-        const price = parseFloat(newPrice);
-        if (isNaN(price) || price <= 0) {
-            alert('Please enter a valid price');
-            return;
-        }
+    const handleDeleteDevice = async (deviceId) => {
+        if (!window.confirm('Are you sure you want to delete this device? This action cannot be undone.')) return;
 
         try {
-            setUpdatingPrice(true);
+            setUpdating(true);
             const token = localStorage.getItem('token');
-            const response = await axios.put(`${API_BASE_URL}/products/${productId}`, {
-                sellingPrice: price
+            const response = await axios.delete(`${API_BASE_URL}/stock/products/${productId}/devices/${deviceId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.data.success) {
+                fetchProduct();
+            }
+        } catch (error) {
+            console.error('Delete device error:', error);
+            alert(error.response?.data?.message || 'Failed to delete device');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const handleUpdateDevice = async (deviceId) => {
+        try {
+            setUpdating(true);
+            const token = localStorage.getItem('token');
+            const response = await axios.put(`${API_BASE_URL}/stock/products/${productId}/devices/${deviceId}`, {
+                price: parseFloat(editPrice),
+                isPriceLocked: editIsLocked,
+                condition: editCondition,
+                simType: editSimType,
+                variant: { storage: editStorage, color: editColor }
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
             if (response.data.success) {
-                setEditPriceModal(false);
+                setEditingDeviceId(null);
                 fetchProduct();
             }
         } catch (error) {
-            console.error('Price update error:', error);
-            alert('Failed to update price');
+            console.error('Update device error:', error);
+            alert('Failed to update device');
         } finally {
-            setUpdatingPrice(false);
+            setUpdating(false);
         }
+    };
+
+    const startEditing = (device) => {
+        setEditingDeviceId(device.id);
+        setEditPrice(device.price);
+        setEditIsLocked(device.isPriceLocked);
+        setEditCondition(device.condition || 'nonActive');
+        setEditSimType(device.simType || 'PHYSICAL_SIM');
+        setEditStorage(device.variant?.storage || '');
+        setEditColor(device.variant?.color || '');
     };
 
     const getConditionBadge = (condition) => {
@@ -573,13 +606,25 @@ const ViewDevicesPage = () => {
                                                             {new Date(device.addedAt).toLocaleDateString()}
                                                         </div>
                                                     </div>
-                                                    {user.role === 'CEO' && (
-                                                        <button
-                                                            onClick={() => startEditing(device)}
-                                                            className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-transparent hover:border-indigo-100"
-                                                        >
-                                                            <FontAwesomeIcon icon={faEdit} />
-                                                        </button>
+                                                    {(user.role === 'CEO' || user.role === 'MANAGER') && (
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => startEditing(device)}
+                                                                className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-transparent hover:border-indigo-100"
+                                                                title="Edit Device"
+                                                            >
+                                                                <FontAwesomeIcon icon={faEdit} />
+                                                            </button>
+                                                            {device.status === 'available' && (
+                                                                <button
+                                                                    onClick={() => handleDeleteDevice(device.id)}
+                                                                    className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all flex items-center justify-center border border-transparent hover:border-red-100"
+                                                                    title="Delete Device"
+                                                                >
+                                                                    <FontAwesomeIcon icon={faTrash} />
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
@@ -593,18 +638,62 @@ const ViewDevicesPage = () => {
                                                         exit={{ height: 0, opacity: 0 }}
                                                         className="mt-4 pt-4 border-t-2 border-dashed border-gray-100 overflow-hidden"
                                                     >
-                                                        <div className="flex flex-wrap items-end gap-4">
-                                                            <div className="flex-1 min-w-[200px]">
-                                                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">New Selling Price (TZS)</label>
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Selling Price (TZS)</label>
                                                                 <input
                                                                     type="number"
                                                                     value={editPrice}
                                                                     onChange={(e) => setEditPrice(e.target.value)}
-                                                                    className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all font-bold"
-                                                                    placeholder="Enter price"
+                                                                    className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all font-bold text-sm"
                                                                 />
                                                             </div>
                                                             <div>
+                                                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Condition</label>
+                                                                <select
+                                                                    value={editCondition}
+                                                                    onChange={(e) => setEditCondition(e.target.value)}
+                                                                    className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all font-bold text-sm"
+                                                                >
+                                                                    <option value="nonActive">Non-Active</option>
+                                                                    <option value="active">Active</option>
+                                                                    <option value="refurbished">Refurbished</option>
+                                                                    <option value="used">Used</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">SIM Type</label>
+                                                                <select
+                                                                    value={editSimType}
+                                                                    onChange={(e) => setEditSimType(e.target.value)}
+                                                                    className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all font-bold text-sm"
+                                                                >
+                                                                    <option value="PHYSICAL_SIM">Physical</option>
+                                                                    <option value="ESIM">eSIM</option>
+                                                                    <option value="DUAL_SIM">Dual SIM</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Storage</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={editStorage}
+                                                                    onChange={(e) => setEditStorage(e.target.value)}
+                                                                    className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all font-bold text-sm"
+                                                                    placeholder="e.g. 256GB"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Color</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={editColor}
+                                                                    onChange={(e) => setEditColor(e.target.value)}
+                                                                    className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all font-bold text-sm"
+                                                                    placeholder="e.g. Titanium"
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-end">
                                                                 <label className="flex items-center gap-3 cursor-pointer group mb-2">
                                                                     <div className={`w-10 h-6 rounded-full transition-all relative ${editIsLocked ? 'bg-indigo-600' : 'bg-gray-300'}`}>
                                                                         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${editIsLocked ? 'left-5' : 'left-1'}`} />
@@ -620,21 +709,21 @@ const ViewDevicesPage = () => {
                                                                     </span>
                                                                 </label>
                                                             </div>
-                                                            <div className="flex gap-2">
-                                                                <button
-                                                                    onClick={() => setEditingDeviceId(null)}
-                                                                    className="px-4 py-2 border-2 border-gray-200 text-gray-500 rounded-xl font-bold hover:bg-gray-50 transition-all text-sm"
-                                                                >
-                                                                    Cancel
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleUpdatePrice(device.id)}
-                                                                    disabled={updating}
-                                                                    className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all text-sm disabled:opacity-50"
-                                                                >
-                                                                    {updating ? 'Saving...' : 'Save Price'}
-                                                                </button>
-                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-end gap-2">
+                                                            <button
+                                                                onClick={() => setEditingDeviceId(null)}
+                                                                className="px-4 py-2 border-2 border-gray-200 text-gray-500 rounded-xl font-bold hover:bg-gray-50 transition-all text-xs uppercase"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleUpdateDevice(device.id)}
+                                                                disabled={updating}
+                                                                className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all text-xs uppercase shadow-lg shadow-indigo-200 disabled:opacity-50"
+                                                            >
+                                                                {updating ? 'Saving...' : 'Save Changes'}
+                                                            </button>
                                                         </div>
                                                         {editIsLocked && (
                                                             <p className="text-[10px] text-indigo-500 font-bold mt-2">

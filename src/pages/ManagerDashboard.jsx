@@ -115,8 +115,9 @@ const ManagerDashboard = () => {
                         {[
                             { label: 'Team Size', value: teamData?.team?.length || 0, icon: faUsers, color: 'blue' },
                             { label: 'Sales Revenue', value: formatCurrency(teamData?.totalTeamRevenue || 0), icon: faMoneyBillWave, color: 'green', restricted: true },
+                            { label: 'Team Expenses', value: formatCurrency(teamData?.totalTeamExpenses || 0), icon: faMoneyBillWave, color: 'red', restricted: true },
                             { label: 'Top Performer', value: teamData?.topPerformer?.name?.split(' ')[0] || 'N/A', icon: faTrophy, color: 'amber' }
-                        ].filter(s => !s.restricted || user?.role === 'CEO').map((s, i) => (
+                        ].filter(s => !s.restricted || (user?.role === 'CEO' || user?.role === 'MANAGER')).map((s, i) => (
                             <div key={i} className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10 shadow-lg">
                                 <div className="flex items-center gap-3 mb-2">
                                     <FontAwesomeIcon icon={s.icon} className="text-white/80 text-[10px]" />
@@ -158,7 +159,7 @@ const ManagerDashboard = () => {
                                             <FontAwesomeIcon icon={faBoxOpen} className="text-gray-300 text-xs" />
                                             <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{teamData.topPerformer.salesCount} Sales</p>
                                         </div>
-                                        {user?.role === 'CEO' && (
+                                        {(user?.role === 'CEO' || user?.role === 'MANAGER') && (
                                             <div className="flex items-center gap-2">
                                                 <FontAwesomeIcon icon={faChartLine} className="text-green-500 text-xs" />
                                                 <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">{formatCurrency(teamData.topPerformer.revenue)}</p>
@@ -213,14 +214,14 @@ const ManagerDashboard = () => {
                                             <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{member.role}</p>
                                         </div>
                                         <div className="text-center md:text-right">
-                                            {user?.role === 'CEO' && (
+                                            {(user?.role === 'CEO' || user?.role === 'MANAGER') && (
                                                 <p className="text-lg font-black text-gray-900 leading-none mb-1">{formatCurrency(member.revenue)}</p>
                                             )}
                                             <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{member.salesCount} Sales Completed</p>
                                         </div>
                                     </div>
 
-                                    {member.salesCount > 0 && user?.role === 'CEO' && (
+                                    {member.salesCount > 0 && (user?.role === 'CEO' || user?.role === 'MANAGER') && (
                                         <div className="bg-gray-100/50 rounded-full h-2 overflow-hidden relative">
                                             <motion.div
                                                 initial={{ width: 0 }}

@@ -7,7 +7,7 @@ import {
     faSearch, faCog, faSignOutAlt, faReceipt,
     faArrowRight, faShieldAlt, faMicrochip, faHistory
 } from '@fortawesome/free-solid-svg-icons';
-import { salesAPI, repairAPI } from '../utils/api';
+import { salesAPI, repairAPI, expenseAPI } from '../utils/api';
 import Modal from '../components/Modal';
 import ConversationalSaleForm from '../components/ConversationalSaleForm';
 import AddCustomerForm from '../components/AddCustomerForm';
@@ -21,6 +21,7 @@ const StaffDashboard = () => {
     const [showSaleModal, setShowSaleModal] = useState(false);
     const [showCustomerModal, setShowCustomerModal] = useState(false);
     const [showRepairModal, setShowRepairModal] = useState(false);
+    const [personalExpenses, setPersonalExpenses] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
 
     useEffect(() => {
@@ -31,11 +32,13 @@ const StaffDashboard = () => {
 
     const loadStats = async () => {
         try {
-            const [salesRes, repairsRes] = await Promise.all([
+            const [salesRes, repairsRes, expensesRes] = await Promise.all([
                 salesAPI.getStats(),
-                repairAPI.getStats()
+                repairAPI.getStats(),
+                expenseAPI.getSummary()
             ]);
             setStats({ sales: salesRes.data.data, repairs: repairsRes.data.data });
+            setPersonalExpenses(expensesRes.data.data);
             setLoading(false);
         } catch (error) {
             setStats({
@@ -102,9 +105,9 @@ const StaffDashboard = () => {
 
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                         {[
-                            { label: 'Active Repairs', value: stats?.repairs?.inProgress || 0, icon: faTools, color: 'purple' },
-                            { label: 'Repairs Finished', value: stats?.repairs?.completed || 0, icon: faCheckCircle, color: 'blue' },
-                            { label: 'System Status', value: 'Online', icon: faShieldAlt, color: 'emerald' }
+                            { label: 'My Sales (Today)', value: stats?.sales?.today?.count || 0, icon: faMoneyBillWave, color: 'emerald' },
+                            { label: 'My Expenses (Total)', value: personalExpenses?.total?.toLocaleString() + ' /=' || '0', icon: faReceipt, color: 'blue' },
+                            { label: 'Repairs in Hand', value: stats?.repairs?.inProgress || 0, icon: faTools, color: 'purple' }
                         ].map((s, i) => (
                             <div key={i} className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10 shadow-lg">
                                 <div className="flex items-center gap-3 mb-2">
