@@ -12,6 +12,8 @@ const StockInventoryTable = () => {
     const [loading, setLoading] = useState(true);
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const isCEO = user?.role === 'CEO';
+    const isManager = user?.role === 'MANAGER';
+    const canSeeValues = isCEO || isManager;
     // Modal functionality disabled
 
     const navigate = useNavigate();
@@ -92,7 +94,7 @@ const StockInventoryTable = () => {
                                 <p className="text-sm text-gray-500 font-medium mt-0.5">{inventory.length} variants • {totalStock} units in stock</p>
                             </div>
                         </div>
-                        {isCEO && (
+                        {canSeeValues && (
                             <div className="flex items-center gap-6">
                                 <div className="text-right">
                                     <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Value</p>
@@ -127,7 +129,7 @@ const StockInventoryTable = () => {
                                     <th className="px-5 py-3 text-center">
                                         <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Sold</span>
                                     </th>
-                                    {isCEO && (
+                                    {canSeeValues && (
                                         <th className="px-5 py-3 text-right">
                                             <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Value (TSh)</span>
                                         </th>
@@ -194,7 +196,7 @@ const StockInventoryTable = () => {
                                                 </span>
                                             </td>
 
-                                            {isCEO && (
+                                            {canSeeValues && (
                                                 <td className="px-5 py-3 text-right">
                                                     <div className="font-semibold text-base text-gray-900">
                                                         {item.stockValue.toLocaleString()}

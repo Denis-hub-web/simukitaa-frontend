@@ -14,15 +14,15 @@ const ToolsPage = () => {
 
     const tools = [
         { title: 'Dashboard', desc: 'Home Overview', icon: faHome, color: 'text-blue-600', bg: 'bg-blue-50', link: '/dashboard', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { title: 'Sales History', desc: 'Transactional Ledger', icon: faMoneyBillWave, color: 'text-emerald-500', bg: 'bg-emerald-50', link: '/sales', roles: ['CEO'] },
+        { title: 'Sales History', desc: 'Transactional Ledger', icon: faMoneyBillWave, color: 'text-emerald-500', bg: 'bg-emerald-50', link: '/sales', roles: ['CEO', 'MANAGER'] },
         { title: 'Expenses', desc: 'Record & Track Costs', icon: faWallet, color: 'text-rose-500', bg: 'bg-rose-50', link: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { title: 'Trade-In Manager', desc: 'Approve & Add to Stock', icon: faExchangeAlt, color: 'text-indigo-500', bg: 'bg-indigo-50', link: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { title: 'Stock Management', desc: 'Add & Organize Inventory', icon: faBoxOpen, color: 'text-blue-500', bg: 'bg-blue-50', link: '/stock-management', roles: ['CEO', 'MANAGER'] },
         { title: 'Supplier Network', desc: 'Procurement Partners', icon: faTruck, color: 'text-indigo-500', bg: 'bg-indigo-50', link: '/suppliers', roles: ['CEO', 'MANAGER'] },
         { title: 'Wanakitaa Hub', desc: 'Loyalty & Community', icon: faGem, color: 'text-purple-500', bg: 'bg-purple-50', link: '/wanakitaa', roles: ['CEO', 'MANAGER'] },
-        { title: 'Campaigns', desc: 'Bulk Customer Messaging', icon: faBullhorn, color: 'text-purple-500', bg: 'bg-purple-50', link: '/campaigns', roles: ['CEO'] },
-        { title: 'Templates', desc: 'Customize Messages', icon: faEnvelope, color: 'text-blue-500', bg: 'bg-blue-50', link: '/notification-templates', roles: ['CEO'] },
-        { title: 'Team Management', desc: 'Staff & Permissions', icon: faUserCog, color: 'text-green-500', bg: 'bg-green-50', link: '/team-management', roles: ['CEO'] },
+        { title: 'Campaigns', desc: 'Bulk Customer Messaging', icon: faBullhorn, color: 'text-purple-500', bg: 'bg-purple-50', link: '/campaigns', roles: ['CEO', 'MANAGER'] },
+        { title: 'Templates', desc: 'Customize Messages', icon: faEnvelope, color: 'text-blue-500', bg: 'bg-blue-50', link: '/notification-templates', roles: ['CEO', 'MANAGER'] },
+        { title: 'Team Management', desc: 'Staff & Permissions', icon: faUserCog, color: 'text-green-500', bg: 'bg-green-50', link: '/team-management', roles: ['CEO', 'MANAGER'] },
         { title: 'Settings', desc: 'System Config', icon: faCog, color: 'text-gray-500', bg: 'bg-gray-50', link: '/settings', roles: ['CEO', 'MANAGER', 'STAFF'] },
     ];
 

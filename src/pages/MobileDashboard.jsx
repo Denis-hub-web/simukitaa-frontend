@@ -206,7 +206,7 @@ const MobileDashboard = () => {
 
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">Karibu Sena,</p>
+                            <p className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">Authenticated Account,</p>
                             <h2 className="text-2xl font-black text-white tracking-tight">{user?.name?.split(' ')[0]}</h2>
                         </div>
                         <div className="flex items-center gap-2 bg-white/10 rounded-xl p-2 shrink-0">
@@ -379,7 +379,7 @@ const MobileDashboard = () => {
                                 { title: 'Expenses Today', desc: 'Record Costs', icon: faWallet, color: 'text-rose-500', bg: 'bg-rose-50', link: '/expenses' },
                                 { title: 'Stock Table', desc: 'Inventory Check', icon: faBoxOpen, color: 'text-blue-500', bg: 'bg-blue-50', link: '/stock-inventory', restricted: true },
                                 { title: 'Team Admin', desc: 'Staff Oversight', icon: faUserCog, color: 'text-green-500', bg: 'bg-green-50', link: '/team-management', restricted: true }
-                            ].filter(t => !t.restricted || user?.role === 'CEO').map((t, i) => (
+                            ].filter(t => !t.restricted || (user?.role === 'CEO' || user?.role === 'MANAGER')).map((t, i) => (
                                 <button key={i} onClick={() => navigate(t.link)} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-5 w-full text-left active:scale-95 transition-all">
                                     <div className={`w-12 h-12 ${t.bg} rounded-2xl flex items-center justify-center`}>
                                         <FontAwesomeIcon icon={t.icon} className={t.color} />

@@ -177,7 +177,7 @@ const CustomerReview = () => {
                     </div>
 
                     <p className="text-white/50 text-sm font-black uppercase tracking-widest">
-                        Karibu Tena SimuKitaa 📱✨
+                        Thank You from SimuKitaa 📱✨
                     </p>
                 </motion.div>
             </div>

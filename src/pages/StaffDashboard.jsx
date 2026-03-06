@@ -113,7 +113,7 @@ const StaffDashboard = () => {
                             <span className="text-3xl font-black text-[#008069]">{user?.name?.charAt(0)}</span>
                         </div>
                         <div className="text-center md:text-left">
-                            <h2 className="text-3xl font-black text-white tracking-tighter mb-1">Karibu, {user?.name}!</h2>
+                            <h2 className="text-3xl font-black text-white tracking-tighter mb-1">Authenticated: {user?.name}!</h2>
                             <p className="text-white/80 text-xs font-bold uppercase tracking-widest">System synchronized • Online & Ready</p>
                         </div>
                     </div>

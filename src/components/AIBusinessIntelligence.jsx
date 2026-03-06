@@ -129,7 +129,7 @@ export default function AIBusinessIntelligence() {
                     }}>
                         <FontAwesomeIcon icon={faBrain} style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.9 }} />
                         <h2 style={{ fontSize: '1.75rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                            Karibu! How can I help you today?
+                            Hello! How can I help you today?
                         </h2>
                         <p style={{ fontSize: '0.95rem', opacity: 0.8, marginBottom: '2rem' }}>
                             Ask me anything about your business—stock, sales, repairs, customers, loyalty, and more.

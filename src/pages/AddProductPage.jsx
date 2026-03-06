@@ -254,7 +254,7 @@ const AddProductPage = () => {
                                 </div>
                             </div>
 
-                            {user.role === 'CEO' && formData.trackSerials && (
+                            {(user.role === 'CEO' || user.role === 'MANAGER') && formData.trackSerials && (
                                 <motion.div
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -296,7 +296,7 @@ const AddProductPage = () => {
                                             className="w-full px-4 py-3 rounded-xl border-2 border-indigo-100 focus:border-indigo-500 focus:outline-none transition-all bg-indigo-50/10"
                                         />
                                     </div>
-                                    {user.role === 'CEO' && (
+                                    {(user.role === 'CEO' || user.role === 'MANAGER') && (
                                         <>
                                             <div>
                                                 <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -378,7 +378,7 @@ const AddProductPage = () => {
                         )}
 
                         {/* Variant Pricing Matrix */}
-                        {user.role === 'CEO' && formData.trackSerials && formData.variantPricing.length > 0 && (
+                        {(user.role === 'CEO' || user.role === 'MANAGER') && formData.trackSerials && formData.variantPricing.length > 0 && (
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
