@@ -22,6 +22,9 @@ const AddProductForm = ({ onSuccess, onCancel }) => {
     const [error, setError] = useState('');
     const [showConfirm, setShowConfirm] = useState(false);
 
+    // Get user for role checking
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setShowConfirm(true);
