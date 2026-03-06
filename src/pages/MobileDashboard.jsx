@@ -61,6 +61,7 @@ const MobileDashboard = () => {
     const [notificationFilter, setNotificationFilter] = useState('all');
     const [showSaleModal, setShowSaleModal] = useState(false);
     const [showCustomerModal, setShowCustomerModal] = useState(false);
+    const [showProductModal, setShowProductModal] = useState(false);
     const [personalExpenses, setPersonalExpenses] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
     const [dateRange, setDateRange] = useState({
