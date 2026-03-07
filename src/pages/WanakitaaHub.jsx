@@ -165,14 +165,14 @@ const WanakitaaHub = () => {
         .sort((a, b) => (b.points || 0) - (a.points || 0)); // Sort by points descending
 
     return (
-        <div className="premium-bg pb-20" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8">
             {/* Header Section */}
-            <div className="max-w-7xl mx-auto px-3 md:px-8 pt-4 md:pt-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-6 mb-6 md:mb-10">
+            <div className="max-w-7xl mx-auto mb-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-6 mb-6">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => navigate('/dashboard')}
-                            className="premium-card w-10 h-10 flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all flex-shrink-0"
+                            className="flex items-center justify-center w-10 h-10 bg-white rounded-2xl border-2 border-gray-100 shadow-sm text-gray-500 hover:text-indigo-600 transition-colors flex-shrink-0"
                         >
                             <FontAwesomeIcon icon={faArrowLeft} className="text-sm" />
                         </button>
@@ -183,7 +183,8 @@ const WanakitaaHub = () => {
                     </div>
 
                     {/* Navigation Menu */}
-                    <div className="flex gap-1.5 p-1.5 bg-gray-50 rounded-xl overflow-x-auto">
+                    <div className="bg-white rounded-2xl p-3 shadow-sm border-2 border-gray-100">
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar">
                         {[
                             { id: 'community', label: 'Members', icon: faIdCard },
                             { id: 'leaderboard', label: 'Leaderboard', icon: faTrophy },
@@ -192,74 +193,75 @@ const WanakitaaHub = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-1.5 px-3 md:px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wide transition-all whitespace-nowrap ${activeTab === tab.id
-                                    ? 'bg-white text-gray-900 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-900'
+                                className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id
+                                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
+                                    : 'text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
                                 <FontAwesomeIcon icon={tab.icon} className="text-[10px]" />
                                 <span className="hidden sm:inline">{tab.label}</span>
                             </button>
                         ))}
+                        </div>
                     </div>
                 </div>
 
                 {/* Community Engagement Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-10">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="premium-card p-3 md:p-4 hover:shadow-md hover:-translate-y-0.5 transition-all group"
+                        className="bg-white rounded-2xl p-5 border-2 border-blue-100 shadow-sm"
                     >
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-50 rounded-lg md:rounded-xl flex items-center justify-center text-blue-600 mb-2 md:mb-3 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-3">
                             <FontAwesomeIcon icon={faUsers} className="text-sm" />
                         </div>
-                        <p className="text-xl md:text-2xl font-black text-gray-900 mb-0.5 md:mb-1">{customers.length}</p>
-                        <p className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-wide">Members</p>
+                        <div className="text-3xl font-black text-blue-600 mb-1">{customers.length}</div>
+                        <div className="text-sm text-gray-600 font-semibold">Members</div>
                     </motion.div>
 
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.05 }}
-                        className="premium-card p-3 md:p-4 hover:shadow-md hover:-translate-y-0.5 transition-all group"
+                        className="bg-white rounded-2xl p-5 border-2 border-amber-100 shadow-sm"
                     >
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-amber-50 rounded-lg md:rounded-xl flex items-center justify-center text-amber-600 mb-2 md:mb-3 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-3">
                             <FontAwesomeIcon icon={faCrown} className="text-sm" />
                         </div>
-                        <p className="text-xl md:text-2xl font-black text-gray-900 mb-0.5 md:mb-1">{customers.filter(c => isEliteTier(c.tier)).length}</p>
-                        <p className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-wide">Elite</p>
+                        <div className="text-3xl font-black text-amber-600 mb-1">{customers.filter(c => isEliteTier(c.tier)).length}</div>
+                        <div className="text-sm text-gray-600 font-semibold">Elite</div>
                     </motion.div>
 
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="premium-card p-3 md:p-4 hover:shadow-md hover:-translate-y-0.5 transition-all group"
+                        className="bg-white rounded-2xl p-5 border-2 border-indigo-100 shadow-sm"
                     >
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-indigo-50 rounded-lg md:rounded-xl flex items-center justify-center text-indigo-600 mb-2 md:mb-3 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-3">
                             <FontAwesomeIcon icon={faGem} className="text-sm" />
                         </div>
-                        <p className="text-xl md:text-2xl font-black text-gray-900 mb-0.5 md:mb-1">{customers.reduce((acc, c) => acc + (c.points || 0), 0).toLocaleString()}</p>
-                        <p className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-wide">Points</p>
+                        <div className="text-3xl font-black text-indigo-600 mb-1">{customers.reduce((acc, c) => acc + (c.points || 0), 0).toLocaleString()}</div>
+                        <div className="text-sm text-gray-600 font-semibold">Points</div>
                     </motion.div>
 
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.15 }}
-                        className="premium-card p-3 md:p-4 hover:shadow-md hover:-translate-y-0.5 transition-all group"
+                        className="bg-white rounded-2xl p-5 border-2 border-rose-100 shadow-sm"
                     >
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-rose-50 rounded-lg md:rounded-xl flex items-center justify-center text-rose-600 mb-2 md:mb-3 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600 mb-3">
                             <FontAwesomeIcon icon={faHistory} className="text-sm" />
                         </div>
-                        <p className="text-xl md:text-2xl font-black text-gray-900 mb-0.5 md:mb-1">{Math.round(customers.reduce((acc, c) => acc + (c.points || 0), 0) / (customers.length || 1))}</p>
-                        <p className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-wide">Avg</p>
+                        <div className="text-3xl font-black text-rose-600 mb-1">{Math.round(customers.reduce((acc, c) => acc + (c.points || 0), 0) / (customers.length || 1))}</div>
+                        <div className="text-sm text-gray-600 font-semibold">Avg</div>
                     </motion.div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-3 md:px-8 mt-6 md:mt-12">
+            <div className="max-w-7xl mx-auto">
                 <AnimatePresence mode="wait">
                     {activeTab === 'community' && (
                         <motion.div
@@ -272,13 +274,13 @@ const WanakitaaHub = () => {
                                 {/* Community Registry Ledger */}
                                 <div className="flex-1">
                                     <div className="relative mb-10">
-                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-400">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-500">
                                             <FontAwesomeIcon icon={faSearch} />
                                         </div>
                                         <input
                                             type="text"
                                             placeholder="Search Members (Name or Phone)..."
-                                            className="w-full bg-white border border-black/5 rounded-[2rem] py-4 md:py-6 pl-16 md:pl-20 pr-6 md:pr-8 shadow-xl shadow-black/5 focus:outline-none font-bold text-gray-700 focus:ring-4 focus:ring-indigo-500/5 transition-all"
+                                            className="w-full bg-white border-2 border-gray-200 rounded-2xl py-3 md:py-4 pl-16 pr-4 shadow-sm focus:border-indigo-500 focus:outline-none transition-all font-semibold text-gray-700"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                         />
@@ -293,7 +295,7 @@ const WanakitaaHub = () => {
                                                     setSelectedMember(member);
                                                     fetchMemberHistory(member.id);
                                                 }}
-                                                className="premium-card p-6 flex items-center gap-6 cursor-pointer border-white group"
+                                                className="bg-white rounded-2xl p-6 border-2 border-gray-100 shadow-sm hover:shadow-md transition-all flex items-center gap-6 cursor-pointer group"
                                             >
                                                 <div className="relative shrink-0">
                                                     <div
@@ -311,7 +313,7 @@ const WanakitaaHub = () => {
 
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex flex-col">
-                                                        <span className="premium-label text-[10px] opacity-40 mb-1">{member.phone}</span>
+                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{member.phone}</span>
                                                         <h3 className="text-xl font-black text-gray-900 tracking-tight leading-none group-hover:text-indigo-600 transition-colors truncate">{member.name}</h3>
                                                     </div>
                                                     <div className="flex items-center gap-2 mt-3">
@@ -497,7 +499,7 @@ const WanakitaaHub = () => {
                             initial={{ opacity: 0, scale: 0.98 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 1.02 }}
-                            className="bg-white rounded-[2.5rem] md:rounded-[4rem] shadow-2xl p-6 md:p-12 overflow-hidden border border-black/5 relative"
+                            className="bg-white rounded-2xl shadow-sm p-6 md:p-8 overflow-hidden border-2 border-gray-100 relative"
                         >
                             <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6 relative z-10">
                                 <div>
@@ -506,19 +508,21 @@ const WanakitaaHub = () => {
                                     <p className="text-gray-500 text-xs md:text-sm font-semibold mt-2">Celebrating our most active customers</p>
                                 </div>
 
-                                <div className="flex flex-wrap gap-1.5 p-1.5 bg-gray-50 rounded-xl">
+                                <div className="bg-white rounded-2xl p-3 shadow-sm border-2 border-gray-100">
+                                    <div className="flex gap-2 overflow-x-auto no-scrollbar">
                                     {['day', 'week', 'month', 'year'].map(p => (
                                         <button
                                             key={p}
                                             onClick={() => setPeriod(p)}
-                                            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wide transition-all ${period === p
-                                                ? 'bg-white text-gray-900 shadow-sm'
-                                                : 'text-gray-500 hover:text-gray-900'
+                                            className={`px-6 py-3 rounded-xl font-semibold transition-all whitespace-nowrap ${period === p
+                                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
+                                                : 'text-gray-600 hover:bg-gray-50'
                                                 }`}
                                         >
                                             {p}
                                         </button>
                                     ))}
+                                    </div>
                                 </div>
                             </div>
 
@@ -568,11 +572,11 @@ const WanakitaaHub = () => {
                                     </div>
 
                                     {/* Detailed Runner-ups */}
-                                    <div className="bg-gray-50/50 rounded-[2.5rem] md:rounded-[3rem] p-5 md:p-8 border border-gray-100">
+                                    <div className="bg-white rounded-2xl p-6 md:p-8 border-2 border-gray-100 shadow-sm">
                                         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-8 px-4">Loyalty Pursuit Lineage</p>
                                         <div className="space-y-4">
                                             {leaderboard.slice(3).map((member, idx) => (
-                                                <div key={member.customerId} className="bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-white hover:shadow-lg transition-all">
+                                                <div key={member.customerId} className="bg-white p-5 rounded-2xl flex items-center gap-4 shadow-sm border-2 border-gray-100 hover:shadow-md transition-all">
                                                     <span className="w-8 text-[11px] font-black text-gray-300">#{idx + 4}</span>
                                                     <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center font-bold text-gray-500 text-xs">
                                                         {member.customerName.charAt(0)}
@@ -602,7 +606,7 @@ const WanakitaaHub = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="bg-white rounded-[2.5rem] md:rounded-[4rem] shadow-2xl p-6 md:p-10 lg:p-16 border border-black/5 max-w-4xl mx-auto relative overflow-hidden"
+                            className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border-2 border-gray-100 max-w-4xl mx-auto relative overflow-hidden"
                         >
                             <div className="relative z-10">
                                 <div className="text-center mb-10 md:mb-16">
@@ -619,7 +623,7 @@ const WanakitaaHub = () => {
                                             <label className="text-xs font-bold text-gray-600 uppercase tracking-wider ml-1">Full Name</label>
                                             <input
                                                 type="text"
-                                                className="premium-input w-full py-4 text-base"
+                                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all"
                                                 placeholder="Customer Full Name"
                                                 value={enrollForm.name}
                                                 onChange={(e) => setEnrollForm({ ...enrollForm, name: e.target.value })}
@@ -630,7 +634,7 @@ const WanakitaaHub = () => {
                                             <label className="text-xs font-bold text-gray-600 uppercase tracking-wider ml-1">Phone Number</label>
                                             <input
                                                 type="tel"
-                                                className="premium-input w-full py-4 text-base"
+                                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all"
                                                 placeholder="Mobile / WhatsApp"
                                                 value={enrollForm.phone}
                                                 onChange={(e) => setEnrollForm({ ...enrollForm, phone: e.target.value })}
@@ -644,7 +648,7 @@ const WanakitaaHub = () => {
                                             whileHover={{ scale: 1.02, y: -2 }}
                                             whileTap={{ scale: 0.98 }}
                                             disabled={submitting}
-                                            className="premium-btn-primary w-full py-3 md:py-4 text-sm md:text-base shadow-lg font-bold"
+                                            className="w-full py-3 md:py-4 text-sm md:text-base shadow-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:shadow-xl transition-all"
                                         >
                                             {submitting ? 'Adding...' : 'Confirm Enrollment'}
                                         </motion.button>
