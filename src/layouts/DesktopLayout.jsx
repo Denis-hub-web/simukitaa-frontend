@@ -56,19 +56,19 @@ const DesktopLayout = () => {
     };
 
     const menuItems = [
-        { icon: LayoutGrid, label: 'Dashboard', path: '/dashboard', roles: ['CEO', 'MANAGER', 'STAFF'] },
+        { icon: LayoutGrid, label: 'Dashboard', path: '/dashboard', roles: ['CEO', 'MANAGER'] },
         { icon: ReceiptText, label: 'Sales History', path: '/sales', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: Wallet, label: 'Expenses', path: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { icon: Repeat2, label: 'Trade-In Manager', path: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
+        { icon: Repeat2, label: 'Trade-In Manager', path: '/trade-ins', roles: ['CEO', 'MANAGER'] },
         { icon: PackageOpen, label: 'Stock Management', path: '/stock-management', roles: ['CEO', 'MANAGER'] },
-        { icon: Calculator, label: 'Calculator', path: '/stock-calculator', roles: ['CEO', 'MANAGER', 'STAFF'] },
+        { icon: Calculator, label: 'Calculator', path: '/stock-calculator', roles: ['CEO', 'MANAGER'] },
         { icon: Truck, label: 'Supplier Network', path: '/suppliers', roles: ['CEO', 'MANAGER'] },
         { icon: Compass, label: 'Wanakitaa Hub', path: '/wanakitaa', roles: ['CEO'] },
         { icon: Megaphone, label: 'Campaigns', path: '/campaigns', roles: ['CEO', 'MANAGER'] },
         { icon: Mail, label: 'Templates', path: '/notification-templates', roles: ['CEO'] },
         { icon: Users, label: 'Team Management', path: '/team-management', roles: ['CEO', 'MANAGER'] },
-        { icon: Wrench, label: 'Tools', path: '/tools', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { icon: Settings, label: 'Settings', path: '/settings', roles: ['CEO', 'MANAGER', 'STAFF'] },
+        { icon: Wrench, label: 'Tools', path: '/tools', roles: ['CEO', 'MANAGER'] },
+        { icon: Settings, label: 'Settings', path: '/settings', roles: ['CEO', 'MANAGER'] },
     ];
 
     const visibleMenuItems = menuItems.filter(item => item.roles.includes(userRole));

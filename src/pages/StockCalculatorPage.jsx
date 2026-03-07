@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft,
@@ -33,6 +33,10 @@ const TypingText = ({ text, speed = 30 }) => {
 
 const StockCalculatorPage = () => {
     const navigate = useNavigate();
+    const userRole = JSON.parse(localStorage.getItem('user') || '{}')?.role || 'STAFF';
+    if (userRole === 'STAFF') {
+        return <Navigate to="/unauthorized" />;
+    }
     const [mode, setMode] = useState('stock'); // 'stock' or 'sales'
     const [options, setOptions] = useState(null);
     const [loading, setLoading] = useState(true);

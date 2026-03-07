@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     ChevronRight,
@@ -21,18 +21,22 @@ const ToolsPage = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userRole = user.role || 'STAFF';
 
+    if (userRole === 'STAFF') {
+        return <Navigate to="/unauthorized" />;
+    }
+
     const tools = [
-        { title: 'Dashboard', desc: 'Home Overview', icon: LayoutGrid, color: 'text-blue-600', bg: 'bg-blue-50', link: '/dashboard', roles: ['CEO', 'MANAGER', 'STAFF'] },
+        { title: 'Dashboard', desc: 'Home Overview', icon: LayoutGrid, color: 'text-blue-600', bg: 'bg-blue-50', link: '/dashboard', roles: ['CEO', 'MANAGER'] },
         { title: 'Sales History', desc: 'Transactional Ledger', icon: FileText, color: 'text-emerald-600', bg: 'bg-emerald-50', link: '/sales', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { title: 'Expenses', desc: 'Record & Track Costs', icon: Wallet, color: 'text-rose-600', bg: 'bg-rose-50', link: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { title: 'Trade-In Manager', desc: 'Approve & Add to Stock', icon: Repeat2, color: 'text-indigo-600', bg: 'bg-indigo-50', link: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
+        { title: 'Trade-In Manager', desc: 'Approve & Add to Stock', icon: Repeat2, color: 'text-indigo-600', bg: 'bg-indigo-50', link: '/trade-ins', roles: ['CEO', 'MANAGER'] },
         { title: 'Stock Management', desc: 'Add & Organize Inventory', icon: PackageOpen, color: 'text-blue-600', bg: 'bg-blue-50', link: '/stock-management', roles: ['CEO', 'MANAGER'] },
         { title: 'Supplier Network', desc: 'Procurement Partners', icon: Truck, color: 'text-indigo-600', bg: 'bg-indigo-50', link: '/suppliers', roles: ['CEO', 'MANAGER'] },
         { title: 'Wanakitaa Hub', desc: 'Loyalty & Community', icon: Compass, color: 'text-purple-600', bg: 'bg-purple-50', link: '/wanakitaa', roles: ['CEO'] },
         { title: 'Campaigns', desc: 'Bulk Customer Messaging', icon: Megaphone, color: 'text-purple-600', bg: 'bg-purple-50', link: '/campaigns', roles: ['CEO', 'MANAGER'] },
         { title: 'Templates', desc: 'Customize Messages', icon: Mail, color: 'text-blue-600', bg: 'bg-blue-50', link: '/notification-templates', roles: ['CEO', 'MANAGER'] },
         { title: 'Team Management', desc: 'Staff & Permissions', icon: Users, color: 'text-green-600', bg: 'bg-green-50', link: '/team-management', roles: ['CEO', 'MANAGER'] },
-        { title: 'Settings', desc: 'System Config', icon: Settings, color: 'text-gray-600', bg: 'bg-gray-50', link: '/settings', roles: ['CEO', 'MANAGER', 'STAFF'] },
+        { title: 'Settings', desc: 'System Config', icon: Settings, color: 'text-gray-600', bg: 'bg-gray-50', link: '/settings', roles: ['CEO', 'MANAGER'] },
     ];
 
     const visibleTools = tools.filter(tool => tool.roles.includes(userRole));

@@ -559,18 +559,21 @@ const MobileDashboard = () => {
                                 { title: 'Stock Table', desc: 'Inventory Check', icon: faCubes, color: 'text-blue-500', bg: 'bg-blue-50', link: '/stock-inventory', restricted: true },
                                 { title: 'Wanakitaa Hub', desc: 'Loyalty & Community', icon: faCompass, color: 'text-purple-600', bg: 'bg-purple-50', link: '/wanakitaa', restrictedCEO: true },
                                 { title: 'Team Admin', desc: 'Staff Oversight', icon: faUserCog, color: 'text-green-500', bg: 'bg-green-50', link: '/team-management', restricted: true }
-                            ].filter(t => (!t.restricted || (user?.role === 'CEO' || user?.role === 'MANAGER')) && (!t.restrictedCEO || user?.role === 'CEO')).map((t, i) => (
-                                <button key={i} onClick={() => navigate(t.link)} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-5 w-full text-left active:scale-95 transition-all">
-                                    <div className={`w-12 h-12 ${t.bg} rounded-2xl flex items-center justify-center`}>
-                                        <FontAwesomeIcon icon={t.icon} className={t.color} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-black text-gray-900 text-sm uppercase">{t.title}</h3>
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t.desc}</p>
-                                    </div>
-                                    <FontAwesomeIcon icon={faChevronRight} className="text-gray-300" />
-                                </button>
-                            ))}
+                            ]
+                                .filter(t => (!t.restricted || (user?.role === 'CEO' || user?.role === 'MANAGER')) && (!t.restrictedCEO || user?.role === 'CEO'))
+                                .filter(t => user?.role !== 'STAFF' || (t.link === '/sales/new' || t.link === '/expenses' || t.link === '/sales'))
+                                .map((t, i) => (
+                                    <button key={i} onClick={() => navigate(t.link)} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-5 w-full text-left active:scale-95 transition-all">
+                                        <div className={`w-12 h-12 ${t.bg} rounded-2xl flex items-center justify-center`}>
+                                            <FontAwesomeIcon icon={t.icon} className={t.color} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-black text-gray-900 text-sm uppercase">{t.title}</h3>
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t.desc}</p>
+                                        </div>
+                                        <FontAwesomeIcon icon={faChevronRight} className="text-gray-300" />
+                                    </button>
+                                ))}
                         </motion.div>
                     )}
 

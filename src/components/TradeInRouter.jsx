@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import TradeInsPage from '../pages/TradeInsPage';
-import StaffTradeInPage from '../pages/StaffTradeInPage';
 
 const TradeInRouter = () => {
     const [userRole, setUserRole] = useState(null);
@@ -15,8 +15,7 @@ const TradeInRouter = () => {
         return <TradeInsPage />;
     }
 
-    // Staff sees submission page
-    return <StaffTradeInPage />;
+    return <Navigate to="/unauthorized" />;
 };
 
 export default TradeInRouter;
