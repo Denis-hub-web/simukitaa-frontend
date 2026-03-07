@@ -548,6 +548,7 @@ const MobileDashboard = () => {
                                 { title: 'New Sale', desc: 'Create Order', icon: faShoppingCart, color: 'text-emerald-500', bg: 'bg-emerald-50', link: '/sales/new' },
                                 { title: 'Sales History', desc: 'Detailed Ledger', icon: faMoneyBillWave, color: 'text-emerald-500', bg: 'bg-emerald-50', link: '/sales' },
                                 { title: 'Expenses Today', desc: 'Record Costs', icon: faWallet, color: 'text-rose-500', bg: 'bg-rose-50', link: '/expenses' },
+                                { title: 'Supplier Network', desc: 'Procurement Partners', icon: faTruck, color: 'text-indigo-600', bg: 'bg-indigo-50', link: '/suppliers', restricted: true },
                                 { title: 'Stock Management', desc: 'Add & Edit Stock', icon: faBoxOpen, color: 'text-blue-600', bg: 'bg-blue-50', link: '/stock-management', restricted: true },
                                 { title: 'Stock Table', desc: 'Inventory Check', icon: faCubes, color: 'text-blue-500', bg: 'bg-blue-50', link: '/stock-inventory', restricted: true },
                                 { title: 'Wanakitaa Hub', desc: 'Loyalty & Community', icon: faCompass, color: 'text-purple-600', bg: 'bg-purple-50', link: '/wanakitaa', restrictedCEO: true },
