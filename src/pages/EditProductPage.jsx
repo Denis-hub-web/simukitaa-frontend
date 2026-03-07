@@ -24,6 +24,7 @@ const EditProductPage = () => {
         buyingPrice: '',
         storageOptions: '',
         colorOptions: '',
+        simTypeOptions: 'DUAL_SIM, ESIM, PHYSICAL_SIM',
         nonActivePrice: '',
         activePrice: '',
         refurbishedPrice: '',
@@ -38,7 +39,7 @@ const EditProductPage = () => {
 
         const storages = formData.storageOptions.split(',').map(s => s.trim()).filter(s => s) || ['Standard'];
         const colors = formData.colorOptions.split(',').map(c => c.trim()).filter(c => c) || ['Any'];
-        const simTypes = ['DUAL_SIM', 'ESIM', 'PHYSICAL_SIM'];
+        const simTypes = formData.simTypeOptions.split(',').map(s => s.trim()).filter(s => s) || ['DUAL_SIM', 'ESIM', 'PHYSICAL_SIM'];
 
         const newPricing = [];
         storages.forEach(s => {
@@ -67,7 +68,7 @@ const EditProductPage = () => {
         if (JSON.stringify(newPricing) !== JSON.stringify(formData.variantPricing)) {
             setFormData(prev => ({ ...prev, variantPricing: newPricing }));
         }
-    }, [formData.storageOptions, formData.colorOptions, formData.trackSerials]);
+    }, [formData.storageOptions, formData.colorOptions, formData.simTypeOptions, formData.trackSerials]);
     const [applyPriceToInventory, setApplyPriceToInventory] = useState(false);
 
     useEffect(() => {
@@ -93,6 +94,7 @@ const EditProductPage = () => {
                 buyingPrice: product.buyingPrice || '',
                 storageOptions: product.variants?.storage?.join(', ') || '',
                 colorOptions: product.variants?.color?.join(', ') || '',
+                simTypeOptions: product.variants?.simType?.join(', ') || 'DUAL_SIM, ESIM, PHYSICAL_SIM',
                 nonActivePrice: product.basePricing?.nonActive || '',
                 activePrice: product.basePricing?.active || '',
                 refurbishedPrice: product.basePricing?.refurbished || '',
@@ -131,7 +133,8 @@ const EditProductPage = () => {
                 applyPriceToInventory,
                 variants: {
                     storage: formData.storageOptions.split(',').map(s => s.trim()).filter(s => s),
-                    color: formData.colorOptions.split(',').map(c => c.trim()).filter(c => c)
+                    color: formData.colorOptions.split(',').map(c => c.trim()).filter(c => c),
+                    simType: formData.simTypeOptions.split(',').map(s => s.trim()).filter(s => s)
                 },
                 basePricing: formData.trackSerials ? {
                     nonActive: parseFloat(formData.nonActivePrice) || 0,
@@ -299,6 +302,17 @@ const EditProductPage = () => {
                                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-all"
                                         />
                                         <p className="text-sm text-gray-500 mt-2">Separate with commas</p>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">SIM Type Options</label>
+                                        <input
+                                            type="text"
+                                            value={formData.simTypeOptions}
+                                            onChange={(e) => setFormData({ ...formData, simTypeOptions: e.target.value.toUpperCase() })}
+                                            placeholder="ESIM, PHYSICAL_SIM, DUAL_SIM"
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-all"
+                                        />
+                                        <p className="text-[10px] text-gray-500 mt-2 font-bold uppercase tracking-wider">Use underscores, e.g. PHYSICAL_SIM</p>
                                     </div>
                                 </div>
                             </div>

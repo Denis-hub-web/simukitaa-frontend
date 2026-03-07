@@ -18,6 +18,7 @@ const ViewDevicesPage = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [editingDeviceId, setEditingDeviceId] = useState(null);
+    const [editSerialNumber, setEditSerialNumber] = useState('');
     const [editPrice, setEditPrice] = useState('');
     const [editCondition, setEditCondition] = useState('nonActive');
     const [editSimType, setEditSimType] = useState('PHYSICAL_SIM');
@@ -128,6 +129,7 @@ const ViewDevicesPage = () => {
             setUpdating(true);
             const token = localStorage.getItem('token');
             const response = await axios.put(`${API_BASE_URL}/stock/products/${productId}/devices/${deviceId}`, {
+                serialNumber: editSerialNumber,
                 price: parseFloat(editPrice),
                 isPriceLocked: editIsLocked,
                 condition: editCondition,
@@ -151,6 +153,7 @@ const ViewDevicesPage = () => {
 
     const startEditing = (device) => {
         setEditingDeviceId(device.id);
+        setEditSerialNumber(device.serialNumber || '');
         setEditPrice(device.price);
         setEditIsLocked(device.isPriceLocked);
         setEditCondition(device.condition || 'nonActive');
@@ -192,6 +195,10 @@ const ViewDevicesPage = () => {
     if (!product) {
         return null;
     }
+
+    const simTypeOptions = Array.isArray(product?.variants?.simType) && product.variants.simType.length > 0
+        ? product.variants.simType
+        : ['PHYSICAL_SIM', 'ESIM', 'DUAL_SIM'];
 
     const devices = product.devices || [];
     const filteredDevices = devices.filter(d =>
@@ -640,6 +647,20 @@ const ViewDevicesPage = () => {
                                                     >
                                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                                             <div>
+                                                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Serial Number</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={editSerialNumber}
+                                                                    onChange={(e) => setEditSerialNumber(e.target.value.toUpperCase())}
+                                                                    className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all font-black text-sm font-mono"
+                                                                    placeholder="IMEI / Serial"
+                                                                    disabled={device.status !== 'available'}
+                                                                />
+                                                                {device.status !== 'available' && (
+                                                                    <p className="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-wider">Serial editable only when available</p>
+                                                                )}
+                                                            </div>
+                                                            <div>
                                                                 <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Selling Price (TZS)</label>
                                                                 <input
                                                                     type="number"
@@ -668,9 +689,9 @@ const ViewDevicesPage = () => {
                                                                     onChange={(e) => setEditSimType(e.target.value)}
                                                                     className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all font-bold text-sm"
                                                                 >
-                                                                    <option value="PHYSICAL_SIM">Physical</option>
-                                                                    <option value="ESIM">eSIM</option>
-                                                                    <option value="DUAL_SIM">Dual SIM</option>
+                                                                    {simTypeOptions.map((t) => (
+                                                                        <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
+                                                                    ))}
                                                                 </select>
                                                             </div>
                                                             <div>

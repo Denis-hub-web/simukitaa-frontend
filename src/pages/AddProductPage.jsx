@@ -27,6 +27,7 @@ const AddProductPage = () => {
         sellingPrice: 0, // NEW: For simple products
         storageOptions: '',
         colorOptions: '',
+        simTypeOptions: 'DUAL_SIM, ESIM, PHYSICAL_SIM',
         basePricing: {
             nonActive: '',
             active: '',
@@ -43,7 +44,7 @@ const AddProductPage = () => {
 
         const storages = formData.storageOptions.split(',').map(s => s.trim()).filter(s => s) || ['Standard'];
         const colors = formData.colorOptions.split(',').map(c => c.trim()).filter(c => c) || ['Any'];
-        const simTypes = ['DUAL_SIM', 'ESIM', 'PHYSICAL_SIM'];
+        const simTypes = formData.simTypeOptions.split(',').map(s => s.trim()).filter(s => s) || ['DUAL_SIM', 'ESIM', 'PHYSICAL_SIM'];
 
         const newPricing = [];
         storages.forEach(s => {
@@ -72,7 +73,7 @@ const AddProductPage = () => {
         if (JSON.stringify(newPricing) !== JSON.stringify(formData.variantPricing)) {
             setFormData(prev => ({ ...prev, variantPricing: newPricing }));
         }
-    }, [formData.storageOptions, formData.colorOptions, formData.trackSerials]);
+    }, [formData.storageOptions, formData.colorOptions, formData.simTypeOptions, formData.trackSerials]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -107,7 +108,10 @@ const AddProductPage = () => {
                 buyingPrice: parseFloat(formData.buyingPrice) || 0,
                 variants: {
                     storage: (formData.trackSerials && storageArray.length > 0) ? storageArray : ['Standard'],
-                    color: (formData.trackSerials && colorArray.length > 0) ? colorArray : ['Standard']
+                    color: (formData.trackSerials && colorArray.length > 0) ? colorArray : ['Standard'],
+                    simType: formData.trackSerials
+                        ? (formData.simTypeOptions.split(',').map(s => s.trim()).filter(s => s) || ['DUAL_SIM', 'ESIM', 'PHYSICAL_SIM'])
+                        : ['DUAL_SIM', 'ESIM', 'PHYSICAL_SIM']
                 },
                 basePricing: formData.trackSerials ? {
                     nonActive: parseFloat(formData.basePricing.nonActive) || 0,
@@ -373,6 +377,21 @@ const AddProductPage = () => {
                                             />
                                         </div>
                                     </div>
+                                </div>
+                                <div className="mt-6">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                                        SIM Type Options (comma-separated)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.simTypeOptions}
+                                        onChange={(e) => setFormData({ ...formData, simTypeOptions: e.target.value.toUpperCase() })}
+                                        placeholder="e.g., ESIM, PHYSICAL_SIM, DUAL_SIM"
+                                        className="w-full px-4 py-3 rounded-xl border-2 border-white focus:border-blue-500 focus:outline-none transition-all"
+                                    />
+                                    <p className="text-[10px] text-gray-500 mt-2 font-bold uppercase tracking-wider">
+                                        Use underscores, e.g. PHYSICAL_SIM
+                                    </p>
                                 </div>
                             </motion.div>
                         )}

@@ -33,6 +33,10 @@ const AddDevicePage = () => {
     });
     const [showScannerModal, setShowScannerModal] = useState(false);
 
+    const simTypeOptions = Array.isArray(product?.variants?.simType) && product.variants.simType.length > 0
+        ? product.variants.simType
+        : ['ESIM', 'PHYSICAL_SIM', 'DUAL_SIM'];
+
     useEffect(() => {
         fetchProduct();
     }, [productId]);
@@ -54,6 +58,10 @@ const AddDevicePage = () => {
             setProduct(productData);
             setSuppliers(Array.isArray(suppliersData) ? suppliersData : []);
 
+            const allowedSimTypes = Array.isArray(productData?.variants?.simType) && productData.variants.simType.length > 0
+                ? productData.variants.simType
+                : ['ESIM', 'PHYSICAL_SIM', 'DUAL_SIM'];
+
             // Set default variant values and first supplier
             if (productData.variants) {
                 // Check query params for auto-fill (e.g. from Trade-In)
@@ -71,6 +79,7 @@ const AddDevicePage = () => {
                     ...prev,
                     storage: storage || productData.variants.storage?.[0] || '',
                     color: color || productData.variants.color?.[0] || '',
+                    simType: allowedSimTypes.includes(prev.simType) ? prev.simType : (allowedSimTypes[0] || prev.simType),
                     supplierId: tradeInId ? 'sup_trade_in' : defaultSupplier, // Use special ID or default
                     serialNumber: serial || '',
                     costPrice: cost || productData.buyingPrice || '',
@@ -397,9 +406,9 @@ const AddDevicePage = () => {
                                             onChange={(e) => setFormData({ ...formData, simType: e.target.value })}
                                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all bg-white"
                                         >
-                                            <option value="ESIM">📶 eSIM</option>
-                                            <option value="PHYSICAL_SIM">📱 Physical SIM</option>
-                                            <option value="DUAL_SIM">📱📶 Dual SIM</option>
+                                            {simTypeOptions.map((t) => (
+                                                <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
