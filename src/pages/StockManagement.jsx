@@ -3,19 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft,
-    Barcode,
-    Box,
-    Boxes,
-    CheckCircle2,
-    Edit3,
-    Filter,
-    Layers3,
-    PackageOpen,
     Plus,
     Search,
-    Tags,
+    Filter,
+    Box,
+    Boxes,
+    Truck,
     TriangleAlert,
-    Truck
+    PackageOpen,
+    Tags,
+    CheckCircle2,
+    Barcode,
+    Edit3,
+    Layers3,
+    Trash2
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -70,6 +71,17 @@ const StockManagement = () => {
     const getAuthHeaders = () => ({
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     });
+
+    const handleDeleteProduct = async (productId) => {
+        if (!window.confirm('Delete this product permanently?')) return;
+        try {
+            await axios.delete(`${API_BASE_URL}/stock/products/${productId}`, getAuthHeaders());
+            setProducts(prev => prev.filter(p => p.id !== productId));
+        } catch (error) {
+            console.error('Error deleting product:', error);
+            alert(error.response?.data?.message || 'Failed to delete product');
+        }
+    };
 
     const tabs = [
         { id: 'all', label: 'All Products', icon: Boxes },
@@ -350,6 +362,16 @@ const StockManagement = () => {
                                             >
                                                 <Edit3 className="w-4 h-4" />
                                             </button>
+
+                                            {(user?.role === 'CEO' || user?.role === 'MANAGER') && (
+                                                <button
+                                                    onClick={() => handleDeleteProduct(product.id)}
+                                                    className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                                    title="Delete Product"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </motion.div>

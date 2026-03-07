@@ -82,9 +82,13 @@ const AddDevicePage = () => {
                     storage: storage || productData.variants.storage?.[0] || '',
                     color: color || productData.variants.color?.[0] || '',
                     simType: allowedSimTypes.includes(prev.simType) ? prev.simType : (allowedSimTypes[0] || prev.simType),
-                    supplierId: tradeInId ? 'sup_trade_in' : defaultSupplier, // Use special ID or default
+                    supplierId: tradeInId ? 'sup_trade_in' : (productData.trackSerials === false ? (productData.supplierId || defaultSupplier) : defaultSupplier), // Use special ID or default
                     serialNumber: serial || '',
                     costPrice: cost || productData.buyingPrice || '',
+                    runningCostMode: productData.trackSerials === false ? (productData.runningCostMode || prev.runningCostMode) : prev.runningCostMode,
+                    runningCostValue: productData.trackSerials === false
+                        ? (productData.runningCostValue !== null && productData.runningCostValue !== undefined ? String(productData.runningCostValue) : prev.runningCostValue)
+                        : prev.runningCostValue,
                     condition: condition || 'nonActive',
                     notes: tradeInId ? `Trade-In ID: ${tradeInId}` : '',
                     tradeInId: tradeInId // Store tradeInId to send to backend

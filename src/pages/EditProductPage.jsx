@@ -22,6 +22,9 @@ const EditProductPage = () => {
         category: 'Phones',
         trackSerials: true,
         buyingPrice: '',
+        runningCostMode: 'TOTAL',
+        runningCostValue: '',
+        supplierId: '',
         storageOptions: '',
         colorOptions: '',
         simTypeOptions: 'DUAL_SIM, ESIM, PHYSICAL_SIM',
@@ -98,6 +101,9 @@ const EditProductPage = () => {
                 category: product.category || 'Phones',
                 trackSerials: product.trackSerials !== false,
                 buyingPrice: product.buyingPrice || '',
+                runningCostMode: product.runningCostMode || 'TOTAL',
+                runningCostValue: (product.runningCostValue !== null && product.runningCostValue !== undefined) ? String(product.runningCostValue) : '',
+                supplierId: product.supplierId || '',
                 storageOptions: product.variants?.storage?.join(', ') || '',
                 colorOptions: product.variants?.color?.join(', ') || '',
                 simTypeOptions: product.variants?.simType?.join(', ') || 'DUAL_SIM, ESIM, PHYSICAL_SIM',
@@ -136,6 +142,11 @@ const EditProductPage = () => {
                 category: formData.category,
                 trackSerials: formData.trackSerials,
                 buyingPrice: parseFloat(formData.buyingPrice) || 0,
+                runningCostMode: !formData.trackSerials ? formData.runningCostMode : undefined,
+                runningCostValue: !formData.trackSerials
+                    ? (formData.runningCostValue !== '' ? parseFloat(formData.runningCostValue) : null)
+                    : undefined,
+                supplierId: !formData.trackSerials ? (formData.supplierId || null) : undefined,
                 applyPriceToInventory,
                 variants: {
                     storage: formData.storageOptions.split(',').map(s => s.trim()).filter(s => s),
@@ -344,6 +355,38 @@ const EditProductPage = () => {
                                             type="number"
                                             value={formData.nonActivePrice}
                                             onChange={(e) => setFormData({ ...formData, nonActivePrice: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Running Cost Mode</label>
+                                        <select
+                                            value={formData.runningCostMode}
+                                            onChange={(e) => setFormData({ ...formData, runningCostMode: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-all"
+                                        >
+                                            <option value="TOTAL">Total (batch)</option>
+                                            <option value="PER_ITEM">Per item</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Running Cost Value (TZS)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.runningCostValue}
+                                            onChange={(e) => setFormData({ ...formData, runningCostValue: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Default Supplier ID (optional)</label>
+                                        <input
+                                            type="text"
+                                            value={formData.supplierId}
+                                            onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
                                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-all"
                                         />
                                     </div>
