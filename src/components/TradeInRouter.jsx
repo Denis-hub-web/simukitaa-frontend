@@ -10,6 +10,10 @@ const TradeInRouter = () => {
         setUserRole(user.role);
     }, []);
 
+    if (userRole === null) {
+        return null;
+    }
+
     // CEO/Manager sees Trade-In Management Dashboard
     if (userRole === 'CEO' || userRole === 'MANAGER') {
         return <TradeInsPage />;
