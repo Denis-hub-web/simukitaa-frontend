@@ -388,9 +388,6 @@ const EditProductPage = () => {
                                         <thead>
                                             <tr className="border-b-2 border-gray-100">
                                                 <th className="py-4 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Variant</th>
-                                                {user.role === 'CEO' && (
-                                                    <th className="py-4 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Buying (Cost)</th>
-                                                )}
                                                 <th className="py-4 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Condition Prices (TZS)</th>
                                             </tr>
                                         </thead>
@@ -410,8 +407,8 @@ const EditProductPage = () => {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    {user.role === 'CEO' && (
-                                                        <td className="py-4 px-2">
+                                                    <td className="py-4 px-2">
+                                                        <div className="space-y-4">
                                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                                                 {['nonActive', 'active', 'refurbished', 'used'].map(condition => (
                                                                     <div key={condition} className="space-y-1">
@@ -420,48 +417,54 @@ const EditProductPage = () => {
                                                                         </label>
                                                                         <input
                                                                             type="number"
-                                                                            value={(variant.costPrices?.[condition] ?? variant.costPrice) ?? ''}
+                                                                            value={variant.prices[condition]}
                                                                             onChange={(e) => {
                                                                                 const updated = [...formData.variantPricing];
-                                                                                const next = parseFloat(e.target.value) || 0;
-                                                                                updated[idx].costPrices = {
-                                                                                    nonActive: 0,
-                                                                                    active: 0,
-                                                                                    refurbished: 0,
-                                                                                    used: 0,
-                                                                                    ...(updated[idx].costPrices || {})
-                                                                                };
-                                                                                updated[idx].costPrices[condition] = next;
+                                                                                updated[idx].prices[condition] = parseFloat(e.target.value) || 0;
                                                                                 setFormData({ ...formData, variantPricing: updated });
                                                                             }}
-                                                                            placeholder="Cost"
+                                                                            placeholder="Price"
                                                                             className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:outline-none text-sm transition-all"
                                                                         />
                                                                     </div>
                                                                 ))}
                                                             </div>
-                                                        </td>
-                                                    )}
-                                                    <td className="py-4 px-2">
-                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                                            {['nonActive', 'active', 'refurbished', 'used'].map(condition => (
-                                                                <div key={condition} className="space-y-1">
-                                                                    <label className="text-[10px] uppercase font-bold text-gray-400 px-1">
-                                                                        {condition === 'nonActive' ? 'NEW' : condition}
-                                                                    </label>
-                                                                    <input
-                                                                        type="number"
-                                                                        value={variant.prices[condition]}
-                                                                        onChange={(e) => {
-                                                                            const updated = [...formData.variantPricing];
-                                                                            updated[idx].prices[condition] = parseFloat(e.target.value) || 0;
-                                                                            setFormData({ ...formData, variantPricing: updated });
-                                                                        }}
-                                                                        placeholder="Price"
-                                                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:outline-none text-sm transition-all"
-                                                                    />
+
+                                                            {user.role === 'CEO' && (
+                                                                <div className="pt-4 border-t border-gray-100">
+                                                                    <div className="text-[10px] uppercase font-bold text-gray-400 px-1 mb-2">
+                                                                        Buying (Cost)
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                                        {['nonActive', 'active', 'refurbished', 'used'].map(condition => (
+                                                                            <div key={condition} className="space-y-1">
+                                                                                <label className="text-[10px] uppercase font-bold text-gray-400 px-1">
+                                                                                    {condition === 'nonActive' ? 'NEW' : condition}
+                                                                                </label>
+                                                                                <input
+                                                                                    type="number"
+                                                                                    value={(variant.costPrices?.[condition] ?? variant.costPrice) ?? ''}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = [...formData.variantPricing];
+                                                                                        const next = parseFloat(e.target.value) || 0;
+                                                                                        updated[idx].costPrices = {
+                                                                                            nonActive: 0,
+                                                                                            active: 0,
+                                                                                            refurbished: 0,
+                                                                                            used: 0,
+                                                                                            ...(updated[idx].costPrices || {})
+                                                                                        };
+                                                                                        updated[idx].costPrices[condition] = next;
+                                                                                        setFormData({ ...formData, variantPricing: updated });
+                                                                                    }}
+                                                                                    placeholder="Cost"
+                                                                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:outline-none text-sm transition-all"
+                                                                                />
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
                                                                 </div>
-                                                            ))}
+                                                            )}
                                                         </div>
                                                     </td>
                                                 </tr>
