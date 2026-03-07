@@ -1,11 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faUser, faBarcode, faCreditCard, faArrowsRotate, faCheckCircle,
-    faArrowLeft, faArrowRight, faMobileAlt, faSearch, faTimes, faTruck, faBan, faExchangeAlt, faCamera
-} from '@fortawesome/free-solid-svg-icons';
+    ArrowLeft,
+    ArrowRight,
+    ArrowLeftRight,
+    Ban,
+    Barcode,
+    Camera,
+    CheckCircle2,
+    CreditCard,
+    Search,
+    Smartphone,
+    Truck,
+    User,
+    X,
+    Repeat2
+} from 'lucide-react';
 import axios from 'axios';
 import api, { customerAPI, salesAPI, paymentAPI, API_URL } from '../utils/api';
 import TradeInForm from '../components/TradeInForm';
@@ -16,6 +27,23 @@ const NewSalePage = () => {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const totalSteps = 5;
+
+    const normalizeDiscountType = (t) => {
+        const v = String(t || '').toUpperCase();
+        if (v === 'PERCENT' || v === 'PERCENTAGE') return 'PERCENT';
+        if (v === 'AMOUNT' || v === 'FIXED') return 'AMOUNT';
+        return '';
+    };
+
+    const computeDiscountAmount = ({ baseAmount, discountType, discountValue }) => {
+        const t = normalizeDiscountType(discountType);
+        const val = parseFloat(discountValue);
+        const base = parseFloat(baseAmount);
+        if (!t || !Number.isFinite(val) || val <= 0) return 0;
+        if (!Number.isFinite(base) || base <= 0) return 0;
+        if (t === 'PERCENT') return Math.max(0, Math.min(base, (base * val) / 100));
+        return Math.max(0, Math.min(base, val));
+    };
 
     // Form data
     const [formData, setFormData] = useState({
@@ -31,6 +59,9 @@ const NewSalePage = () => {
         sellingPrice: 0,
         paymentMethod: 'CASH',
         amountPaid: '',
+        receiptMode: 'SINGLE', // SINGLE | SEPARATE
+        invoiceDiscountType: 'AMOUNT', // AMOUNT | PERCENT
+        invoiceDiscountValue: '',
         tradeInId: '',
         tradeInValue: 0,
         tradeInDeviceName: '',
@@ -38,6 +69,8 @@ const NewSalePage = () => {
         isRegional: false,
         approximateDays: '3-5'
     });
+
+    const [cartItems, setCartItems] = useState([]);
 
     // UI state
     const [customers, setCustomers] = useState([]);
@@ -190,19 +223,128 @@ const NewSalePage = () => {
         setSearchSerial(match.device.serialNumber);
     };
 
+    const addSelectedToCart = () => {
+        if (!foundDevice) return;
+
+        const productId = formData.productId;
+        const deviceId = formData.deviceId || null;
+        const key = `${productId}__${deviceId || 'no_device'}__${formData.condition || ''}`;
+
+        setCartItems((prev) => {
+            const existingIndex = prev.findIndex(i => i.key === key);
+            // For tracked devices: don't allow duplicates
+            const trackSerials = foundDevice?.product?.trackSerials !== false;
+            if (trackSerials && existingIndex !== -1) return prev;
+
+            const newItem = {
+                key,
+                productId,
+                productName: formData.productName || `${foundDevice.product?.brand || ''} ${foundDevice.product?.name || ''}`.trim(),
+                deviceId,
+                serialNumber: formData.serialNumber || '',
+                condition: formData.condition || '',
+                sellingPrice: parseFloat(formData.sellingPrice) || 0,
+                quantity: trackSerials ? 1 : 1,
+                discountType: '',
+                discountValue: ''
+            };
+
+            if (existingIndex !== -1) {
+                const next = [...prev];
+                const qty = parseInt(next[existingIndex].quantity) || 1;
+                next[existingIndex] = { ...next[existingIndex], quantity: qty + 1 };
+                return next;
+            }
+
+            return [...prev, newItem];
+        });
+
+        setFoundDevice(null);
+        setSearchSerial('');
+        setFormData({
+            ...formData,
+            serialNumber: '',
+            productId: '',
+            productName: '',
+            deviceId: '',
+            condition: '',
+            sellingPrice: 0,
+            supplierId: '',
+            supplierName: ''
+        });
+    };
+
+    const updateCartItem = (key, patch) => {
+        setCartItems((prev) => prev.map(i => (i.key === key ? { ...i, ...patch } : i)));
+    };
+
+    const removeCartItem = (key) => {
+        setCartItems((prev) => prev.filter(i => i.key !== key));
+    };
+
+    const cartTotals = (() => {
+        const items = cartItems.map((i) => {
+            const qty = Math.max(1, parseInt(i.quantity) || 1);
+            const unit = parseFloat(i.sellingPrice) || 0;
+            const itemBase = unit;
+            const itemDiscPerUnit = computeDiscountAmount({
+                baseAmount: itemBase,
+                discountType: i.discountType,
+                discountValue: i.discountValue
+            });
+            const unitFinal = Math.max(0, itemBase - itemDiscPerUnit);
+            return {
+                ...i,
+                quantity: qty,
+                originalUnitPrice: itemBase,
+                itemDiscountAmount: itemDiscPerUnit,
+                finalUnitPrice: unitFinal,
+                lineBase: itemBase * qty,
+                lineItemDiscount: itemDiscPerUnit * qty,
+                lineTotalAfterItemDiscount: unitFinal * qty
+            };
+        });
+
+        const subtotalOriginal = items.reduce((s, i) => s + i.lineBase, 0);
+        const itemDiscountTotal = items.reduce((s, i) => s + i.lineItemDiscount, 0);
+        const subtotalAfterItemDiscount = items.reduce((s, i) => s + i.lineTotalAfterItemDiscount, 0);
+
+        const invoiceDiscountAmount = computeDiscountAmount({
+            baseAmount: subtotalAfterItemDiscount,
+            discountType: formData.invoiceDiscountType,
+            discountValue: formData.invoiceDiscountValue
+        });
+
+        const invoiceDiscountClamped = Math.max(0, Math.min(subtotalAfterItemDiscount, invoiceDiscountAmount));
+        const totalAfterInvoiceDiscount = Math.max(0, subtotalAfterItemDiscount - invoiceDiscountClamped);
+
+        const netPayable = Math.max(0, totalAfterInvoiceDiscount - (parseFloat(formData.tradeInValue) || 0));
+
+        const paid = parseFloat(formData.amountPaid || 0) || 0;
+        const balance = paid - netPayable;
+
+        return {
+            items,
+            subtotalOriginal,
+            itemDiscountTotal,
+            subtotalAfterItemDiscount,
+            invoiceDiscountAmount: invoiceDiscountClamped,
+            totalAfterInvoiceDiscount,
+            netPayable,
+            paid,
+            balance
+        };
+    })();
+
     // Navigation
     const handleNext = () => {
-        if (currentStep === 2 && foundDevice?.product?.trackSerials === false) {
-            setCurrentStep(4); // Skip Trade-In (Step 3) for accessories
-        } else if (currentStep < totalSteps) {
+        if (currentStep < totalSteps) {
             setCurrentStep(currentStep + 1);
         }
     };
 
     const handleBack = () => {
-        if (currentStep === 4 && foundDevice?.product?.trackSerials === false) {
-            setCurrentStep(2); // Skip back to Selection from Payment
-        } else if (currentStep > 1) {
+        if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
         }
     };
@@ -218,10 +360,8 @@ const NewSalePage = () => {
                 }
                 return formData.customerId !== '';
             case 2:
-                // Check if product is selected AND has stock if simple product
-                if (!foundDevice) return false;
-                if (foundDevice.product?.trackSerials === false && (foundDevice.product?.quantity || 0) <= 0) return false;
-                return formData.productId !== '';
+                // At least one item in cart
+                return cartItems.length > 0;
             case 3: return true; // Trade-in optional
             case 4: return formData.paymentMethod && formData.amountPaid;
             case 5: return true; // Review
@@ -233,24 +373,85 @@ const NewSalePage = () => {
     const handleSubmit = async () => {
         setLoading(true);
         try {
-            const saleData = {
-                customerId: formData.isNewCustomer ? null : formData.customerId,
-                customerName: formData.customerName, // Send name for new customer creation
-                customerPhone: formData.customerPhone, // Send phone for new customer creation
-                isNewCustomer: formData.isNewCustomer,
-                productId: formData.productId,
-                condition: formData.condition,
-                deviceId: formData.deviceId,
-                sellingPrice: parseFloat(formData.sellingPrice),
-                paymentMethod: formData.paymentMethod === 'CUSTOM' ? formData.customPaymentMethod : formData.paymentMethod,
-                amountPaid: parseFloat(formData.amountPaid),
-                tradeInId: formData.tradeInId || null,
-                serialNumber: formData.serialNumber,
-                isRegional: formData.isRegional || false,
-                approximateDays: formData.approximateDays || '3-5'
-            };
+            const paymentMethod = formData.paymentMethod === 'CUSTOM' ? formData.customPaymentMethod : formData.paymentMethod;
+            const paid = parseFloat(formData.amountPaid) || 0;
 
-            await salesAPI.create(saleData);
+            if (formData.receiptMode === 'SEPARATE') {
+                const baseForSplit = cartTotals.subtotalAfterItemDiscount || 0;
+                const totalInvoiceDiscount = cartTotals.invoiceDiscountAmount || 0;
+
+                // Split invoice discount proportionally by each item's total after item discount
+                const split = cartTotals.items.map((i) => {
+                    const ratio = baseForSplit > 0 ? (i.lineTotalAfterItemDiscount / baseForSplit) : 0;
+                    return {
+                        item: i,
+                        invoiceDiscountShare: Math.max(0, totalInvoiceDiscount * ratio)
+                    };
+                });
+
+                // Split amountPaid proportionally by final net payable per receipt
+                const netPerReceipt = split.map((s) => {
+                    const net = Math.max(0, (s.item.lineTotalAfterItemDiscount - s.invoiceDiscountShare));
+                    return { ...s, net };
+                });
+                const totalNet = netPerReceipt.reduce((sum, x) => sum + x.net, 0);
+
+                for (const part of netPerReceipt) {
+                    const paidShare = totalNet > 0 ? (paid * (part.net / totalNet)) : 0;
+                    const saleData = {
+                        customerId: formData.isNewCustomer ? null : formData.customerId,
+                        customerName: formData.customerName,
+                        customerPhone: formData.customerPhone,
+                        isNewCustomer: formData.isNewCustomer,
+                        paymentMethod,
+                        amountPaid: paidShare,
+                        // Use fixed discountAmount per receipt after split
+                        discountAmount: part.invoiceDiscountShare,
+                        discountNote: 'Invoice discount split across separate receipts',
+                        items: [
+                            {
+                                productId: part.item.productId,
+                                deviceId: part.item.deviceId,
+                                quantity: part.item.quantity,
+                                sellingPrice: part.item.originalUnitPrice,
+                                discountType: part.item.discountType,
+                                discountValue: part.item.discountValue
+                            }
+                        ],
+                        tradeInId: formData.tradeInId || null,
+                        isRegional: formData.isRegional || false,
+                        approximateDays: formData.approximateDays || '3-5'
+                    };
+
+                    await salesAPI.create(saleData);
+                }
+            } else {
+                const saleData = {
+                    customerId: formData.isNewCustomer ? null : formData.customerId,
+                    customerName: formData.customerName,
+                    customerPhone: formData.customerPhone,
+                    isNewCustomer: formData.isNewCustomer,
+                    paymentMethod,
+                    amountPaid: paid,
+                    invoiceDiscountType: formData.invoiceDiscountType,
+                    invoiceDiscountValue: formData.invoiceDiscountValue,
+                    discountAmount: cartTotals.invoiceDiscountAmount,
+                    items: cartTotals.items.map((i) => ({
+                        productId: i.productId,
+                        deviceId: i.deviceId,
+                        quantity: i.quantity,
+                        sellingPrice: i.originalUnitPrice,
+                        discountType: i.discountType,
+                        discountValue: i.discountValue
+                    })),
+                    tradeInId: formData.tradeInId || null,
+                    isRegional: formData.isRegional || false,
+                    approximateDays: formData.approximateDays || '3-5'
+                };
+
+                await salesAPI.create(saleData);
+            }
+
             alert('✅ Sale completed successfully!');
             navigate('/dashboard');
         } catch (error) {
@@ -365,7 +566,7 @@ const NewSalePage = () => {
                             onClick={() => navigate('/dashboard')}
                             className="w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center text-gray-400 hover:text-blue-500 transition-all border border-white"
                         >
-                            <FontAwesomeIcon icon={faArrowLeft} />
+                            <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div>
                             <p className="premium-label mb-0">New Sale</p>
@@ -382,7 +583,7 @@ const NewSalePage = () => {
                             return (
                                 <div key={stepNo} className="relative z-10 flex flex-col items-center gap-4">
                                     <div className={getStepClasses(stepNo)}>
-                                        <FontAwesomeIcon icon={stepInfo.icon} className="text-sm" />
+                                        <stepInfo.icon className="w-5 h-5" />
                                     </div>
                                     <span className={"text-[9px] font-black uppercase tracking-widest " + (stepNo === currentStep ? "text-blue-600" : "text-gray-400")}>
                                         {stepInfo.title}
@@ -407,7 +608,7 @@ const NewSalePage = () => {
                             >
                                 <div className="flex items-center gap-4 mb-10">
                                     <div className="premium-icon-box bg-blue-50 text-blue-500">
-                                        <FontAwesomeIcon icon={faUser} className="text-2xl" />
+                                        <User className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <h2 className="premium-h2">Customer Information</h2>
@@ -435,7 +636,7 @@ const NewSalePage = () => {
                                     <>
                                         {/* Search Mode */}
                                         <div className="relative mb-8 group">
-                                            <FontAwesomeIcon icon={faSearch} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                                             <input
                                                 type="text"
                                                 value={searchCustomer}
@@ -469,7 +670,7 @@ const NewSalePage = () => {
                                                 >
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-gray-400 group-hover:text-blue-500 transition-colors shadow-sm">
-                                                            <FontAwesomeIcon icon={faUser} />
+                                                            <User className="w-5 h-5" />
                                                         </div>
                                                         <div>
                                                             <h4 className="font-extrabold text-gray-900 leading-tight mb-0.5">{customer.name}</h4>
@@ -477,7 +678,7 @@ const NewSalePage = () => {
                                                         </div>
                                                     </div>
                                                     {formData.customerId === customer.id && (
-                                                        <FontAwesomeIcon icon={faCheckCircle} className="text-blue-500" />
+                                                        <CheckCircle2 className="w-5 h-5 text-blue-500" />
                                                     )}
                                                 </button>
                                             ))}
@@ -521,7 +722,7 @@ const NewSalePage = () => {
                                                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                                     }`}
                                             >
-                                                Continue with New Customer <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
+                                                Continue with New Customer <ArrowRight className="inline-block w-4 h-4 ml-2" />
                                             </button>
                                         </div>
                                     </div>
@@ -540,7 +741,7 @@ const NewSalePage = () => {
                             >
                                 <div className="flex items-center gap-4 mb-10">
                                     <div className="premium-icon-box bg-purple-50 text-purple-500">
-                                        <FontAwesomeIcon icon={faBarcode} className="text-2xl" />
+                                        <Barcode className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <h2 className="premium-h2">Product Selection</h2>
@@ -550,7 +751,7 @@ const NewSalePage = () => {
 
                                 {/* Unified Search Input */}
                                 <div className="relative mb-8 group">
-                                    <FontAwesomeIcon icon={faSearch} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
+                                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
                                     <input
                                         type="text"
                                         value={searchSerial}
@@ -569,7 +770,7 @@ const NewSalePage = () => {
                                         onClick={() => setShowScannerModal(true)}
                                         className="absolute right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
                                     >
-                                        <FontAwesomeIcon icon={faCamera} />
+                                        <Camera className="w-4 h-4" />
                                         <span className="hidden sm:inline">Scan</span>
                                     </button>
 
@@ -599,7 +800,7 @@ const NewSalePage = () => {
                                                         className="w-full p-5 flex items-start gap-4 hover:bg-blue-50 transition-colors text-left border-b border-gray-50 last:border-0"
                                                     >
                                                         <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                            <FontAwesomeIcon icon={faMobileAlt} className="text-blue-600" />
+                                                            <Smartphone className="w-5 h-5 text-blue-600" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex justify-between items-start mb-2">
@@ -638,7 +839,7 @@ const NewSalePage = () => {
                                                         className={`w-full p-5 flex items-start gap-4 transition-colors text-left border-b border-gray-50 last:border-0 ${product.quantity <= 0 ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:bg-purple-50'}`}
                                                     >
                                                         <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                            <FontAwesomeIcon icon={faMobileAlt} className="text-purple-600" />
+                                                            <Smartphone className="w-5 h-5 text-purple-600" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex justify-between items-start mb-2">
@@ -681,7 +882,7 @@ const NewSalePage = () => {
                                     >
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="flex items-center gap-2">
-                                                <FontAwesomeIcon icon={faCheckCircle} className="text-green-600 text-xl" />
+                                                <CheckCircle2 className="w-5 h-5 text-green-600" />
                                                 <h3 className="text-lg font-bold text-green-900">Device Found!</h3>
                                             </div>
                                             <div className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold uppercase">
@@ -691,7 +892,7 @@ const NewSalePage = () => {
                                         <div className="space-y-4">
                                             <div className="flex items-start gap-4">
                                                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-green-100">
-                                                    <FontAwesomeIcon icon={faMobileAlt} className="text-2xl text-green-600" />
+                                                    <Smartphone className="w-7 h-7 text-green-600" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <h4 className="font-black text-xl text-gray-900 break-words">
@@ -726,7 +927,7 @@ const NewSalePage = () => {
                                             </div>
 
                                             <div className="flex items-center gap-2 p-3 bg-white rounded-xl border border-green-100">
-                                                <FontAwesomeIcon icon={faTruck} className="text-green-500" />
+                                                <Truck className="w-4 h-4 text-green-500" />
                                                 <span className="text-sm font-semibold text-gray-600">Supplier:</span>
                                                 <span className="text-sm font-black text-gray-900">{foundDevice.device.supplierName}</span>
                                             </div>
@@ -741,11 +942,119 @@ const NewSalePage = () => {
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={addSelectedToCart}
+                                                    className="w-full py-4 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] bg-gray-900 text-white shadow-lg hover:scale-[1.01] transition-all"
+                                                >
+                                                    Add to Cart
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        addSelectedToCart();
+                                                        handleNext();
+                                                    }}
+                                                    className="w-full py-4 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all"
+                                                >
+                                                    Add & Continue
+                                                    <ArrowRight className="inline-block w-4 h-4 ml-3" />
+                                                </button>
+                                            </div>
                                         </div>
                                     </motion.div>
                                 )}
 
+                                {/* Cart */}
+                                {cartItems.length > 0 && (
+                                    <div className="mt-8 p-6 rounded-2xl bg-white border border-gray-100 shadow-sm">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Cart Items</p>
+                                            <p className="text-sm font-black text-gray-900">{cartItems.length} item(s)</p>
+                                        </div>
 
+                                        <div className="space-y-3">
+                                            {cartTotals.items.map((i) => (
+                                                <div key={i.key} className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="font-black text-gray-900 truncate">{i.productName}</p>
+                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                                                                {i.serialNumber ? `SN: ${i.serialNumber}` : (i.condition ? i.condition : 'ITEM')}
+                                                            </p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeCartItem(i.key)}
+                                                            className="px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 transition-all text-[10px] font-black uppercase tracking-widest"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                                                        <div>
+                                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Qty</label>
+                                                            <input
+                                                                type="number"
+                                                                min={1}
+                                                                value={i.quantity}
+                                                                onChange={(e) => updateCartItem(i.key, { quantity: e.target.value })}
+                                                                className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 font-black"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Unit Price</label>
+                                                            <input
+                                                                type="number"
+                                                                min={0}
+                                                                value={i.originalUnitPrice}
+                                                                onChange={(e) => updateCartItem(i.key, { sellingPrice: e.target.value })}
+                                                                className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 font-black"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Item Discount</label>
+                                                            <div className="flex gap-2">
+                                                                <select
+                                                                    value={i.discountType || ''}
+                                                                    onChange={(e) => updateCartItem(i.key, { discountType: e.target.value })}
+                                                                    className="px-3 py-3 bg-white rounded-xl border border-gray-200 text-[10px] font-black uppercase tracking-widest"
+                                                                >
+                                                                    <option value="">None</option>
+                                                                    <option value="AMOUNT">Amt</option>
+                                                                    <option value="PERCENT">%</option>
+                                                                </select>
+                                                                <input
+                                                                    type="number"
+                                                                    min={0}
+                                                                    value={i.discountValue ?? ''}
+                                                                    onChange={(e) => updateCartItem(i.key, { discountValue: e.target.value })}
+                                                                    className="flex-1 px-4 py-3 bg-white rounded-xl border border-gray-200 font-black"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Line Total</label>
+                                                            <div className="px-4 py-3 bg-white rounded-xl border border-gray-200 font-black text-gray-900">
+                                                                {Math.round(i.lineTotalAfterItemDiscount).toLocaleString()} TZS
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="mt-4 p-4 rounded-2xl bg-gray-900 text-white">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Subtotal</span>
+                                                <span className="font-black">{Math.round(cartTotals.subtotalAfterItemDiscount).toLocaleString()} TZS</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Not Found Message */}
                                 {searchSerial.length >= 3 && !foundDevice && !searching && (
@@ -767,7 +1076,7 @@ const NewSalePage = () => {
                             >
                                 <div className="flex items-center gap-4 mb-10">
                                     <div className="premium-icon-box bg-orange-50 text-orange-500">
-                                        <FontAwesomeIcon icon={faArrowsRotate} className="text-2xl" />
+                                        <Repeat2 className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <h2 className="premium-h2">Trade-In Device</h2>
@@ -786,7 +1095,7 @@ const NewSalePage = () => {
                                             : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
-                                        <FontAwesomeIcon icon={faBan} className="text-3xl mb-3 opacity-80" />
+                                        <Ban className="w-8 h-8 mb-3 opacity-80" />
                                         <div className="font-black uppercase text-[10px] tracking-widest">No Trade-In</div>
                                     </button>
                                     <button
@@ -799,7 +1108,7 @@ const NewSalePage = () => {
                                             : 'border-gray-200 hover:border-orange-300'
                                             }`}
                                     >
-                                        <FontAwesomeIcon icon={faExchangeAlt} className="text-3xl mb-3 opacity-80" />
+                                        <ArrowLeftRight className="w-8 h-8 mb-3 opacity-80" />
                                         <div className="font-bold uppercase text-[10px] tracking-widest">Add Trade-In</div>
                                     </button>
                                 </div>
@@ -831,7 +1140,7 @@ const NewSalePage = () => {
                             >
                                 <div className="flex items-center gap-4 mb-10">
                                     <div className="premium-icon-box bg-emerald-50 text-emerald-500">
-                                        <FontAwesomeIcon icon={faCreditCard} className="text-2xl" />
+                                        <CreditCard className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <h2 className="premium-h2">Payment</h2>
@@ -891,12 +1200,75 @@ const NewSalePage = () => {
                                     />
                                 </div>
 
+                                {/* Receipt Mode */}
+                                <div className="mb-8">
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Receipt Mode</label>
+                                    <div className="flex p-1 bg-gray-100 rounded-xl w-fit">
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, receiptMode: 'SINGLE' })}
+                                            className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${formData.receiptMode === 'SINGLE' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                        >
+                                            One Receipt
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, receiptMode: 'SEPARATE' })}
+                                            className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${formData.receiptMode === 'SEPARATE' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                        >
+                                            Separate
+                                        </button>
+                                    </div>
+                                    {formData.receiptMode === 'SEPARATE' && (
+                                        <p className="text-[10px] font-bold text-gray-500 mt-3 uppercase tracking-widest">
+                                            Invoice discount will be split proportionally across receipts.
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Invoice Discount */}
+                                <div className="mb-8">
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Invoice Discount</label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <select
+                                            value={formData.invoiceDiscountType}
+                                            onChange={(e) => setFormData({ ...formData, invoiceDiscountType: e.target.value })}
+                                            className="px-5 py-4 bg-gray-50 rounded-2xl text-sm font-black border-0 focus:ring-4 focus:ring-indigo-500/10 shadow-inner uppercase"
+                                        >
+                                            <option value="AMOUNT">Amount</option>
+                                            <option value="PERCENT">Percent</option>
+                                        </select>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={formData.invoiceDiscountValue}
+                                            onChange={(e) => setFormData({ ...formData, invoiceDiscountValue: e.target.value })}
+                                            placeholder={formData.invoiceDiscountType === 'PERCENT' ? 'e.g. 5' : 'e.g. 10000'}
+                                            className="sm:col-span-2 px-6 py-4 bg-gray-50 rounded-2xl text-sm font-black border-0 focus:ring-4 focus:ring-indigo-500/10 shadow-inner"
+                                        />
+                                    </div>
+                                </div>
+
                                 {/* Price Summary */}
                                 <div className="p-5 rounded-3xl bg-gray-50 space-y-3 border border-gray-100">
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="text-gray-500 font-bold uppercase tracking-wider">Product Price</span>
-                                        <span className="font-bold text-gray-900">TSH {formData.sellingPrice.toLocaleString()}</span>
+                                        <span className="text-gray-500 font-bold uppercase tracking-wider">Subtotal</span>
+                                        <span className="font-bold text-gray-900">TSH {Math.round(cartTotals.subtotalOriginal).toLocaleString()}</span>
                                     </div>
+
+                                    {cartTotals.itemDiscountTotal > 0 && (
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="text-gray-500 font-bold uppercase tracking-wider">Item Discounts</span>
+                                            <span className="font-bold text-gray-900">- TSH {Math.round(cartTotals.itemDiscountTotal).toLocaleString()}</span>
+                                        </div>
+                                    )}
+
+                                    {cartTotals.invoiceDiscountAmount > 0 && (
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="text-gray-500 font-bold uppercase tracking-wider">Invoice Discount</span>
+                                            <span className="font-bold text-gray-900">- TSH {Math.round(cartTotals.invoiceDiscountAmount).toLocaleString()}</span>
+                                        </div>
+                                    )}
 
                                     {formData.tradeInValue > 0 && (
                                         <div className="flex justify-between items-center text-sm">
@@ -910,18 +1282,18 @@ const NewSalePage = () => {
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-900 font-black uppercase tracking-wider text-sm">Net Payable</span>
                                         <span className="font-black text-2xl text-gray-900">
-                                            TSH {(formData.sellingPrice - (formData.tradeInValue || 0)).toLocaleString()}
+                                            TSH {Math.round(cartTotals.netPayable).toLocaleString()}
                                         </span>
                                     </div>
 
                                     {formData.amountPaid && (
                                         <div className="flex justify-between items-center p-3 bg-white rounded-xl border border-gray-200 mt-2">
                                             <span className="text-gray-500 font-bold uppercase tracking-wider text-xs">Change / Balance</span>
-                                            <span className={`font-black text-lg ${parseFloat(formData.amountPaid) - (formData.sellingPrice - (formData.tradeInValue || 0)) >= 0
+                                            <span className={`font-black text-lg ${cartTotals.balance >= 0
                                                 ? 'text-emerald-500'
                                                 : 'text-red-500'
                                                 }`}>
-                                                TSH {(parseFloat(formData.amountPaid || 0) - (formData.sellingPrice - (formData.tradeInValue || 0))).toLocaleString()}
+                                                TSH {Math.round(cartTotals.balance).toLocaleString()}
                                             </span>
                                         </div>
                                     )}

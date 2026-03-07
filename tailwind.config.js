@@ -32,7 +32,7 @@ export default {
                 danger: '#EF4444',
             },
             fontFamily: {
-                sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Inter', 'Roboto', 'Arial', 'sans-serif'],
+                sans: ['-apple-system', 'BlinkMacSystemFont', 'system-ui', '"Segoe UI"', 'Inter', 'Roboto', 'Arial', 'ui-sans-serif', 'sans-serif'],
             },
             borderRadius: {
                 '4xl': '2rem',
