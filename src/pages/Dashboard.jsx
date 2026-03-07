@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faChartLine, faMoneyBillWave, faTools, faExclamationTriangle,
-    faBoxOpen, faBox, faUsers, faBell, faCheckCircle, faClock,
-    faMobileAlt, faLaptop, faCreditCard, faFileInvoiceDollar,
-    faUserPlus, faSearch, faCog, faSignOutAlt, faCircle,
-    faMicrochip, faShieldAlt, faSignature, faChartBar, faUserCog
-} from '@fortawesome/free-solid-svg-icons';
+    Activity,
+    Bell,
+    CheckCircle2,
+    CreditCard,
+    FileText,
+    PackageOpen,
+    ReceiptText,
+    Shield,
+    Tool,
+    TriangleAlert,
+    UserPlus,
+    Users,
+    Wrench
+} from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { dashboardAPI, salesAPI, repairAPI, notificationAPI } from '../utils/api';
 import Modal from '../components/Modal';
@@ -33,6 +40,16 @@ const Dashboard = () => {
 
     // Get user from local storage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    const handleSuccess = (msg) => {
+        setSuccessMessage(msg);
+        setShowSaleModal(false);
+        setShowCustomerModal(false);
+        setShowRepairModal(false);
+        setShowProductModal(false);
+        setTimeout(() => setSuccessMessage(''), 3000);
+        loadDashboardData();
+    };
 
     useEffect(() => {
         loadDashboardData();
@@ -137,9 +154,9 @@ const Dashboard = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#efeff4]">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-[#008069] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loading Dashboard...</p>
                 </div>
             </div>
@@ -151,20 +168,20 @@ const Dashboard = () => {
             {/* Elite Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { label: 'Sales Today', value: formatCurrency(metrics?.sales?.today?.revenue), sub: `${metrics?.sales?.today?.count || 0} SALES`, icon: faMoneyBillWave, delta: metrics?.sales?.change, color: 'emerald', restricted: true },
-                    { label: 'Total Repairs', value: metrics?.repairs?.total || 0, sub: `${metrics?.repairs?.inProgress || 0} IN PROGRESS`, icon: faTools, color: 'purple', text: 'REPAIRS' },
-                    { label: 'Overdue Payments', value: formatCurrency(metrics?.payments?.overdue?.amount), sub: `${metrics?.payments?.overdue?.count || 0} OVERDUE BILLS`, icon: faExclamationTriangle, color: 'rose', restricted: true }
+                    { label: 'Sales Today', value: formatCurrency(metrics?.sales?.today?.revenue), sub: `${metrics?.sales?.today?.count || 0} SALES`, icon: ReceiptText, delta: metrics?.sales?.change, color: 'emerald', restricted: true },
+                    { label: 'Total Repairs', value: metrics?.repairs?.total || 0, sub: `${metrics?.repairs?.inProgress || 0} IN PROGRESS`, icon: Wrench, color: 'purple', text: 'REPAIRS' },
+                    { label: 'Overdue Payments', value: formatCurrency(metrics?.payments?.overdue?.amount), sub: `${metrics?.payments?.overdue?.count || 0} OVERDUE BILLS`, icon: TriangleAlert, color: 'rose', restricted: true }
                 ].filter(m => !m.restricted || user?.role === 'CEO').map((m, i) => (
                     <motion.div
                         key={i}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 hover:shadow-2xl transition-all group"
+                        className="apple-card p-8 transition-all group"
                     >
                         <div className="flex items-center justify-between mb-6">
-                            <div className={`w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-2xl text-gray-400 group-hover:bg-[#008069]/10 group-hover:text-[#008069] transition-all`}>
-                                <FontAwesomeIcon icon={m.icon} />
+                            <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-700 transition-all">
+                                <m.icon className="w-7 h-7" />
                             </div>
                             {m.delta !== undefined && (
                                 <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-green-100">
@@ -185,15 +202,15 @@ const Dashboard = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="bg-white rounded-[3rem] p-10 shadow-sm border border-gray-100"
+                    className="apple-card p-10"
                 >
                     <div className="flex items-center gap-4 mb-8">
-                        <div className="w-14 h-14 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl flex items-center justify-center text-2xl text-green-600">
-                            <FontAwesomeIcon icon={faChartBar} />
+                        <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+                            <Activity className="w-7 h-7" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">Sales Today</h2>
-                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hourly breakdown - Last 24 hours</p>
+                            <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">Sales Today</h2>
+                            <p className="text-sm text-gray-500">Hourly breakdown - last 24 hours</p>
                         </div>
                     </div>
 
@@ -276,13 +293,13 @@ const Dashboard = () => {
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="bg-white rounded-[3rem] p-10 shadow-sm border border-gray-100"
+                        className="apple-card p-10"
                     >
                         <div className="flex items-center justify-between mb-10">
                             <div className="flex items-center gap-4">
                                 <div>
-                                    <h2 className="text-2xl font-black text-gray-900 tracking-tighter mb-1 uppercase">Activity Feed</h2>
-                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Recent activity and updates</p>
+                                    <h2 className="text-2xl font-semibold text-gray-900 tracking-tight mb-1">Activity</h2>
+                                    <p className="text-sm text-gray-500">Recent activity and updates</p>
                                 </div>
                                 {notifications.filter(n => n.unread).length > 0 && (
                                     <div className="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-black">
@@ -293,7 +310,7 @@ const Dashboard = () => {
                             <button
                                 onClick={handleClearAllNotifications}
                                 disabled={notifications.length === 0}
-                                className="text-[10px] font-black text-[#008069] uppercase tracking-[0.2em] hover:opacity-70 transition-opacity disabled:opacity-30"
+                                className="text-sm font-medium text-blue-600 hover:opacity-70 transition-opacity disabled:opacity-30"
                             >
                                 Clear All
                             </button>
@@ -313,7 +330,7 @@ const Dashboard = () => {
                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl shadow-inner shrink-0 transition-transform group-hover:rotate-12 ${notif.type === 'sale' ? 'bg-green-50 text-green-600' :
                                         notif.type === 'repair' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'
                                         }`}>
-                                        <FontAwesomeIcon icon={notif.type === 'sale' ? faMoneyBillWave : notif.type === 'repair' ? faTools : faBell} />
+                                        {notif.type === 'sale' ? <ReceiptText className="w-6 h-6" /> : notif.type === 'repair' ? <Tool className="w-6 h-6" /> : <Bell className="w-6 h-6" />}
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-sm font-black text-gray-900 leading-snug mb-1 group-hover:text-[#008069] transition-colors uppercase tracking-tight whitespace-pre-line break-words">{notif.message}</p>
@@ -322,7 +339,7 @@ const Dashboard = () => {
                                             {notif.unread && <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse" />}
                                         </div>
                                     </div>
-                                    <FontAwesomeIcon icon={faSignature} className="text-gray-100 group-hover:text-gray-200 transition-colors" />
+                                    <CheckCircle2 className="w-5 h-5 text-gray-200 group-hover:text-gray-300 transition-colors" />
                                 </motion.div>
                             )) : (
                                 <div className="text-center py-20 opacity-20">
@@ -340,13 +357,13 @@ const Dashboard = () => {
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                             {[
-                                { label: 'New Sale', icon: faMoneyBillWave, color: 'emerald', bgColor: 'bg-emerald-50', textColor: 'text-emerald-600', hoverBg: 'hover:bg-emerald-100', action: () => setShowSaleModal(true) },
-                                { label: 'Stock Table', icon: faBox, color: 'pink', bgColor: 'bg-pink-50', textColor: 'text-pink-600', hoverBg: 'hover:bg-pink-100', action: () => navigate('/stock-inventory') },
-                                { label: 'Repairs', icon: faTools, color: 'purple', bgColor: 'bg-purple-50', textColor: 'text-purple-600', hoverBg: 'hover:bg-purple-100', action: () => setShowRepairModal(true) },
-                                { label: 'Customers', icon: faUserPlus, color: 'blue', bgColor: 'bg-blue-50', textColor: 'text-blue-600', hoverBg: 'hover:bg-blue-100', action: () => setShowCustomerModal(true) },
-                                { label: 'Inventory', icon: faBoxOpen, color: 'orange', bgColor: 'bg-amber-50', textColor: 'text-amber-600', hoverBg: 'hover:bg-amber-100', action: () => setShowProductModal(true) },
-                                user.role === 'CEO' && { label: 'Daily Sheet', icon: faFileInvoiceDollar, color: 'emerald', bgColor: 'bg-emerald-50', textColor: 'text-emerald-600', hoverBg: 'hover:bg-emerald-100', action: () => navigate('/daily-sheet') },
-                                { label: 'Team', icon: faUserCog, color: 'indigo', bgColor: 'bg-indigo-50', textColor: 'text-indigo-600', hoverBg: 'hover:bg-indigo-100', action: () => navigate('/team-management') }
+                                { label: 'New Sale', icon: ReceiptText, bgColor: 'bg-emerald-50', textColor: 'text-emerald-600', action: () => setShowSaleModal(true) },
+                                { label: 'Stock Table', icon: PackageOpen, bgColor: 'bg-pink-50', textColor: 'text-pink-600', action: () => navigate('/stock-inventory') },
+                                { label: 'Repairs', icon: Wrench, bgColor: 'bg-purple-50', textColor: 'text-purple-600', action: () => setShowRepairModal(true) },
+                                { label: 'Customers', icon: UserPlus, bgColor: 'bg-blue-50', textColor: 'text-blue-600', action: () => setShowCustomerModal(true) },
+                                { label: 'Inventory', icon: PackageOpen, bgColor: 'bg-amber-50', textColor: 'text-amber-600', action: () => setShowProductModal(true) },
+                                user.role === 'CEO' && { label: 'Daily Sheet', icon: FileText, bgColor: 'bg-emerald-50', textColor: 'text-emerald-600', action: () => navigate('/daily-sheet') },
+                                { label: 'Team', icon: Users, bgColor: 'bg-indigo-50', textColor: 'text-indigo-600', action: () => navigate('/team-management') }
                             ].filter(Boolean).map((action, i) => (
                                 <motion.button
                                     key={i}
@@ -357,7 +374,7 @@ const Dashboard = () => {
                                 >
                                     {/* Icon with color */}
                                     <div className={`w-14 h-14 ${action.bgColor} rounded-2xl flex items-center justify-center text-2xl ${action.textColor} transition-all group-hover:scale-110 shadow-sm`}>
-                                        <FontAwesomeIcon icon={action.icon} />
+                                        <action.icon className="w-7 h-7" />
                                     </div>
                                     {/* Label */}
                                     <span className="premium-label text-gray-700 group-hover:text-gray-900 mb-0">{action.label}</span>
@@ -375,18 +392,18 @@ const Dashboard = () => {
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100"
+                        className="apple-card p-8"
                     >
                         <h2 className="text-lg font-black text-gray-900 tracking-tighter mb-8 uppercase">Vital Stats</h2>
                         <div className="space-y-6">
                             {[
-                                { label: 'Pending Capital', value: formatCurrency(metrics?.payments?.pending?.amount), icon: faCreditCard, color: 'amber' },
-                                { label: 'Low Stock Items', value: metrics?.inventory?.lowStock || 0, icon: faBoxOpen, color: 'orange' },
-                                { label: 'Active Repairs', value: metrics?.repairs?.inProgress || 0, icon: faTools, color: 'purple' }
+                                { label: 'Pending Capital', value: formatCurrency(metrics?.payments?.pending?.amount), icon: CreditCard },
+                                { label: 'Low Stock Items', value: metrics?.inventory?.lowStock || 0, icon: PackageOpen },
+                                { label: 'Active Repairs', value: metrics?.repairs?.inProgress || 0, icon: Wrench }
                             ].map((spec, i) => (
                                 <div key={i} className="flex items-center gap-4 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
                                     <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-gray-400">
-                                        <FontAwesomeIcon icon={spec.icon} />
+                                        <spec.icon className="w-5 h-5" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">{spec.label}</p>
@@ -411,7 +428,7 @@ const Dashboard = () => {
                                 <p className="text-[10px] font-black uppercase tracking-widest text-white/60">Server Synchronized</p>
                             </div>
                             <div className="flex items-center gap-4">
-                                <FontAwesomeIcon icon={faShieldAlt} className="text-[#00a884]" />
+                                <Shield className="w-5 h-5 text-[#00a884]" />
                                 <p className="text-[10px] font-black uppercase tracking-widest text-white/60">Security Level: High</p>
                             </div>
                         </div>
@@ -429,7 +446,7 @@ const Dashboard = () => {
                         className="fixed bottom-10 right-10 bg-gray-900/95 backdrop-blur-xl text-white px-8 py-6 rounded-[2rem] shadow-2xl flex items-center gap-4 z-50 border border-white/5"
                     >
                         <div className="w-12 h-12 bg-[#008069] rounded-2xl flex items-center justify-center text-2xl shadow-lg">
-                            <FontAwesomeIcon icon={faCheckCircle} />
+                            <CheckCircle2 className="w-7 h-7" />
                         </div>
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest mb-1">Success</p>
