@@ -270,6 +270,17 @@ const SalesPage = () => {
         };
     };
 
+    const getMissingCostBadge = (sale) => {
+        if (!isCEO) return null;
+        const cost = computeSaleCostTotal(sale);
+        if (cost > 0) return null;
+        return (
+            <span className="inline-flex items-center px-2 py-1 rounded-lg bg-rose-50 text-rose-700 text-[10px] font-black uppercase tracking-wider border border-rose-200">
+                Missing cost
+            </span>
+        );
+    };
+
     const filteredSales = sales.filter(sale => {
         const q = searchQuery.trim().toLowerCase();
         const items = normalizeItems(sale);
@@ -354,63 +365,76 @@ const SalesPage = () => {
     ).sort((a, b) => a.name.localeCompare(b.name));
 
     return (
-        <div className="min-h-screen" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
             {/* Modern Header */}
-            <div className="apple-surface border-b border-white/40">
-                <div className="max-w-[95%] mx-auto px-6 py-5">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => navigate('/dashboard')}
-                                className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors mobile-only"
-                            >
-                                <ArrowLeft className="w-4 h-4 text-gray-700" />
-                            </button>
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Sales History</h1>
-                                <p className="text-sm text-gray-500 font-medium mt-0.5">{filteredSales.length} transactions • {itemsSold} total sales</p>
-                            </div>
-                        </div>
+            <div className="max-w-7xl mx-auto mb-6">
+                <div className="flex items-center justify-between mb-6">
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span className="hidden sm:inline">Back</span>
+                    </button>
+
+                    <div className="text-center flex-1">
+                        <h1 className="text-2xl md:text-3xl font-black text-gray-900">Sales History</h1>
+                        <p className="text-sm text-gray-600 font-semibold mt-1">{filteredSales.length} transactions • {itemsSold} items</p>
+                    </div>
+
+                    <div className="flex gap-2">
                         {isCEO && (
-                            <div className="flex items-center gap-6">
-                                <div className="text-right">
-                                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Revenue</p>
-                                    <p className="text-xl font-bold text-gray-900">{formatCurrency(totalRevenue)} <span className="text-sm text-gray-500 font-normal">TSh</span></p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Net Profit</p>
-                                    <p className="text-xl font-bold text-emerald-600">{formatCurrency(totalProfit)} <span className="text-sm text-gray-500 font-normal">TSh</span></p>
-                                </div>
-                                <div className="flex gap-2 ml-4">
-                                    <button
-                                        onClick={handleExportExcel}
-                                        className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
-                                    >
-                                        <FileSpreadsheet className="w-4 h-4" /> Excel
-                                    </button>
-                                    <button
-                                        onClick={handleExportPDF}
-                                        className="px-4 py-2 bg-blue-50 text-blue-700 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                                    >
-                                        <FileDown className="w-4 h-4" /> PDF
-                                    </button>
-                                </div>
-                            </div>
+                            <>
+                                <button
+                                    onClick={handleExportExcel}
+                                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"
+                                >
+                                    <FileSpreadsheet className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Excel</span>
+                                </button>
+                                <button
+                                    onClick={handleExportPDF}
+                                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"
+                                >
+                                    <FileDown className="w-4 h-4" />
+                                    <span className="hidden sm:inline">PDF</span>
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>
-            </div>
+
+                {isCEO && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-white rounded-2xl p-5 border-2 border-blue-100 shadow-sm">
+                            <div className="text-2xl md:text-3xl font-black text-blue-600 mb-1">{filteredSales.length}</div>
+                            <div className="text-sm text-gray-600 font-semibold">Sales</div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-5 border-2 border-emerald-100 shadow-sm">
+                            <div className="text-2xl md:text-3xl font-black text-emerald-600 mb-1">{formatCurrency(filteredSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0))}</div>
+                            <div className="text-sm text-gray-600 font-semibold">Revenue</div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-5 border-2 border-amber-100 shadow-sm">
+                            <div className="text-2xl md:text-3xl font-black text-amber-600 mb-1">{formatCurrency(filteredSales.reduce((sum, s) => sum + computeSaleCostTotal(s), 0))}</div>
+                            <div className="text-sm text-gray-600 font-semibold">COGS</div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-5 border-2 border-purple-100 shadow-sm">
+                            <div className="text-2xl md:text-3xl font-black text-purple-600 mb-1">{formatCurrency(filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0))}</div>
+                            <div className="text-sm text-gray-600 font-semibold">Profit</div>
+                        </div>
+                    </div>
+                )}
 
             {/* Filters Toolbar */}
-            <div className="apple-surface border-b border-white/40 sticky top-0 z-10">
-                <div className="max-w-[95%] mx-auto px-6 py-4">
+            <div className="max-w-7xl mx-auto">
+                <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-gray-100 mb-6 sticky top-2 z-10">
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="flex-1 relative group min-w-[300px]">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
                                 placeholder="Search by ID, product, customer, serial..."
-                                className="w-full pl-12 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                className="w-full !pl-12 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition-all"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -436,7 +460,7 @@ const SalesPage = () => {
                                 />
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                             <Filter className="w-4 h-4 text-purple-600" />
                             <select
                                 value={filterMethod}
@@ -451,7 +475,7 @@ const SalesPage = () => {
                                 ))}
                             </select>
                         </div>
-                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                             <Filter className="w-4 h-4 text-blue-600" />
                             <select
                                 value={filterStaffId}
@@ -465,20 +489,20 @@ const SalesPage = () => {
                             </select>
                         </div>
                         {isCEO && (
-                            <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
+                            <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-3 rounded-2xl border-2 border-gray-200 shadow-sm">
                                 <div className="flex items-center gap-2">
                                     <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">Profit</span>
                                     <input
                                         type="number"
                                         placeholder="Min"
-                                        className="w-24 bg-transparent border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-gray-700 outline-none"
+                                        className="w-24 bg-transparent border-2 border-gray-200 rounded-xl px-2 py-2 text-xs font-bold text-gray-700 outline-none"
                                         value={profitMin}
                                         onChange={(e) => setProfitMin(e.target.value)}
                                     />
                                     <input
                                         type="number"
                                         placeholder="Max"
-                                        className="w-24 bg-transparent border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-gray-700 outline-none"
+                                        className="w-24 bg-transparent border-2 border-gray-200 rounded-xl px-2 py-2 text-xs font-bold text-gray-700 outline-none"
                                         value={profitMax}
                                         onChange={(e) => setProfitMax(e.target.value)}
                                     />
@@ -489,14 +513,14 @@ const SalesPage = () => {
                                     <input
                                         type="number"
                                         placeholder="Min"
-                                        className="w-20 bg-transparent border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-gray-700 outline-none"
+                                        className="w-20 bg-transparent border-2 border-gray-200 rounded-xl px-2 py-2 text-xs font-bold text-gray-700 outline-none"
                                         value={marginMin}
                                         onChange={(e) => setMarginMin(e.target.value)}
                                     />
                                     <input
                                         type="number"
                                         placeholder="Max"
-                                        className="w-20 bg-transparent border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-gray-700 outline-none"
+                                        className="w-20 bg-transparent border-2 border-gray-200 rounded-xl px-2 py-2 text-xs font-bold text-gray-700 outline-none"
                                         value={marginMax}
                                         onChange={(e) => setMarginMax(e.target.value)}
                                     />
@@ -522,84 +546,77 @@ const SalesPage = () => {
                         </button>
                     </div>
                 </div>
-            </div>
 
-            {/* Payment Summary - Moved to Top */}
-            {isCEO && filteredSales.length > 0 && (
-                <div className="max-w-[95%] mx-auto px-6 py-4">
-                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1 mb-4">Payment Summary</h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {(() => {
-                            // Calculate totals by payment method
-                            const methodTotals = {};
-                            filteredSales.forEach(sale => {
-                                const method = sale.paymentMethod || 'UNKNOWN';
-                                if (!methodTotals[method]) {
-                                    methodTotals[method] = { revenue: 0, profit: 0, count: 0 };
-                                }
-                                methodTotals[method].revenue += sale.totalAmount || 0;
-                                methodTotals[method].profit += sale.profit || 0;
-                                methodTotals[method].count += 1;
-                            });
-
-                            const methodColors = {
-                                'CASH': { bg: 'bg-green-50', text: 'text-green-700', icon: '💵' },
-                                'TIGOPESA': { bg: 'bg-blue-50', text: 'text-blue-700', icon: '🔵' },
-                                'M_PESA': { bg: 'bg-red-50', text: 'text-red-700', icon: '🔴' },
-                                'AIRTEL_MONEY': { bg: 'bg-orange-50', text: 'text-orange-700', icon: '🟠' },
-                                'BANK': { bg: 'bg-purple-50', text: 'text-purple-700', icon: '🏦' },
-                                'UNKNOWN': { bg: 'bg-gray-50', text: 'text-gray-700', icon: '❓' }
-                            };
-
-                            return Object.entries(methodTotals).map(([method, totals]) => {
-                                const colors = methodColors[method] || methodColors['UNKNOWN'];
-                                return (
-                                    <div key={method} className={`${colors.bg} rounded-xl p-5 border border-gray-100 shadow-sm`}>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-lg">{colors.icon}</span>
-                                            <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                                                {method.replace(/_/g, ' ')}
-                                            </p>
+                {/* Mobile Cards */}
+                <div className="md:hidden space-y-3">
+                    {filteredSales.map((sale) => {
+                        const items = normalizeItems(sale);
+                        const preview = items.slice(0, 2);
+                        const { month, day, time } = formatDate(sale.saleDate);
+                        return (
+                            <div key={sale.id} className="bg-white rounded-2xl p-5 shadow-sm border-2 border-gray-100">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex flex-col items-center justify-center border border-indigo-100">
+                                            <span className="text-[10px] text-indigo-500 font-black uppercase">{month}</span>
+                                            <span className="text-lg font-black text-gray-900 leading-none">{day}</span>
                                         </div>
-                                        <p className={`text-2xl font-black ${colors.text}`}>
-                                            {formatCurrency(totals.revenue)} <span className="text-xs text-gray-500 font-normal">TSh</span>
-                                        </p>
-                                        <div className="flex items-center justify-between mt-2 text-xs">
-                                            <span className="text-gray-500 font-medium">{totals.count} transactions</span>
-                                            <span className="text-emerald-600 font-bold">+{formatCurrency(totals.profit)}</span>
+                                        <div>
+                                            <div className="text-xs font-bold text-gray-500">{time}</div>
+                                            <div className="text-xs font-mono text-blue-700 font-bold mt-1">{sale.id}</div>
                                         </div>
                                     </div>
-                                );
-                            });
-                        })()}
+                                    <div className="text-right">
+                                        <div className="text-xs font-black text-gray-400 uppercase">{sale.paymentMethod?.replace(/_/g, ' ') || 'N/A'}</div>
+                                        {isCEO && (
+                                            <div className="mt-2 space-y-1">
+                                                <div className="text-base font-black text-gray-900">{formatCurrency(sale.totalAmount)}</div>
+                                                <div className="text-xs font-bold text-gray-600">COGS: {formatCurrency(computeSaleCostTotal(sale))}</div>
+                                                <div className="text-xs font-bold text-emerald-700">Profit: +{formatCurrency(sale.profit || 0)}</div>
+                                                <div className="flex justify-end">{getMissingCostBadge(sale)}</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
 
-                        {/* Grand Total Card */}
-                        <div className="bg-gray-900 rounded-xl p-5 text-white shadow-xl">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-lg">💰</span>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Grand Total</p>
+                                <div className="mt-4">
+                                    <div className="text-xs font-black text-gray-400 uppercase tracking-wider">Items</div>
+                                    <div className="mt-1 space-y-1">
+                                        {preview.map((it, i) => (
+                                            <div key={i} className="text-sm font-bold text-gray-900">{getItemDetailString(it)}</div>
+                                        ))}
+                                        {items.length > 2 && (
+                                            <div className="text-[10px] font-black text-gray-400 uppercase tracking-wider">+{items.length - 2} more</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                                    <div>
+                                        <div className="text-sm font-black text-gray-900">{sale.customer?.name || 'Walk-in'}</div>
+                                        <div className="text-xs text-gray-500 font-semibold">{sale.customer?.phone || 'No Contact'}</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-xs text-gray-500 font-bold">Staff</div>
+                                        <div className="text-sm font-bold text-gray-900">{sale.staff?.name || sale.staffName || 'System'}</div>
+                                    </div>
+                                </div>
                             </div>
-                            <p className="text-2xl font-black">
-                                {formatCurrency(filteredSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0))}
-                                <span className="text-xs text-gray-500 font-normal ml-1">TSh</span>
-                            </p>
-                            <div className="flex items-center justify-between mt-2 text-xs">
-                                <span className="text-gray-400 font-medium">{filteredSales.length} sales</span>
-                                <span className="text-emerald-400 font-bold">
-                                    +{formatCurrency(filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0))}
-                                </span>
-                            </div>
+                        );
+                    })}
+
+                    {filteredSales.length === 0 && (
+                        <div className="bg-white rounded-3xl p-12 text-center shadow-lg">
+                            <p className="text-gray-400 font-medium">No sales data available</p>
                         </div>
-                    </div>
+                    )}
                 </div>
-            )}
 
-            {/* Clean Table Container */}
-            <div className="max-w-[95%] mx-auto px-6 py-6">
-                <div className="apple-card rounded-xl overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                {/* Desktop Table */}
+                <div className="hidden md:block">
+                    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border-2 border-gray-100">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
                             {/* Minimal Header */}
                             <thead>
                                 <tr className="bg-gray-50 border-b border-gray-200">
@@ -752,6 +769,9 @@ const SalesPage = () => {
                                                         <div className="font-semibold text-sm text-indigo-700">
                                                             {computeSaleMarginPct(sale).toFixed(1)}%
                                                         </div>
+                                                        <div className="mt-1 flex justify-end">
+                                                            {getMissingCostBadge(sale)}
+                                                        </div>
                                                     </td>
                                                 </>
                                             )}
@@ -766,79 +786,9 @@ const SalesPage = () => {
                                 <p className="text-gray-400 font-medium">No sales data available</p>
                             </div>
                         )}
-                    </div>
-                </div>
-
-                {/* Summary Footer - Payment Method Breakdown */}
-                {isCEO && filteredSales.length > 0 && (
-                    <div className="mt-6 space-y-4">
-                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">Payment Summary</h3>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {(() => {
-                                // Calculate totals by payment method
-                                const methodTotals = {};
-                                filteredSales.forEach(sale => {
-                                    const method = sale.paymentMethod || 'UNKNOWN';
-                                    if (!methodTotals[method]) {
-                                        methodTotals[method] = { revenue: 0, profit: 0, count: 0 };
-                                    }
-                                    methodTotals[method].revenue += sale.totalAmount || 0;
-                                    methodTotals[method].profit += sale.profit || 0;
-                                    methodTotals[method].count += 1;
-                                });
-
-                                const methodColors = {
-                                    'CASH': { bg: 'bg-green-50', text: 'text-green-700', icon: '💵' },
-                                    'TIGOPESA': { bg: 'bg-blue-50', text: 'text-blue-700', icon: '🔵' },
-                                    'M_PESA': { bg: 'bg-red-50', text: 'text-red-700', icon: '🔴' },
-                                    'AIRTEL_MONEY': { bg: 'bg-orange-50', text: 'text-orange-700', icon: '🟠' },
-                                    'BANK': { bg: 'bg-purple-50', text: 'text-purple-700', icon: '🏦' },
-                                    'UNKNOWN': { bg: 'bg-gray-50', text: 'text-gray-700', icon: '❓' }
-                                };
-
-                                return Object.entries(methodTotals).map(([method, totals]) => {
-                                    const colors = methodColors[method] || methodColors['UNKNOWN'];
-                                    return (
-                                        <div key={method} className={`${colors.bg} rounded-xl p-5 border border-gray-100 shadow-sm`}>
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-lg">{colors.icon}</span>
-                                                <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                                                    {method.replace(/_/g, ' ')}
-                                                </p>
-                                            </div>
-                                            <p className={`text-2xl font-black ${colors.text}`}>
-                                                {formatCurrency(totals.revenue)} <span className="text-xs text-gray-500 font-normal">TSh</span>
-                                            </p>
-                                            <div className="flex items-center justify-between mt-2 text-xs">
-                                                <span className="text-gray-500 font-medium">{totals.count} transactions</span>
-                                                <span className="text-emerald-600 font-bold">+{formatCurrency(totals.profit)}</span>
-                                            </div>
-                                        </div>
-                                    );
-                                });
-                            })()}
-
-                            {/* Grand Total Card */}
-                            <div className="bg-gray-900 rounded-xl p-5 text-white shadow-xl">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-lg">💰</span>
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Grand Total</p>
-                                </div>
-                                <p className="text-2xl font-black">
-                                    {formatCurrency(filteredSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0))}
-                                    <span className="text-xs text-gray-500 font-normal ml-1">TSh</span>
-                                </p>
-                                <div className="flex items-center justify-between mt-2 text-xs">
-                                    <span className="text-gray-400 font-medium">{filteredSales.length} sales</span>
-                                    <span className="text-emerald-400 font-bold">
-                                        +{formatCurrency(filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0))}
-                                    </span>
-                                </div>
-                            </div>
                         </div>
                     </div>
-                )}
+                </div>
             </div>
         </div>
     );

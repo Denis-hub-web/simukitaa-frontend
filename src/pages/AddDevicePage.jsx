@@ -28,6 +28,8 @@ const AddDevicePage = () => {
         condition: 'nonActive',
         customPrice: '',
         costPrice: '',
+        runningCostMode: 'TOTAL',
+        runningCostValue: '',
         isPriceLocked: false, // NEW
         notes: ''
     });
@@ -168,6 +170,8 @@ const AddDevicePage = () => {
                     condition: formData.condition,
                     price: formData.customPrice ? parseFloat(formData.customPrice) : null,
                     costPrice: formData.costPrice ? parseFloat(formData.costPrice) : null,
+                    runningCostMode: formData.runningCostMode,
+                    runningCostValue: formData.runningCostValue ? parseFloat(formData.runningCostValue) : null,
                     notes: formData.notes.trim() || '',
                     tradeInId: formData.tradeInId || null
                 };
@@ -376,6 +380,40 @@ const AddDevicePage = () => {
                                         ⚡ Profit will be calculated automatically: <strong>Selling Price - Cost Price</strong>
                                     </p>
                                 </div>
+                            </div>
+                        )}
+
+                        {user.role === 'CEO' && product?.trackSerials === false && (
+                            <div className="bg-gradient-to-br from-sky-50 to-indigo-50 rounded-2xl p-6 border-2 border-sky-200">
+                                <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
+                                    🚚 Running Cost (Transport, etc.)
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Mode</label>
+                                        <select
+                                            value={formData.runningCostMode}
+                                            onChange={(e) => setFormData({ ...formData, runningCostMode: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-sky-500 focus:outline-none transition-all bg-white"
+                                        >
+                                            <option value="TOTAL">Total for this batch</option>
+                                            <option value="PER_ITEM">Per item</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Cost (TZS)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.runningCostValue}
+                                            onChange={(e) => setFormData({ ...formData, runningCostValue: e.target.value })}
+                                            placeholder={formData.runningCostMode === 'PER_ITEM' ? 'e.g. 2000 per item' : 'e.g. 50000 total'}
+                                            className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 focus:border-sky-500 focus:outline-none transition-all bg-white text-lg"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-sm text-gray-600 mt-3 font-semibold">
+                                    💡 This will be added into the batch unit cost for correct COGS & profit.
+                                </p>
                             </div>
                         )}
 
