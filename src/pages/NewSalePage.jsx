@@ -749,7 +749,7 @@ const NewSalePage = () => {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 1.05 }}
-                                className="premium-card p-6 md:p-8 overflow-visible"
+                                className="apple-card p-6 md:p-8 overflow-visible"
                             >
                                 <div className="flex items-center gap-4 mb-10">
                                     <div className="premium-icon-box bg-purple-50 text-purple-500">
