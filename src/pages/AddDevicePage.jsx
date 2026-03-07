@@ -134,13 +134,17 @@ const AddDevicePage = () => {
             (vp.color === formData.color || !vp.color || vp.color === 'Any')
         );
 
-        if (v && (v.costPrice !== null && v.costPrice !== undefined)) {
+        const nextCost = (v?.costPrices && (v.costPrices[formData.condition] !== null && v.costPrices[formData.condition] !== undefined))
+            ? v.costPrices[formData.condition]
+            : v?.costPrice;
+
+        if (nextCost !== null && nextCost !== undefined) {
             setFormData(prev => ({
                 ...prev,
-                costPrice: String(v.costPrice)
+                costPrice: String(nextCost)
             }));
         }
-    }, [formData.storage, formData.color, formData.simType, product, user.role]);
+    }, [formData.storage, formData.color, formData.simType, formData.condition, product, user.role]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

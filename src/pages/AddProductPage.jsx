@@ -58,7 +58,12 @@ const AddProductPage = () => {
                             storage: s,
                             color: c,
                             simType: sim,
-                            costPrice: parseFloat(formData.buyingPrice) || 0,
+                            costPrices: {
+                                nonActive: parseFloat(formData.buyingPrice) || 0,
+                                active: parseFloat(formData.buyingPrice) || 0,
+                                refurbished: parseFloat(formData.buyingPrice) || 0,
+                                used: parseFloat(formData.buyingPrice) || 0
+                            },
                             prices: {
                                 nonActive: formData.basePricing?.nonActive || 0,
                                 active: formData.basePricing?.active || 0,
@@ -443,17 +448,34 @@ const AddProductPage = () => {
                                                     </td>
                                                     {user.role === 'CEO' && (
                                                         <td className="py-4 px-2">
-                                                            <input
-                                                                type="number"
-                                                                value={variant.costPrice ?? ''}
-                                                                onChange={(e) => {
-                                                                    const updated = [...formData.variantPricing];
-                                                                    updated[idx].costPrice = parseFloat(e.target.value) || 0;
-                                                                    setFormData({ ...formData, variantPricing: updated });
-                                                                }}
-                                                                placeholder="Cost"
-                                                                className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:outline-none text-sm transition-all"
-                                                            />
+                                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                                {['nonActive', 'active', 'refurbished', 'used'].map(condition => (
+                                                                    <div key={condition} className="space-y-1">
+                                                                        <label className="text-[10px] uppercase font-bold text-gray-400 px-1">
+                                                                            {condition === 'nonActive' ? 'NEW' : condition}
+                                                                        </label>
+                                                                        <input
+                                                                            type="number"
+                                                                            value={(variant.costPrices?.[condition] ?? variant.costPrice) ?? ''}
+                                                                            onChange={(e) => {
+                                                                                const updated = [...formData.variantPricing];
+                                                                                const next = parseFloat(e.target.value) || 0;
+                                                                                updated[idx].costPrices = {
+                                                                                    nonActive: 0,
+                                                                                    active: 0,
+                                                                                    refurbished: 0,
+                                                                                    used: 0,
+                                                                                    ...(updated[idx].costPrices || {})
+                                                                                };
+                                                                                updated[idx].costPrices[condition] = next;
+                                                                                setFormData({ ...formData, variantPricing: updated });
+                                                                            }}
+                                                                            placeholder="Cost"
+                                                                            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:outline-none text-sm transition-all"
+                                                                        />
+                                                                    </div>
+                                                                ))}
+                                                            </div>
                                                         </td>
                                                     )}
                                                     <td className="py-4 px-2">
