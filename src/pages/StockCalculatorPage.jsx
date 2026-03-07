@@ -121,7 +121,7 @@ const StockCalculatorPage = () => {
 
     if (loading && !options) {
         return (
-            <div className="min-h-screen bg-[#efeff4] flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-12 h-12 border-4 border-[#6366f1] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-gray-600 font-bold">Initializing {mode === 'stock' ? 'Stock' : 'Sales'} Calculator...</p>
@@ -131,13 +131,13 @@ const StockCalculatorPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 pb-20">
+        <div className="min-h-screen pb-20">
             {/* Header - Non-sticky Part with enhanced gradient */}
-            <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 pb-10 pt-8 shadow-2xl relative overflow-hidden">
+            <div className="apple-surface pb-10 pt-8 shadow-apple-md relative overflow-hidden">
                 {/* Animated background orbs */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-pink-500/30 to-purple-500/30 rounded-full -mr-48 -mt-48 blur-3xl animate-pulse"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-cyan-400/20 to-blue-500/20 rounded-full -ml-32 -mb-32 blur-3xl"></div>
-                <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-indigo-300/10 rounded-full -ml-36 -mt-36 blur-2xl"></div>
+                <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full -mr-48 -mt-48 blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-indigo-400/10 to-transparent rounded-full -ml-32 -mb-32 blur-3xl"></div>
+                <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-blue-300/10 rounded-full -ml-36 -mt-36 blur-2xl"></div>
 
                 <div className="max-w-4xl mx-auto px-4 relative z-10">
                     <motion.div
@@ -150,7 +150,7 @@ const StockCalculatorPage = () => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => navigate('/dashboard')}
-                                className="w-12 h-12 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center text-white hover:bg-white/30 transition-all border border-white/20 shadow-lg hover:shadow-xl"
+                                className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-gray-900 hover:bg-gray-50 transition-all border border-gray-100 shadow-apple-sm"
                             >
                                 <ArrowLeft className="w-5 h-5" />
                             </motion.button>
@@ -159,18 +159,18 @@ const StockCalculatorPage = () => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: 0.1 }}
-                                    className="text-indigo-100 font-black uppercase tracking-[0.25em] text-[9px] mb-1.5 flex items-center gap-2"
+                                    className="text-gray-500 font-black uppercase tracking-[0.25em] text-[9px] mb-1.5 flex items-center gap-2"
                                 >
-                                    <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>
+                                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
                                     Intelligence Hub
                                 </motion.p>
                                 <motion.h1
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.2 }}
-                                    className="text-3xl font-black text-white tracking-tight flex items-center gap-3 drop-shadow-lg"
+                                    className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3"
                                 >
-                                    <Calculator className="w-7 h-7 text-cyan-300 drop-shadow-glow" />
+                                    <Calculator className="w-7 h-7 text-blue-600" />
                                     Analytics Center
                                 </motion.h1>
                             </div>
@@ -181,15 +181,15 @@ const StockCalculatorPage = () => {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.3 }}
-                            className="bg-black/30 backdrop-blur-xl p-1.5 rounded-2xl border border-white/20 flex gap-2 shadow-2xl"
+                            className="bg-white/70 backdrop-blur-xl p-1.5 rounded-2xl border border-gray-200 flex gap-2 shadow-apple-sm"
                         >
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => handleModeSwitch('stock')}
                                 className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ${mode === 'stock'
-                                    ? 'bg-gradient-to-r from-white to-gray-50 text-indigo-700 shadow-xl'
-                                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                    ? 'bg-white text-blue-700 shadow-apple-sm'
+                                    : 'text-gray-600 hover:bg-white/60 hover:text-gray-900'
                                     }`}
                             >
                                 📦 Stock
@@ -199,8 +199,8 @@ const StockCalculatorPage = () => {
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => handleModeSwitch('sales')}
                                 className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ${mode === 'sales'
-                                    ? 'bg-gradient-to-r from-white to-gray-50 text-purple-700 shadow-xl'
-                                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                    ? 'bg-white text-blue-700 shadow-apple-sm'
+                                    : 'text-gray-600 hover:bg-white/60 hover:text-gray-900'
                                     }`}
                             >
                                 💰 Sales
@@ -211,11 +211,11 @@ const StockCalculatorPage = () => {
             </div>
 
             {/* Sticky Calculator Display Section - Enhanced */}
-            <div className="sticky top-0 z-50 pt-3 pb-5 bg-gradient-to-b from-slate-50/95 via-blue-50/90 to-transparent backdrop-blur-2xl border-b border-indigo-100/50">
+            <div className="sticky top-0 z-50 pt-3 pb-5 apple-surface border-b border-white/40">
                 <div className="max-w-4xl mx-auto px-4">
                     <motion.div
                         layout
-                        className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 rounded-3xl p-8 border-2 border-indigo-400/30 shadow-2xl relative overflow-hidden"
+                        className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 rounded-3xl p-8 border border-white/10 shadow-2xl relative overflow-hidden"
                     >
                         {/* Decorative elements */}
                         <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full -mr-20 -mt-20 blur-2xl"></div>
