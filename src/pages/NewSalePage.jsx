@@ -616,9 +616,9 @@ const NewSalePage = () => {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 1.05 }}
-                                className="apple-card p-10 mb-10"
+                                className="apple-card p-6 md:p-8 mb-8"
                             >
-                                <div className="flex items-center gap-4 mb-10">
+                                <div className="flex items-center gap-4 mb-6">
                                     <div className="premium-icon-box bg-gray-100 text-gray-500">
                                         <User className="w-6 h-6" />
                                     </div>
@@ -629,7 +629,7 @@ const NewSalePage = () => {
                                 </div>
 
                                 {/* Toggle: Search vs New */}
-                                <div className="flex p-1 bg-gray-100 rounded-xl mb-8 w-fit">
+                                <div className="flex p-1 bg-gray-100 rounded-xl mb-6 w-fit">
                                     <button
                                         onClick={() => setFormData({ ...formData, isNewCustomer: false, customerId: '', customerName: '', customerPhone: '' })}
                                         className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${!formData.isNewCustomer ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
@@ -647,7 +647,7 @@ const NewSalePage = () => {
                                 {!formData.isNewCustomer ? (
                                     <>
                                         {/* Search Mode */}
-                                        <div className="relative mb-8 group">
+                                        <div className="relative mb-6 group">
                                             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                                             <input
                                                 type="text"
@@ -660,7 +660,7 @@ const NewSalePage = () => {
                                         </div>
 
                                         {/* Customer List */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[360px] overflow-y-auto pr-2 no-scrollbar">
                                             {filteredCustomers.slice(0, 10).map(customer => (
                                                 <button
                                                     key={customer.id}
@@ -675,7 +675,7 @@ const NewSalePage = () => {
                                                         setSearchCustomer('');
                                                         handleNext();
                                                     }}
-                                                    className={`p-6 rounded-3xl border-2 transition-all text-left flex items-center justify-between group ${formData.customerId === customer.id
+                                                    className={`p-5 rounded-3xl border-2 transition-all text-left flex items-center justify-between group ${formData.customerId === customer.id
                                                         ? 'border-blue-500 bg-blue-50 shadow-lg'
                                                         : 'border-gray-50 bg-gray-50/50 hover:bg-white hover:border-gray-200'
                                                         }`}
@@ -760,6 +760,9 @@ const NewSalePage = () => {
                                         <p className="premium-label mb-0">Search product name or scan serial number</p>
                                     </div>
                                 </div>
+
+                                <div className="lg:grid lg:grid-cols-5 lg:gap-6">
+                                    <div className="lg:col-span-3">
 
                                 {/* Unified Search Input */}
                                 <div className="relative mb-8 group">
@@ -979,101 +982,105 @@ const NewSalePage = () => {
                                     </motion.div>
                                 )}
 
-                                {/* Cart */}
-                                {cartItems.length > 0 && (
-                                    <div className="mt-8 p-6 rounded-2xl bg-white border border-gray-100 shadow-sm">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Cart Items</p>
-                                            <p className="text-sm font-black text-gray-900">{cartItems.length} item(s)</p>
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            {cartTotals.items.map((i) => (
-                                                <div key={i.key} className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <div className="min-w-0">
-                                                            <p className="font-black text-gray-900 truncate">{i.productName}</p>
-                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
-                                                                {i.serialNumber ? `SN: ${i.serialNumber}` : (i.condition ? i.condition : 'ITEM')}
-                                                            </p>
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeCartItem(i.key)}
-                                                            className="px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 transition-all text-[10px] font-black uppercase tracking-widest"
-                                                        >
-                                                            Remove
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-                                                        <div>
-                                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Qty</label>
-                                                            <input
-                                                                type="number"
-                                                                min={1}
-                                                                value={i.quantity}
-                                                                onChange={(e) => updateCartItem(i.key, { quantity: e.target.value })}
-                                                                className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 font-black"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Unit Price</label>
-                                                            <input
-                                                                type="number"
-                                                                min={0}
-                                                                value={i.originalUnitPrice}
-                                                                onChange={(e) => updateCartItem(i.key, { sellingPrice: e.target.value })}
-                                                                className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 font-black"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Item Discount</label>
-                                                            <div className="flex gap-2">
-                                                                <select
-                                                                    value={i.discountType || ''}
-                                                                    onChange={(e) => updateCartItem(i.key, { discountType: e.target.value })}
-                                                                    className="px-3 py-3 bg-white rounded-xl border border-gray-200 text-[10px] font-black uppercase tracking-widest"
-                                                                >
-                                                                    <option value="">None</option>
-                                                                    <option value="AMOUNT">Amt</option>
-                                                                    <option value="PERCENT">%</option>
-                                                                </select>
-                                                                <input
-                                                                    type="number"
-                                                                    min={0}
-                                                                    value={i.discountValue ?? ''}
-                                                                    onChange={(e) => updateCartItem(i.key, { discountValue: e.target.value })}
-                                                                    className="flex-1 px-4 py-3 bg-white rounded-xl border border-gray-200 font-black"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Line Total</label>
-                                                            <div className="px-4 py-3 bg-white rounded-xl border border-gray-200 font-black text-gray-900">
-                                                                {Math.round(i.lineTotalAfterItemDiscount).toLocaleString()} TZS
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        <div className="mt-4 p-4 rounded-2xl bg-gray-900 text-white">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Subtotal</span>
-                                                <span className="font-black">{Math.round(cartTotals.subtotalAfterItemDiscount).toLocaleString()} TZS</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
                                 {/* Not Found Message */}
                                 {searchSerial.length >= 3 && !foundDevice && !searching && (
                                     <div className="p-4 rounded-2xl bg-yellow-50 border-2 border-yellow-200 text-center">
                                         <p className="text-yellow-800">Serial number not found. Please check and try again.</p>
                                     </div>
                                 )}
+                                    </div>
+
+                                    {/* Cart */}
+                                    {cartItems.length > 0 && (
+                                        <div className="mt-8 lg:mt-0 lg:col-span-2 lg:sticky lg:top-6">
+                                            <div className="p-5 rounded-2xl bg-white border border-gray-100 shadow-sm">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Cart</p>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{cartItems.length} item(s)</p>
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    {cartTotals.items.map((i) => (
+                                                        <div key={i.key} className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                                                            <div className="flex items-start justify-between gap-3">
+                                                                <div className="min-w-0">
+                                                                    <p className="font-black text-gray-900 truncate">{i.productName}</p>
+                                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                                                                        {i.serialNumber ? `SN: ${i.serialNumber}` : (i.condition ? i.condition : 'ITEM')}
+                                                                    </p>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeCartItem(i.key)}
+                                                                    className="px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 transition-all text-[10px] font-black uppercase tracking-widest"
+                                                                >
+                                                                    Remove
+                                                                </button>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-2 gap-3 mt-4">
+                                                                <div>
+                                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Qty</label>
+                                                                    <input
+                                                                        type="number"
+                                                                        min={1}
+                                                                        value={i.quantity}
+                                                                        onChange={(e) => updateCartItem(i.key, { quantity: e.target.value })}
+                                                                        className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 font-black"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Unit</label>
+                                                                    <input
+                                                                        type="number"
+                                                                        min={0}
+                                                                        value={i.originalUnitPrice}
+                                                                        onChange={(e) => updateCartItem(i.key, { sellingPrice: e.target.value })}
+                                                                        className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 font-black"
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-2">
+                                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Discount</label>
+                                                                    <div className="flex gap-2">
+                                                                        <select
+                                                                            value={i.discountType || ''}
+                                                                            onChange={(e) => updateCartItem(i.key, { discountType: e.target.value })}
+                                                                            className="px-3 py-3 bg-white rounded-xl border border-gray-200 text-[10px] font-black uppercase tracking-widest"
+                                                                        >
+                                                                            <option value="">None</option>
+                                                                            <option value="AMOUNT">Amt</option>
+                                                                            <option value="PERCENT">%</option>
+                                                                        </select>
+                                                                        <input
+                                                                            type="number"
+                                                                            min={0}
+                                                                            value={i.discountValue ?? ''}
+                                                                            onChange={(e) => updateCartItem(i.key, { discountValue: e.target.value })}
+                                                                            className="flex-1 px-4 py-3 bg-white rounded-xl border border-gray-200 font-black"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-span-2">
+                                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Line Total</label>
+                                                                    <div className="px-4 py-3 bg-white rounded-xl border border-gray-200 font-black text-gray-900 tabular-nums">
+                                                                        {Math.round(i.lineTotalAfterItemDiscount).toLocaleString()} TZS
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                <div className="mt-4 p-4 rounded-2xl bg-gray-900 text-white">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Subtotal</span>
+                                                        <span className="font-black tabular-nums">{Math.round(cartTotals.subtotalAfterItemDiscount).toLocaleString()} TZS</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </motion.div>
                         )}
 
