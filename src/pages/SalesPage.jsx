@@ -425,6 +425,8 @@ const SalesPage = () => {
                     </div>
                 )}
 
+            </div>
+
             {/* Filters Toolbar */}
             <div className="max-w-7xl mx-auto">
                 <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-gray-100 mb-6 sticky top-2 z-10">
