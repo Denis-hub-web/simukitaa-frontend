@@ -59,9 +59,9 @@ const ToolsPage = () => {
                     <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-apple-sm border border-gray-100">
                         <Wrench className="w-6 h-6" />
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 tracking-tight">System <span className="text-blue-600">Tools</span></h1>
+                    <h1 className="apple-title">System <span className="text-blue-600">Tools</span></h1>
                 </div>
-                <p className="text-gray-500 max-w-2xl font-medium">Unified management module</p>
+                <p className="apple-subtitle max-w-2xl font-medium">Unified management module</p>
             </header>
 
             <motion.div

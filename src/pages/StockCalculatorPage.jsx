@@ -143,7 +143,7 @@ const StockCalculatorPage = () => {
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center justify-between gap-4"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                     >
                         <div className="flex items-center gap-4">
                             <motion.button
@@ -181,13 +181,13 @@ const StockCalculatorPage = () => {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.3 }}
-                            className="bg-white/70 backdrop-blur-xl p-1.5 rounded-2xl border border-gray-200 flex gap-2 shadow-apple-sm"
+                            className="bg-white/70 backdrop-blur-xl p-1.5 rounded-2xl border border-gray-200 flex gap-2 shadow-apple-sm w-full sm:w-auto"
                         >
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => handleModeSwitch('stock')}
-                                className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ${mode === 'stock'
+                                className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ${mode === 'stock'
                                     ? 'bg-white text-blue-700 shadow-apple-sm'
                                     : 'text-gray-600 hover:bg-white/60 hover:text-gray-900'
                                     }`}
@@ -198,7 +198,7 @@ const StockCalculatorPage = () => {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => handleModeSwitch('sales')}
-                                className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ${mode === 'sales'
+                                className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ${mode === 'sales'
                                     ? 'bg-white text-blue-700 shadow-apple-sm'
                                     : 'text-gray-600 hover:bg-white/60 hover:text-gray-900'
                                     }`}

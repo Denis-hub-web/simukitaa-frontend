@@ -64,7 +64,7 @@ const MobileDashboard = () => {
     const [showSaleModal, setShowSaleModal] = useState(false);
     const [showCustomerModal, setShowCustomerModal] = useState(false);
     const [showProductModal, setShowProductModal] = useState(false);
-    const [personalExpenses, setPersonalExpenses] = useState(null);
+    const [personalExpenses, setPersonalExpenses] = useState([]);
     const [activityFeed, setActivityFeed] = useState([]);
     const [lowStockItems, setLowStockItems] = useState([]);
     const [topStaff, setTopStaff] = useState([]);
@@ -223,7 +223,12 @@ const MobileDashboard = () => {
     }
 
     return (
-        <div className="min-h-screen pb-24">
+        <div className="min-h-screen pb-24 relative overflow-hidden">
+            <div className="pointer-events-none absolute inset-0 -z-10">
+                <div className="absolute -top-24 -right-24 w-80 h-80 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full blur-3xl" />
+                <div className="absolute top-1/3 -left-28 w-72 h-72 bg-gradient-to-tr from-indigo-400/10 to-transparent rounded-full blur-3xl" />
+                <div className="absolute -bottom-32 left-1/4 w-96 h-96 bg-gradient-to-tr from-cyan-400/10 to-transparent rounded-full blur-3xl" />
+            </div>
             {/* Classic Mobile Header */}
             <div className="sticky top-0 z-40">
                 <div className="apple-surface border-b border-white/40">
