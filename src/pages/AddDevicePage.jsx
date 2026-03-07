@@ -123,6 +123,25 @@ const AddDevicePage = () => {
         }
     }, [formData.storage, formData.color, formData.simType, formData.condition, product, formData.isPriceLocked]);
 
+    useEffect(() => {
+        if (user.role !== 'CEO') return;
+        if (!product || product.trackSerials === false) return;
+        if (!product.variantPricing || product.variantPricing.length === 0) return;
+
+        const v = product.variantPricing.find(vp =>
+            vp.storage === formData.storage &&
+            (vp.simType === formData.simType || !vp.simType || vp.simType === 'Any') &&
+            (vp.color === formData.color || !vp.color || vp.color === 'Any')
+        );
+
+        if (v && (v.costPrice !== null && v.costPrice !== undefined)) {
+            setFormData(prev => ({
+                ...prev,
+                costPrice: String(v.costPrice)
+            }));
+        }
+    }, [formData.storage, formData.color, formData.simType, product, user.role]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
