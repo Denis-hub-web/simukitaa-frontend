@@ -62,7 +62,7 @@ const SettingsPage = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-[#efeff4] pb-24">
+        <div className="min-h-screen pb-24">
             <FactoryResetModal
                 show={showResetModal}
                 password={resetPassword}
@@ -113,7 +113,7 @@ const SettingsPage = () => {
             </div>
 
             {/* Mobile Tab Bar (visible only on small screens) */}
-            <div className="lg:hidden sticky top-0 z-20 bg-[#efeff4] px-4 pt-3 pb-2">
+            <div className="lg:hidden sticky top-0 z-20 bg-transparent px-4 pt-3 pb-2">
                 <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
                     {settingsSections.map((section) => (
                         <button

@@ -164,7 +164,7 @@ const ExpensesPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-3 md:p-6">
+        <div className="min-h-screen p-3 md:p-6">
             {/* Header */}
             <motion.div
                 initial={{ y: -20, opacity: 0 }}

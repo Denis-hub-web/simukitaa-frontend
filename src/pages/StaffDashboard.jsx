@@ -85,7 +85,7 @@ const StaffDashboard = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#efeff4] flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-12 h-12 border-4 border-[#008069] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loading Staff Dashboard...</p>
@@ -95,7 +95,7 @@ const StaffDashboard = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#efeff4] pb-24">
+        <div className="min-h-screen pb-24">
             {/* Classic Global Header */}
             <div className="bg-[#008069] relative overflow-hidden pb-12 pt-4 shadow-xl">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>

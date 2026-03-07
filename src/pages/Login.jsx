@@ -96,7 +96,7 @@ const Login = () => {
     );
 
     return (
-        <div className="min-h-[100dvh] relative overflow-hidden flex items-center justify-center p-4">
+        <div className="premium-bg min-h-[100dvh] relative overflow-hidden flex items-center justify-center p-4">
             {/* High-Fidelity Image Background */}
             <div className="absolute inset-0 z-0">
                 <img
