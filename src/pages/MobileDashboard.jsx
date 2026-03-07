@@ -387,8 +387,9 @@ const MobileDashboard = () => {
                                 { title: 'Expenses Today', desc: 'Record Costs', icon: faWallet, color: 'text-rose-500', bg: 'bg-rose-50', link: '/expenses' },
                                 { title: 'Stock Management', desc: 'Add & Edit Stock', icon: faBoxOpen, color: 'text-blue-600', bg: 'bg-blue-50', link: '/stock-management', restricted: true },
                                 { title: 'Stock Table', desc: 'Inventory Check', icon: faCubes, color: 'text-blue-500', bg: 'bg-blue-50', link: '/stock-inventory', restricted: true },
+                                { title: 'Wanakitaa Hub', desc: 'Loyalty & Community', icon: faCompass, color: 'text-purple-600', bg: 'bg-purple-50', link: '/wanakitaa', restrictedCEO: true },
                                 { title: 'Team Admin', desc: 'Staff Oversight', icon: faUserCog, color: 'text-green-500', bg: 'bg-green-50', link: '/team-management', restricted: true }
-                            ].filter(t => !t.restricted || (user?.role === 'CEO' || user?.role === 'MANAGER')).map((t, i) => (
+                            ].filter(t => (!t.restricted || (user?.role === 'CEO' || user?.role === 'MANAGER')) && (!t.restrictedCEO || user?.role === 'CEO')).map((t, i) => (
                                 <button key={i} onClick={() => navigate(t.link)} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-5 w-full text-left active:scale-95 transition-all">
                                     <div className={`w-12 h-12 ${t.bg} rounded-2xl flex items-center justify-center`}>
                                         <FontAwesomeIcon icon={t.icon} className={t.color} />
