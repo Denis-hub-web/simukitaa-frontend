@@ -84,6 +84,27 @@ const DailySheetReport = () => {
         }).format(amount || 0);
     };
 
+    const getProductDetailString = (t) => {
+        let name = t.productName;
+        const variants = [];
+        if (t.storage) variants.push(t.storage);
+        if (t.color) variants.push(t.color);
+        if (t.simType) variants.push(t.simType);
+
+        if (variants.length > 0) {
+            name += ` (${variants.join(', ')})`;
+        }
+
+        if (t.serialNumber && t.serialNumber !== 'N/A') {
+            name += ` [SN: ${t.serialNumber}]`;
+        }
+
+        if (t.quantity > 1) {
+            return `[QTY: ${t.quantity}] ${name}`;
+        }
+        return name;
+    };
+
     const handleExportExcel = () => {
         if (!data) return;
         let csv = `SimuKitaa Business Report\nRange: ${startDate} to ${endDate}\n\n`;
@@ -95,9 +116,10 @@ const DailySheetReport = () => {
         csv += `Net Profit,${data.summary.netProfit}\n\n`;
 
         csv += `SALES TRANSACTIONS\n`;
-        csv += `Date,Product,Staff,Amount,Profit,Method\n`;
+        csv += `Date,Product Details,Personnel,Amount,Profit,Method\n`;
         data.sales.transactions.forEach(t => {
-            csv += `${new Date(t.time).toLocaleDateString()},"${t.productName}",${t.staffName},${t.amount},${t.profit},${t.paymentMethod}\n`;
+            const productDetail = getProductDetailString(t).replace(/"/g, '""');
+            csv += `${new Date(t.time).toLocaleDateString()},"${productDetail}",${t.staffName},${t.amount},${t.profit},${t.paymentMethod}\n`;
         });
 
         const blob = new Blob([csv], { type: 'text/csv' });
@@ -145,14 +167,20 @@ const DailySheetReport = () => {
         });
 
         // Sales Table
-        doc.text('Top Sales Transactions', 15, doc.lastAutoTable.finalY + 15);
+        doc.text('Detailed Sales Transactions', 15, doc.lastAutoTable.finalY + 15);
         autoTable(doc, {
             startY: doc.lastAutoTable.finalY + 20,
-            head: [['Product', 'Staff', 'Amount', 'Method']],
-            body: data.sales.transactions.slice(0, 20).map(t => [
-                t.productName, t.staffName, formatCurrency(t.amount), t.paymentMethod
+            head: [['Date', 'Product Details', 'Staff', 'Amount', 'Method']],
+            body: data.sales.transactions.slice(0, 50).map(t => [
+                new Date(t.time).toLocaleDateString(),
+                getProductDetailString(t),
+                t.staffName,
+                formatCurrency(t.amount),
+                t.paymentMethod
             ]),
-            theme: 'grid'
+            theme: 'grid',
+            styles: { fontSize: 8 },
+            columnStyles: { 1: { cellWidth: 80 } }
         });
 
         doc.save(`SimuKitaa_Report_${startDate}.pdf`);

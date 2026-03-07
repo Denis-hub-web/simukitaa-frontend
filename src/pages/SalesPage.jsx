@@ -46,6 +46,27 @@ const SalesPage = () => {
         }
     };
 
+    const getProductDetailString = (s) => {
+        let name = s.product?.name || 'Unknown';
+        const variants = [];
+        if (s.storage) variants.push(s.storage);
+        if (s.color) variants.push(s.color);
+        if (s.simType) variants.push(s.simType);
+
+        if (variants.length > 0) {
+            name += ` (${variants.join(', ')})`;
+        }
+
+        if (s.serialNumber && s.serialNumber !== 'N/A') {
+            name += ` [SN: ${s.serialNumber}]`;
+        }
+
+        if (s.quantity > 1) {
+            return `[QTY: ${s.quantity}] ${name}`;
+        }
+        return name;
+    };
+
     const handleExportExcel = () => {
         if (!filteredSales.length) return;
 
@@ -55,17 +76,16 @@ const SalesPage = () => {
         }
         csv += `\n`;
 
-        csv += `Date,Product,Serial,Customer,Staff,Method,Amount,Profit\n`;
+        csv += `Date,Product Details,Customer,Staff,Method,Amount,Profit\n`;
         filteredSales.forEach(s => {
             const date = new Date(s.saleDate).toLocaleDateString();
-            const product = `"${s.product?.name || 'Unknown'}"`;
-            const serial = `"${s.serialNumber || 'N/A'}"`;
+            const productDetail = getProductDetailString(s).replace(/"/g, '""');
             const customer = `"${s.customer?.name || 'Walk-in'}"`;
             const staff = `"${s.staffName || 'System'}"`;
             const method = s.paymentMethod || 'N/A';
             const amount = s.totalAmount || 0;
             const profit = s.profit || 0;
-            csv += `${date},${product},${serial},${customer},${staff},${method},${amount},${profit}\n`;
+            csv += `${date},"${productDetail}",${customer},${staff},${method},${amount},${profit}\n`;
         });
 
         const blob = new Blob([csv], { type: 'text/csv' });
@@ -114,20 +134,21 @@ const SalesPage = () => {
         });
 
         // Transactions Table
-        doc.text('Transaction Details', 15, doc.lastAutoTable.finalY + 15);
+        doc.text('Detailed Transaction Record', 15, doc.lastAutoTable.finalY + 15);
         autoTable(doc, {
             startY: doc.lastAutoTable.finalY + 20,
-            head: [['Date', 'Product', 'Customer', 'Amount', 'Method']],
+            head: [['Date', 'Product Details', 'Customer', 'Amount', 'Method']],
             body: filteredSales.map(t => [
                 new Date(t.saleDate).toLocaleDateString(),
-                t.product?.name || 'Unknown',
+                getProductDetailString(t),
                 t.customer?.name || 'Walk-in',
                 `TSh ${(t.totalAmount || 0).toLocaleString()}`,
                 t.paymentMethod || 'N/A'
             ]),
             theme: 'grid',
             styles: { fontSize: 8 },
-            headStyles: { fillColor: [51, 65, 85] }
+            headStyles: { fillColor: [51, 65, 85] },
+            columnStyles: { 1: { cellWidth: 80 } }
         });
 
         doc.save(`SimuKitaa_Sales_History_${new Date().toISOString().split('T')[0]}.pdf`);
