@@ -1300,10 +1300,10 @@ const NewSalePage = () => {
                                 </div>
 
                                 {/* Regional Customer Toggle */}
-                                <div className="mt-6 p-5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border-2 border-orange-200">
+                                <div className="mt-6 p-5 bg-orange-50 rounded-2xl border border-orange-200">
                                     <div className="flex items-start gap-4">
                                         <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <FontAwesomeIcon icon={faTruck} className="text-orange-500" />
+                                            <Truck className="w-5 h-5 text-orange-600" />
                                         </div>
                                         <div className="flex-1">
                                             <h4 className="font-bold text-gray-900 mb-1">Regional Delivery?</h4>
@@ -1321,7 +1321,7 @@ const NewSalePage = () => {
                                                 <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ${formData.isRegional ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
                                                     }`}>
                                                     {formData.isRegional && (
-                                                        <FontAwesomeIcon icon={faCheckCircle} className="text-white text-xs" />
+                                                        <CheckCircle2 className="w-4 h-4 text-white" />
                                                     )}
                                                 </div>
                                                 <div className="text-left flex-1">
@@ -1367,11 +1367,11 @@ const NewSalePage = () => {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 1.05 }}
-                                className="premium-card p-8 md:p-10"
+                                className="apple-card p-8 md:p-10"
                             >
                                 <div className="flex items-center gap-4 mb-10">
-                                    <div className="premium-icon-box bg-emerald-50 text-emerald-500">
-                                        <FontAwesomeIcon icon={faCheckCircle} className="text-2xl" />
+                                    <div className="premium-icon-box bg-gray-100 text-gray-600">
+                                        <CheckCircle2 className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <h2 className="premium-h2">Review Sale</h2>
@@ -1379,66 +1379,115 @@ const NewSalePage = () => {
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-                                    {/* Customer */}
-                                    <div className="p-4 rounded-2xl bg-blue-50 border-2 border-blue-200">
-                                        <div className="text-sm text-blue-600 font-semibold mb-1">Customer</div>
-                                        <div className="font-bold text-lg">{formData.customerName}</div>
-                                        <div className="text-sm text-gray-600">{formData.customerPhone}</div>
-                                    </div>
-
-                                    {/* Product */}
-                                    <div className="p-4 rounded-2xl bg-green-50 border-2 border-green-200">
-                                        <div className="text-sm text-green-600 font-semibold mb-1">Product Details</div>
-                                        <div className="font-bold text-lg">{formData.productName}</div>
-                                        <div className="grid grid-cols-2 gap-2 mt-2">
-                                            <div className="text-sm text-gray-600 overflow-hidden text-ellipsis whitespace-nowrap">Serial: <span className="font-bold">{formData.serialNumber}</span></div>
-                                            {foundDevice?.product?.trackSerials !== false && (
-                                                <div className="text-sm text-gray-600 text-right">Condition: <span className="font-bold uppercase tracking-tighter">{formData.condition}</span></div>
-                                            )}
-                                        </div>
-                                        <div className="mt-2 pt-2 border-t border-green-100 flex items-center gap-2">
-                                            <FontAwesomeIcon icon={faTruck} className="text-green-500 text-xs" />
-                                            <div className="text-xs text-gray-600">Supplier: <span className="font-bold">{formData.supplierName}</span></div>
-                                        </div>
-                                    </div>
-
-                                    {/* Payment */}
-                                    <div className="p-4 rounded-2xl bg-indigo-50 border-2 border-indigo-200">
-                                        <div className="text-sm border-b border-indigo-100 pb-2 mb-2 font-black uppercase tracking-widest text-indigo-400">Payment Breakdown</div>
-                                        <div className="flex justify-between items-center mb-2 text-sm">
-                                            <span className="text-gray-600">Payment Method:</span>
-                                            <span className="font-bold">
-                                                {formData.paymentMethod === 'CUSTOM' ? formData.customPaymentMethod : formData.paymentMethod}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center mb-2 text-sm border-b border-indigo-100 pb-2">
-                                            <span className="text-gray-600 font-semibold uppercase tracking-tighter">Amount Paid:</span>
-                                            <span className="font-black text-indigo-600 text-lg">TSH {parseFloat(formData.amountPaid || 0).toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center pt-1">
-                                            <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">Device Price:</span>
-                                            <span className="font-bold text-gray-900">TSH {formData.sellingPrice.toLocaleString()}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Trade-In */}
-                                    {formData.hasTradeIn && formData.tradeInValue > 0 && (
-                                        <div className="p-4 rounded-2xl bg-orange-50 border-2 border-orange-200">
-                                            <div className="text-sm border-b border-orange-200/50 pb-2 mb-2 font-black uppercase tracking-widest text-orange-400">Trade-In Details</div>
-                                            <div className="font-bold text-md mb-2">{formData.tradeInDeviceName}</div>
-                                            <div className="flex justify-between items-center text-xs text-orange-900/70 mb-3 pb-3 border-b border-orange-200/50">
-                                                <span>S/N: {formData.tradeInSerialNumber}</span>
-                                                <span className="font-black">Credit: - TSH {formData.tradeInValue.toLocaleString()}</span>
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                        <div className="lg:col-span-2 space-y-4">
+                                            <div className="p-5 rounded-2xl bg-white border border-gray-100">
+                                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Customer</div>
+                                                <div className="font-black text-gray-900 text-lg">{formData.customerName || '—'}</div>
+                                                <div className="text-sm text-gray-600 font-semibold">{formData.customerPhone || '—'}</div>
                                             </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-sm font-semibold text-gray-600 uppercase tracking-tighter">Due After Trade-In:</span>
-                                                <span className="font-black text-xl text-orange-600">
-                                                    TSH {(formData.sellingPrice - formData.tradeInValue).toLocaleString()}
-                                                </span>
+
+                                            <div className="p-5 rounded-2xl bg-white border border-gray-100">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Invoice Items</div>
+                                                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{cartTotals.items.length} item(s)</div>
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    {cartTotals.items.map((i) => (
+                                                        <div key={i.key} className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                                                            <div className="flex items-start justify-between gap-4">
+                                                                <div className="min-w-0">
+                                                                    <div className="font-black text-gray-900 truncate">{i.productName}</div>
+                                                                    <div className="mt-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                        {i.serialNumber ? `SN: ${i.serialNumber}` : (i.condition ? i.condition : 'ITEM')}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="text-right shrink-0">
+                                                                    <div className="text-sm font-black text-gray-900">{Math.round(i.lineTotalAfterItemDiscount).toLocaleString()} TZS</div>
+                                                                    <div className="text-[10px] font-bold text-gray-500">{i.quantity} × {Math.round(i.originalUnitPrice).toLocaleString()}</div>
+                                                                </div>
+                                                            </div>
+
+                                                            {(i.lineItemDiscount || 0) > 0 && (
+                                                                <div className="mt-3 flex items-center justify-between text-[10px] font-bold text-gray-500">
+                                                                    <span className="uppercase tracking-widest">Item Discount</span>
+                                                                    <span>- {Math.round(i.lineItemDiscount).toLocaleString()} TZS</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
-                                    )}
+
+                                        <div className="space-y-4">
+                                            <div className="p-5 rounded-2xl bg-white border border-gray-100">
+                                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Payment</div>
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-gray-600 font-semibold">Method</span>
+                                                    <span className="font-black text-gray-900">
+                                                        {formData.paymentMethod === 'CUSTOM' ? (formData.customPaymentMethod || 'CUSTOM') : (formData.paymentMethod || '—')}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-sm mt-2">
+                                                    <span className="text-gray-600 font-semibold">Receipt Mode</span>
+                                                    <span className="font-black text-gray-900">{formData.receiptMode === 'SEPARATE' ? 'SEPARATE' : 'SINGLE'}</span>
+                                                </div>
+                                                <div className="h-px bg-gray-100 my-4" />
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-600 font-semibold">Amount Paid</span>
+                                                    <span className="font-black text-gray-900">{Math.round(cartTotals.paid).toLocaleString()} TZS</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100">
+                                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Totals</div>
+
+                                                <div className="space-y-2 text-sm">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-gray-600 font-semibold">Subtotal</span>
+                                                        <span className="font-black text-gray-900">{Math.round(cartTotals.subtotalOriginal).toLocaleString()} TZS</span>
+                                                    </div>
+
+                                                    {(cartTotals.itemDiscountTotal || 0) > 0 && (
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-gray-600 font-semibold">Item Discounts</span>
+                                                            <span className="font-black text-gray-900">- {Math.round(cartTotals.itemDiscountTotal).toLocaleString()} TZS</span>
+                                                        </div>
+                                                    )}
+
+                                                    {(cartTotals.invoiceDiscountAmount || 0) > 0 && (
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-gray-600 font-semibold">Invoice Discount</span>
+                                                            <span className="font-black text-gray-900">- {Math.round(cartTotals.invoiceDiscountAmount).toLocaleString()} TZS</span>
+                                                        </div>
+                                                    )}
+
+                                                    {(parseFloat(formData.tradeInValue) || 0) > 0 && (
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-orange-700 font-semibold">Trade-In</span>
+                                                            <span className="font-black text-orange-800">- {Math.round(parseFloat(formData.tradeInValue) || 0).toLocaleString()} TZS</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="h-px bg-gray-200 my-4" />
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-900 font-black uppercase tracking-wider text-[10px]">Net Payable</span>
+                                                    <span className="text-lg font-black text-gray-900">{Math.round(cartTotals.netPayable).toLocaleString()} TZS</span>
+                                                </div>
+
+                                                <div className="mt-3 flex items-center justify-between p-3 rounded-xl bg-white border border-gray-200">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Change / Balance</span>
+                                                    <span className={`font-black ${cartTotals.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                        {Math.round(cartTotals.balance).toLocaleString()} TZS
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </motion.div>
                         )}
@@ -1451,7 +1500,7 @@ const NewSalePage = () => {
                             disabled={currentStep === 1}
                             className={`py-5 rounded-3xl font-black uppercase tracking-[0.2em] text-[10px] transition-all ${currentStep === 1 ? 'opacity-0 cursor-default' : 'bg-white text-gray-400 border border-gray-100 hover:text-gray-900 shadow-lg'}`}
                         >
-                            <FontAwesomeIcon icon={faArrowLeft} className="mr-3" />
+                            <ArrowLeft className="inline-block w-4 h-4 mr-3" />
                             Back
                         </button>
                         {currentStep < totalSteps ? (
@@ -1464,7 +1513,7 @@ const NewSalePage = () => {
                                     }`}
                             >
                                 Next Step
-                                <FontAwesomeIcon icon={faArrowRight} className="ml-3" />
+                                <ArrowRight className="inline-block w-4 h-4 ml-3" />
                             </button>
                         ) : (
                             <button
@@ -1473,7 +1522,7 @@ const NewSalePage = () => {
                                 className="py-5 rounded-3xl bg-gray-900 text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50"
                             >
                                 {loading ? 'Processing...' : 'Complete Sale'}
-                                <FontAwesomeIcon icon={faCheckCircle} className="ml-3 text-emerald-400" />
+                                <CheckCircle2 className="inline-block w-4 h-4 ml-3 text-emerald-300" />
                             </button>
                         )}
                     </div>
