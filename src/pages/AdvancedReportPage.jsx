@@ -72,44 +72,48 @@ const AdvancedReportPage = () => {
     };
 
     return (
-        <div className="space-y-8 pb-20">
-            {/* Header section with Date Filter */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Advanced Analytics</h1>
-                    <p className="text-gray-500 font-medium">Detailed performance matrix & AI recommendations</p>
-                </div>
-
-                <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-xs uppercase tracking-widest">
-                        <FontAwesomeIcon icon={faCalendarAlt} />
-                        <span>Range</span>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8 pb-24">
+            <div className="max-w-7xl mx-auto space-y-8">
+                {/* Header section with Date Filter */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Business Intelligence</p>
+                        <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Advanced Analytics</h1>
+                        <p className="text-sm text-gray-500 font-medium mt-1">Detailed performance matrix & AI recommendations</p>
                     </div>
-                    <input
-                        type="date"
-                        value={dateRange.start}
-                        onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                        className="bg-transparent border-none outline-none font-bold text-sm text-gray-700"
-                    />
-                    <span className="text-gray-300">to</span>
-                    <input
-                        type="date"
-                        value={dateRange.end}
-                        onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                        className="bg-transparent border-none outline-none font-bold text-sm text-gray-700"
-                    />
+
+                    <div className="bg-white rounded-2xl p-3 shadow-sm border-2 border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-xs uppercase tracking-widest">
+                                <FontAwesomeIcon icon={faCalendarAlt} />
+                                <span>Range</span>
+                            </div>
+                            <input
+                                type="date"
+                                value={dateRange.start}
+                                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                                className="bg-transparent border-none outline-none font-bold text-sm text-gray-700"
+                            />
+                            <span className="text-gray-300">to</span>
+                            <input
+                                type="date"
+                                value={dateRange.end}
+                                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                                className="bg-transparent border-none outline-none font-bold text-sm text-gray-700"
+                            />
+                        </div>
+                    </div>
                 </div>
-            </div>
 
             {/* AI Insights Carousel/Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {aiInsights.map((insight, idx) => (
                     <motion.div
                         key={idx}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
-                        className="premium-card p-6 border-l-4 border-l-blue-600 group hover:scale-[1.02] transition-all"
+                        className="apple-card p-6 border-l-4 border-l-blue-600 group hover:scale-[1.01] transition-all"
                     >
                         <div className="flex items-center gap-4 mb-4">
                             <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-colors">
@@ -120,11 +124,11 @@ const AdvancedReportPage = () => {
                         <p className="text-sm text-gray-600 font-medium leading-relaxed">{insight.desc}</p>
                     </motion.div>
                 ))}
-            </div>
+                </div>
 
             {/* Main Data Table */}
-            <div className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-                <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
+                <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden">
+                    <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-gray-900 border border-gray-100">
                             <FontAwesomeIcon icon={faTable} />
@@ -135,7 +139,7 @@ const AdvancedReportPage = () => {
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handleExportCSV}
-                            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 hover:scale-[1.05] transition-all"
+                            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 hover:scale-[1.02] transition-all"
                         >
                             <FontAwesomeIcon icon={faFileExport} />
                             Export Excel
@@ -200,6 +204,7 @@ const AdvancedReportPage = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
                 </div>
             </div>
         </div>

@@ -358,11 +358,11 @@ const Dashboard = () => {
                         <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                             {[
                                 { label: 'New Sale', icon: ReceiptText, bgColor: 'bg-emerald-50', textColor: 'text-emerald-600', action: () => setShowSaleModal(true) },
-                                { label: 'Stock Table', icon: PackageOpen, bgColor: 'bg-pink-50', textColor: 'text-pink-600', action: () => navigate('/stock-inventory') },
                                 { label: 'Repairs', icon: Wrench, bgColor: 'bg-purple-50', textColor: 'text-purple-600', action: () => setShowRepairModal(true) },
                                 { label: 'Customers', icon: UserPlus, bgColor: 'bg-blue-50', textColor: 'text-blue-600', action: () => setShowCustomerModal(true) },
                                 { label: 'Inventory', icon: PackageOpen, bgColor: 'bg-amber-50', textColor: 'text-amber-600', action: () => setShowProductModal(true) },
-                                user.role === 'CEO' && { label: 'Daily Sheet', icon: FileText, bgColor: 'bg-emerald-50', textColor: 'text-emerald-600', action: () => navigate('/daily-sheet') },
+                                (user.role === 'CEO' || user.role === 'MANAGER') && { label: 'Daily Sheet', icon: FileText, bgColor: 'bg-emerald-50', textColor: 'text-emerald-600', action: () => navigate('/daily-sheet') },
+                                user.role === 'CEO' && { label: 'Analytics', icon: Activity, bgColor: 'bg-indigo-50', textColor: 'text-indigo-600', action: () => navigate('/analytics') },
                                 { label: 'Team', icon: Users, bgColor: 'bg-indigo-50', textColor: 'text-indigo-600', action: () => navigate('/team-management') }
                             ].filter(Boolean).map((action, i) => (
                                 <motion.button
