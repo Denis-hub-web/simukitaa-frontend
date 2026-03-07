@@ -18,6 +18,7 @@ import {
     faChevronRight,
     faUserPlus,
     faClock,
+    faHistory,
     faArrowUp,
     faExclamationTriangle,
     faEllipsisH,
