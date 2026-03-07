@@ -383,7 +383,7 @@ const AddDevicePage = () => {
                             </div>
                         )}
 
-                        {user.role === 'CEO' && product?.trackSerials === false && (
+                        {(user.role === 'CEO' || user.role === 'MANAGER') && product?.trackSerials === false && (
                             <div className="bg-gradient-to-br from-sky-50 to-indigo-50 rounded-2xl p-6 border-2 border-sky-200">
                                 <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
                                     🚚 Running Cost (Transport, etc.)

@@ -23,7 +23,7 @@ const ToolsPage = () => {
 
     const tools = [
         { title: 'Dashboard', desc: 'Home Overview', icon: LayoutGrid, color: 'text-blue-600', bg: 'bg-blue-50', link: '/dashboard', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { title: 'Sales History', desc: 'Transactional Ledger', icon: FileText, color: 'text-emerald-600', bg: 'bg-emerald-50', link: '/sales', roles: ['CEO', 'MANAGER'] },
+        { title: 'Sales History', desc: 'Transactional Ledger', icon: FileText, color: 'text-emerald-600', bg: 'bg-emerald-50', link: '/sales', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { title: 'Expenses', desc: 'Record & Track Costs', icon: Wallet, color: 'text-rose-600', bg: 'bg-rose-50', link: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { title: 'Trade-In Manager', desc: 'Approve & Add to Stock', icon: Repeat2, color: 'text-indigo-600', bg: 'bg-indigo-50', link: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { title: 'Stock Management', desc: 'Add & Organize Inventory', icon: PackageOpen, color: 'text-blue-600', bg: 'bg-blue-50', link: '/stock-management', roles: ['CEO', 'MANAGER'] },

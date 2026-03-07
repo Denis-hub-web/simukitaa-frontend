@@ -57,7 +57,7 @@ const DesktopLayout = () => {
 
     const menuItems = [
         { icon: LayoutGrid, label: 'Dashboard', path: '/dashboard', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { icon: ReceiptText, label: 'Sales History', path: '/sales', roles: ['CEO', 'MANAGER'] },
+        { icon: ReceiptText, label: 'Sales History', path: '/sales', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: Wallet, label: 'Expenses', path: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: Repeat2, label: 'Trade-In Manager', path: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: PackageOpen, label: 'Stock Management', path: '/stock-management', roles: ['CEO', 'MANAGER'] },
