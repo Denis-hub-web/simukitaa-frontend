@@ -471,11 +471,11 @@ const NewSalePage = () => {
     // Step info
     const getStepInfo = (step) => {
         const steps = [
-            { icon: faUser, title: 'Customer', color: 'from-blue-500 to-blue-600' },
-            { icon: faBarcode, title: 'Serial Number', color: 'from-green-500 to-green-600' },
-            { icon: faArrowsRotate, title: 'Trade-In', color: 'from-orange-500 to-pink-600' },
-            { icon: faCreditCard, title: 'Payment', color: 'from-indigo-500 to-purple-600' },
-            { icon: faCheckCircle, title: 'Review', color: 'from-emerald-500 to-teal-600' }
+            { icon: User, title: 'Customer' },
+            { icon: Barcode, title: 'Products' },
+            { icon: Repeat2, title: 'Trade-In' },
+            { icon: CreditCard, title: 'Payment' },
+            { icon: CheckCircle2, title: 'Review' }
         ];
         return steps[step - 1];
     };
@@ -499,7 +499,7 @@ const NewSalePage = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-[#008069] via-[#00a884] to-[#005c4b]"
+                        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-2xl"
                     >
                         {/* Background blobs */}
                         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl" />
@@ -604,10 +604,10 @@ const NewSalePage = () => {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 1.05 }}
-                                className="premium-card p-8 md:p-10"
+                                className="apple-card p-10 mb-10"
                             >
                                 <div className="flex items-center gap-4 mb-10">
-                                    <div className="premium-icon-box bg-blue-50 text-blue-500">
+                                    <div className="premium-icon-box bg-gray-100 text-gray-500">
                                         <User className="w-6 h-6" />
                                     </div>
                                     <div>
@@ -768,7 +768,7 @@ const NewSalePage = () => {
 
                                     <button
                                         onClick={() => setShowScannerModal(true)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-all shadow-apple-sm flex items-center gap-2"
                                     >
                                         <Camera className="w-4 h-4" />
                                         <span className="hidden sm:inline">Scan</span>
@@ -878,7 +878,7 @@ const NewSalePage = () => {
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        className="p-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 shadow-lg"
+                                        className="apple-card p-6"
                                     >
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="flex items-center gap-2">
@@ -947,7 +947,7 @@ const NewSalePage = () => {
                                                 <button
                                                     type="button"
                                                     onClick={addSelectedToCart}
-                                                    className="w-full py-4 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] bg-gray-900 text-white shadow-lg hover:scale-[1.01] transition-all"
+                                                    className="w-full py-4 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] bg-gray-900 text-white shadow-apple-sm hover:bg-black transition-all"
                                                 >
                                                     Add to Cart
                                                 </button>
@@ -957,7 +957,7 @@ const NewSalePage = () => {
                                                         addSelectedToCart();
                                                         handleNext();
                                                     }}
-                                                    className="w-full py-4 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all"
+                                                    className="w-full py-4 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] bg-blue-600 text-white shadow-apple-sm hover:bg-blue-700 transition-all"
                                                 >
                                                     Add & Continue
                                                     <ArrowRight className="inline-block w-4 h-4 ml-3" />
