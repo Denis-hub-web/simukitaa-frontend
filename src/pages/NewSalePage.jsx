@@ -749,7 +749,7 @@ const NewSalePage = () => {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 1.05 }}
-                                className="premium-card p-6 md:p-8"
+                                className="premium-card p-6 md:p-8 overflow-visible"
                             >
                                 <div className="flex items-center gap-4 mb-10">
                                     <div className="premium-icon-box bg-purple-50 text-purple-500">
@@ -761,8 +761,8 @@ const NewSalePage = () => {
                                     </div>
                                 </div>
 
-                                <div className="lg:grid lg:grid-cols-5 lg:gap-6">
-                                    <div className="lg:col-span-3">
+                                <div className="lg:grid lg:grid-cols-5 lg:gap-6 overflow-visible">
+                                    <div className="lg:col-span-3 relative overflow-visible isolate">
 
                                 {/* Unified Search Input */}
                                 <div className="relative mb-8 group">
@@ -796,7 +796,7 @@ const NewSalePage = () => {
                                                 initial={{ opacity: 0, y: -10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -10 }}
-                                                className="absolute z-50 left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-h-[500px] overflow-y-auto"
+                                                className="absolute z-[80] left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-h-[420px] overflow-y-auto"
                                             >
                                                 {/* Devices (by Serial) */}
                                                 {suggestions.length > 0 && (
