@@ -365,24 +365,24 @@ const SalesPage = () => {
     ).sort((a, b) => a.name.localeCompare(b.name));
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8 overflow-x-hidden" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
             {/* Modern Header */}
             <div className="max-w-7xl mx-auto mb-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                     <button
                         onClick={() => navigate('/dashboard')}
-                        className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors self-start"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span className="hidden sm:inline">Back</span>
                     </button>
 
-                    <div className="text-center flex-1">
+                    <div className="text-center sm:flex-1">
                         <h1 className="text-2xl md:text-3xl font-black text-gray-900">Sales History</h1>
                         <p className="text-sm text-gray-600 font-semibold mt-1">{filteredSales.length} transactions • {itemsSold} items</p>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 self-end sm:self-auto">
                         {isCEO && (
                             <>
                                 <button
@@ -431,7 +431,7 @@ const SalesPage = () => {
             <div className="max-w-7xl mx-auto">
                 <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-gray-100 mb-6 sticky top-2 z-10">
                     <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex-1 relative group min-w-[300px]">
+                        <div className="flex-1 relative group w-full sm:min-w-[260px] basis-full md:basis-auto">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
@@ -441,7 +441,7 @@ const SalesPage = () => {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm w-full sm:w-auto">
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-black text-blue-500 uppercase tracking-tighter">From</span>
                                 <input
@@ -462,7 +462,7 @@ const SalesPage = () => {
                                 />
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow w-full sm:w-auto">
                             <Filter className="w-4 h-4 text-purple-600" />
                             <select
                                 value={filterMethod}
@@ -477,7 +477,7 @@ const SalesPage = () => {
                                 ))}
                             </select>
                         </div>
-                        <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow w-full sm:w-auto">
                             <Filter className="w-4 h-4 text-blue-600" />
                             <select
                                 value={filterStaffId}
@@ -491,7 +491,7 @@ const SalesPage = () => {
                             </select>
                         </div>
                         {isCEO && (
-                            <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-3 rounded-2xl border-2 border-gray-200 shadow-sm">
+                            <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-3 rounded-2xl border-2 border-gray-200 shadow-sm w-full lg:w-auto">
                                 <div className="flex items-center gap-2">
                                     <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">Profit</span>
                                     <input
