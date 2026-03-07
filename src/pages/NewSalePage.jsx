@@ -575,27 +575,39 @@ const NewSalePage = () => {
                     </div>
                 </div>
 
-                <div className="premium-card p-10 mb-10">
-                    <div className="flex items-center justify-between relative max-w-2xl mx-auto">
-                        <div className="absolute top-6 left-0 right-0 h-0.5 bg-gray-100 -z-0" />
-                        {[1, 2, 3, 4, 5].map((stepNo) => {
-                            const stepInfo = getStepInfo(stepNo);
-                            return (
-                                <div key={stepNo} className="relative z-10 flex flex-col items-center gap-4">
-                                    <div className={getStepClasses(stepNo)}>
-                                        <stepInfo.icon className="w-5 h-5" />
+                {/* Step Progress */}
+                <div className="flex items-center mb-8">
+                    {[1, 2, 3, 4, 5].map((stepNo) => {
+                        const info = getStepInfo(stepNo);
+                        const StepIcon = info.icon;
+                        const isActive = stepNo === currentStep;
+                        const isDone = stepNo < currentStep;
+                        return (
+                            <div key={stepNo} className="flex items-center flex-1 last:flex-none">
+                                <button
+                                    type="button"
+                                    onClick={() => { if (isDone) setCurrentStep(stepNo); }}
+                                    className="flex flex-col items-center gap-1.5 flex-shrink-0 focus:outline-none"
+                                >
+                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25 scale-110 ring-4 ring-blue-100' : isDone ? 'bg-emerald-500 text-white cursor-pointer hover:bg-emerald-600' : 'bg-white text-gray-300 border-2 border-gray-100'}`}>
+                                        {isDone ? <CheckCircle2 className="w-4 h-4" /> : <StepIcon className="w-4 h-4" />}
                                     </div>
-                                    <span className={"text-[9px] font-black uppercase tracking-widest " + (stepNo === currentStep ? "text-blue-600" : "text-gray-400")}>
-                                        {stepInfo.title}
+                                    <span className={`text-[9px] font-black uppercase tracking-wider hidden sm:block transition-colors ${isActive ? 'text-blue-600' : isDone ? 'text-emerald-500' : 'text-gray-300'}`}>
+                                        {info.title}
                                     </span>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                </button>
+                                {stepNo < 5 && (
+                                    <div className={`flex-1 h-px mx-2 rounded-full transition-all duration-300 ${stepNo < currentStep ? 'bg-emerald-300' : 'bg-gray-100'}`} />
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* Content */}
-                <div className="max-w-4xl mx-auto">
+                <div>
+                    <div className="lg:flex lg:gap-6 lg:items-start">
+                    <div className="flex-1 min-w-0">
                     <AnimatePresence mode="wait">
                         {/* Step 1: Customer Selection */}
                         {currentStep === 1 && (
@@ -737,7 +749,7 @@ const NewSalePage = () => {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 1.05 }}
-                                className="premium-card p-8 md:p-10 min-h-[600px]"
+                                className="premium-card p-6 md:p-8"
                             >
                                 <div className="flex items-center gap-4 mb-10">
                                     <div className="premium-icon-box bg-purple-50 text-purple-500">
@@ -1149,27 +1161,34 @@ const NewSalePage = () => {
                                 </div>
 
                                 {/* Payment Methods */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-                                    {paymentMethods.map(method => (
-                                        <button
-                                            key={method}
-                                            onClick={() => setFormData({ ...formData, paymentMethod: method })}
-                                            className={`p-4 rounded-2xl border-2 transition-all text-[10px] font-black uppercase tracking-widest ${formData.paymentMethod === method
-                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-lg'
-                                                : 'border-gray-50 bg-gray-50/50 hover:bg-white text-gray-400 hover:text-gray-700 hover:border-gray-200'
-                                                }`}
-                                        >
-                                            {method.replace('_', ' ')}
-                                        </button>
-                                    ))}
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+                                    {paymentMethods.map(method => {
+                                        const sel = formData.paymentMethod === method;
+                                        return (
+                                            <button
+                                                key={method}
+                                                onClick={() => setFormData({ ...formData, paymentMethod: method })}
+                                                className={`p-4 rounded-2xl border-2 transition-all text-left group ${sel ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm'}`}
+                                            >
+                                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2.5 transition-all ${sel ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500'}`}>
+                                                    <CreditCard className="w-4 h-4" />
+                                                </div>
+                                                <div className={`text-xs font-black uppercase tracking-wider leading-tight ${sel ? 'text-blue-700' : 'text-gray-500'}`}>
+                                                    {method.replace(/_/g, ' ')}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                     <button
                                         onClick={() => setFormData({ ...formData, paymentMethod: 'CUSTOM' })}
-                                        className={`p-4 rounded-2xl border-2 transition-all text-[10px] font-black uppercase tracking-widest ${formData.paymentMethod === 'CUSTOM'
-                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-lg'
-                                            : 'border-gray-50 bg-gray-50/50 hover:bg-white text-gray-400 hover:text-gray-700 hover:border-gray-200'
-                                            }`}
+                                        className={`p-4 rounded-2xl border-2 transition-all text-left group ${formData.paymentMethod === 'CUSTOM' ? 'border-gray-900 bg-gray-900 shadow-md' : 'border-dashed border-gray-200 bg-gray-50 hover:border-gray-400'}`}
                                     >
-                                        + CUSTOM
+                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2.5 ${formData.paymentMethod === 'CUSTOM' ? 'bg-white/20 text-white' : 'bg-white text-gray-400 border border-gray-100'}`}>
+                                            <span className="text-base font-black leading-none">+</span>
+                                        </div>
+                                        <div className={`text-xs font-black uppercase tracking-wider ${formData.paymentMethod === 'CUSTOM' ? 'text-white' : 'text-gray-400'}`}>
+                                            Custom
+                                        </div>
                                     </button>
                                 </div>
 
@@ -1494,38 +1513,108 @@ const NewSalePage = () => {
                     </AnimatePresence>
 
                     {/* Navigation Buttons */}
-                    <div className="grid grid-cols-2 gap-4 mt-10">
+                    <div className="grid grid-cols-2 gap-3 mt-6">
                         <button
                             onClick={handleBack}
                             disabled={currentStep === 1}
-                            className={`py-5 rounded-3xl font-black uppercase tracking-[0.2em] text-[10px] transition-all ${currentStep === 1 ? 'opacity-0 cursor-default' : 'bg-white text-gray-400 border border-gray-100 hover:text-gray-900 shadow-lg'}`}
+                            className={`py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-2 ${currentStep === 1 ? 'opacity-0 pointer-events-none' : 'bg-white text-gray-500 border border-gray-100 hover:text-gray-900 hover:border-gray-200 shadow-sm'}`}
                         >
-                            <ArrowLeft className="inline-block w-4 h-4 mr-3" />
+                            <ArrowLeft className="w-4 h-4" />
                             Back
                         </button>
                         {currentStep < totalSteps ? (
                             <button
                                 onClick={handleNext}
                                 disabled={!isStepValid()}
-                                className={`py-5 rounded-3xl font-black uppercase tracking-[0.2em] text-[10px] transition-all ${isStepValid()
-                                    ? 'premium-btn-primary shadow-2xl shadow-blue-500/20'
-                                    : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed'
+                                className={`py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-2 ${isStepValid()
+                                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20'
+                                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
                                     }`}
                             >
                                 Next Step
-                                <ArrowRight className="inline-block w-4 h-4 ml-3" />
+                                <ArrowRight className="w-4 h-4" />
                             </button>
                         ) : (
                             <button
                                 onClick={handleSubmit}
                                 disabled={loading}
-                                className="py-5 rounded-3xl bg-gray-900 text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50"
+                                className="py-4 rounded-2xl bg-gray-900 text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-lg hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {loading ? 'Processing...' : 'Complete Sale'}
-                                <CheckCircle2 className="inline-block w-4 h-4 ml-3 text-emerald-300" />
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                             </button>
                         )}
                     </div>
+                    </div>{/* end flex-1 min-w-0 */}
+                    {/* Live Order Summary Sidebar */}
+                    {currentStep >= 2 && cartItems.length > 0 && (
+                        <div className="hidden lg:block w-64 xl:w-72 flex-shrink-0 sticky top-6">
+                            <div className="apple-card p-5 space-y-4">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Order Summary</p>
+                                {formData.customerName && (
+                                    <div className="flex items-center gap-2.5 p-3 bg-gray-50 rounded-xl">
+                                        <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-gray-100 flex-shrink-0">
+                                            <User className="w-3.5 h-3.5 text-gray-400" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-gray-900 text-sm truncate">{formData.customerName}</p>
+                                            <p className="text-[10px] text-gray-400">{formData.customerPhone}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="space-y-2">
+                                    {cartTotals.items.map(i => (
+                                        <div key={i.key} className="flex items-start justify-between gap-2">
+                                            <span className="text-xs text-gray-500 truncate flex-1 leading-tight">{i.productName}</span>
+                                            <span className="text-xs font-black text-gray-900 whitespace-nowrap tabular-nums">{Math.round(i.lineTotalAfterItemDiscount).toLocaleString()}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                {cartTotals.items.length > 0 && (
+                                    <>
+                                        <div className="h-px bg-gray-100" />
+                                        <div className="space-y-1.5 text-xs">
+                                            {cartTotals.itemDiscountTotal > 0 && (
+                                                <div className="flex justify-between text-red-500 font-semibold">
+                                                    <span>Item Discounts</span>
+                                                    <span>-{Math.round(cartTotals.itemDiscountTotal).toLocaleString()}</span>
+                                                </div>
+                                            )}
+                                            {cartTotals.invoiceDiscountAmount > 0 && (
+                                                <div className="flex justify-between text-red-500 font-semibold">
+                                                    <span>Invoice Disc.</span>
+                                                    <span>-{Math.round(cartTotals.invoiceDiscountAmount).toLocaleString()}</span>
+                                                </div>
+                                            )}
+                                            {(parseFloat(formData.tradeInValue) || 0) > 0 && (
+                                                <div className="flex justify-between text-orange-500 font-semibold">
+                                                    <span>Trade-In</span>
+                                                    <span>-{Math.round(parseFloat(formData.tradeInValue)).toLocaleString()}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="p-3 bg-gray-900 rounded-xl">
+                                            <div className="flex justify-between items-baseline">
+                                                <span className="text-white/50 text-[9px] font-black uppercase tracking-widest">Net Payable</span>
+                                                <span className="text-white font-black text-lg tabular-nums">{Math.round(cartTotals.netPayable).toLocaleString()}</span>
+                                            </div>
+                                            <div className="text-white/30 text-[9px] font-bold mt-0.5">TZS</div>
+                                            {formData.amountPaid && (
+                                                <div className={`flex justify-between items-center mt-2 text-[10px] font-black pt-2 border-t border-white/10 ${cartTotals.balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                    <span>{cartTotals.balance >= 0 ? 'Change' : 'Balance Due'}</span>
+                                                    <span className="tabular-nums">{Math.abs(Math.round(cartTotals.balance)).toLocaleString()} TZS</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                                <p className="text-center text-[9px] text-gray-300 font-bold uppercase tracking-widest">
+                                    {cartItems.length} item{cartItems.length !== 1 ? 's' : ''} · {formData.paymentMethod !== 'CASH' ? formData.paymentMethod.replace(/_/g, ' ') : 'Cash'}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    </div>{/* end lg:flex */}
                 </div>
 
                 {/* Trade-In Form Modal */}
