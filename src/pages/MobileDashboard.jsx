@@ -34,6 +34,7 @@ import {
     faUserCog,
     faFileAlt,
     faWallet,
+    faTrophy,
     faSignOutAlt,
     faMobileAlt
 } from '@fortawesome/free-solid-svg-icons';
