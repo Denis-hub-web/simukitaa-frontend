@@ -102,6 +102,7 @@ body {
   font-size: 16px;
   line-height: 1.6;
   color: var(--gray-900);
+  background: linear-gradient(180deg, #f7f7f9 0%, #f3f4f6 100%);
 }
 
 /* === LAYOUT UTILITIES === */
@@ -112,6 +113,26 @@ body {
 
 .premium-container {
   @apply max-w-7xl mx-auto px-4 md:px-6 lg:px-8;
+}
+
+.apple-surface {
+  @apply bg-white/80 backdrop-blur-2xl border border-white/60 shadow-apple-sm;
+}
+
+.apple-card {
+  @apply rounded-4xl bg-white border border-gray-100/80 shadow-apple-sm;
+}
+
+.apple-card:hover {
+  @apply shadow-apple-md;
+}
+
+.apple-title {
+  @apply text-2xl md:text-3xl font-semibold tracking-tight text-gray-900;
+}
+
+.apple-subtitle {
+  @apply text-sm text-gray-500;
 }
 
 .sr-only {

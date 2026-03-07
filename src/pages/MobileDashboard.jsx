@@ -168,9 +168,9 @@ const MobileDashboard = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#efeff4] flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-[#008069] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-gray-500 font-black uppercase tracking-widest text-[10px]">Loading Mobile Dashboard...</p>
                 </div>
             </div>
@@ -178,58 +178,65 @@ const MobileDashboard = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#efeff4] pb-24">
+        <div className="min-h-screen pb-24">
             {/* Classic Mobile Header */}
-            <div className="bg-[#008069] pb-10 pt-8 shadow-xl">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-white">
-                                <FontAwesomeIcon icon={faMobileAlt} />
+            <div className="sticky top-0 z-40">
+                <div className="apple-surface border-b border-white/40">
+                    <div className="max-w-6xl mx-auto px-4 pt-7 pb-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-apple-sm">
+                                    <FontAwesomeIcon icon={faMobileAlt} />
+                                </div>
+                                <div>
+                                    <h1 className="text-lg font-semibold tracking-tight text-gray-900">Simukitaa</h1>
+                                    <p className="text-xs text-gray-500">Dashboard</p>
+                                </div>
                             </div>
-                            <h1 className="text-xl font-black text-white tracking-tighter uppercase">Simukitaa</h1>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => { localStorage.clear(); window.location.href = '/login'; }} className="text-white/60 hover:text-white transition-colors p-2">
-                                <FontAwesomeIcon icon={faSignOutAlt} />
-                            </button>
-                            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white relative">
-                                <FontAwesomeIcon icon={faBell} />
-                                {notifications.filter(n => !n.isRead).length > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[8px] font-black border-2 border-[#008069]">
-                                        {notifications.filter(n => !n.isRead).length}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">Authenticated Account,</p>
-                            <h2 className="text-2xl font-black text-white tracking-tight">{user?.name?.split(' ')[0]}</h2>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => { localStorage.clear(); window.location.href = '/login'; }} className="text-gray-500 hover:text-gray-900 transition-colors p-2">
+                                    <FontAwesomeIcon icon={faSignOutAlt} />
+                                </button>
+                                <div className="w-10 h-10 bg-white rounded-2xl border border-gray-100 shadow-apple-sm flex items-center justify-center text-gray-700 relative">
+                                    <FontAwesomeIcon icon={faBell} className="text-gray-600" />
+                                    {notifications.filter(n => !n.isRead).length > 0 && (
+                                        <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-blue-600 rounded-full flex items-center justify-center text-[8px] font-black border-2 border-white">
+                                            {notifications.filter(n => !n.isRead).length}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2 bg-white/10 rounded-xl p-2 shrink-0">
-                            <input
-                                type="date"
-                                value={dateRange.start}
-                                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                                className="bg-transparent text-white text-[9px] font-black uppercase outline-none"
-                            />
-                            <span className="text-white/40 text-[9px]">to</span>
-                            <input
-                                type="date"
-                                value={dateRange.end}
-                                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                                className="bg-transparent text-white text-[9px] font-black uppercase outline-none"
-                            />
+
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-gray-500 text-[11px] font-semibold tracking-tight mb-1">Welcome back</p>
+                                <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">{user?.name?.split(' ')[0]}</h2>
+                            </div>
+
+                            <div className="flex items-center gap-2 bg-white rounded-2xl p-2 shrink-0 border border-gray-100 shadow-apple-sm">
+                                <input
+                                    type="date"
+                                    value={dateRange.start}
+                                    onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                                    className="bg-transparent text-gray-700 text-[10px] font-semibold outline-none"
+                                />
+                                <span className="text-gray-300 text-[10px]">to</span>
+                                <input
+                                    type="date"
+                                    value={dateRange.end}
+                                    onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                                    className="bg-transparent text-gray-700 text-[10px] font-semibold outline-none"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="max-w-6xl mx-auto px-4 -mt-6 relative z-10">
+            <div className="max-w-6xl mx-auto px-4 mt-6 relative z-10">
                 {/* Search Bar */}
                 <div className="mb-6">
                     <div className="relative">
@@ -239,7 +246,7 @@ const MobileDashboard = () => {
                             placeholder="Find records, inventory..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white border-none rounded-2xl py-4 pl-12 pr-4 shadow-lg focus:ring-2 focus:ring-[#008069] text-sm"
+                            className="w-full bg-white border border-gray-100 rounded-2xl py-4 pl-12 pr-4 shadow-apple-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-200 text-sm"
                         />
                     </div>
                 </div>
@@ -256,7 +263,7 @@ const MobileDashboard = () => {
                             {/* CEO Spotlight - Restricted to CEO */}
                             {user?.role === 'CEO' ? (
                                 <>
-                                    <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
+                                    <div className="apple-card p-6">
                                         <div className="flex justify-between items-start mb-6">
                                             <div>
                                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Revenue Today</p>
@@ -264,7 +271,7 @@ const MobileDashboard = () => {
                                                     {formatCurrency((metrics?.sales?.today?.revenue || 0) + (metrics?.repairs?.today?.revenue || 0))}
                                                 </h3>
                                             </div>
-                                            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+                                            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
                                                 <FontAwesomeIcon icon={faChartLine} className="text-xl" />
                                             </div>
                                         </div>
@@ -281,11 +288,11 @@ const MobileDashboard = () => {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <button onClick={() => navigate('/daily-sheet')} className="bg-[#008069] text-white p-6 rounded-[2rem] shadow-lg flex flex-col items-center gap-3">
+                                        <button onClick={() => navigate('/daily-sheet')} className="bg-blue-600 text-white p-6 rounded-[2rem] shadow-apple-md flex flex-col items-center gap-3">
                                             <FontAwesomeIcon icon={faFileAlt} className="text-2xl" />
                                             <span className="text-[10px] font-black uppercase tracking-widest">Daily Sheet</span>
                                         </button>
-                                        <button onClick={() => navigate('/analytics')} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col items-center gap-3 text-gray-900">
+                                        <button onClick={() => navigate('/analytics')} className="apple-card p-6 flex flex-col items-center gap-3 text-gray-900">
                                             <FontAwesomeIcon icon={faChartLine} className="text-2xl text-blue-600" />
                                             <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Analytics</span>
                                         </button>
@@ -406,7 +413,7 @@ const MobileDashboard = () => {
 
             {/* Bottom Nav */}
             <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-8">
-                <div className="max-w-xl mx-auto bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 p-2 flex items-center justify-between">
+                <div className="max-w-xl mx-auto apple-surface rounded-[2.5rem] p-2 flex items-center justify-between">
                     {[
                         { id: 'updates', icon: faBell },
                         { id: 'tools', icon: faBoxOpen },
@@ -417,7 +424,7 @@ const MobileDashboard = () => {
                         <button
                             key={tab.id}
                             onClick={() => tab.id === 'calculator' ? navigate('/stock-calculator') : setActiveTab(tab.id)}
-                            className={`flex-1 py-4 rounded-[2rem] flex flex-col items-center gap-1 transition-all ${activeTab === tab.id ? 'bg-[#008069] text-white shadow-lg' : 'text-gray-400'}`}
+                            className={`flex-1 py-4 rounded-[2rem] flex flex-col items-center gap-1 transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-apple-sm' : 'text-gray-500 hover:text-gray-900'}`}
                         >
                             {tab.isLucide ? (
                                 <Calculator className="w-5 h-5" />

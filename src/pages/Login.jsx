@@ -70,7 +70,7 @@ const Login = () => {
             whileTap={{ scale: 0.92 }}
             onClick={() => handleNumberClick(item.num)}
             disabled={isLoading}
-            className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex flex-col items-center justify-center text-white transition-all hover:bg-white/20 active:bg-white/30 disabled:opacity-50 overflow-hidden group"
+            className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10 backdrop-blur-xl border border-white/25 flex flex-col items-center justify-center text-white transition-all hover:bg-white/20 active:bg-white/30 disabled:opacity-50 overflow-hidden group shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
         >
             {/* Liquidity ripple effect */}
             {ripples[item.num] && (
@@ -96,7 +96,7 @@ const Login = () => {
     );
 
     return (
-        <div className="min-h-[100dvh] relative overflow-hidden flex items-center justify-center p-4">
+        <div className="min-h-[100dvh] relative overflow-hidden flex items-center justify-center p-4 bg-[#0b1020]">
             {/* High-Fidelity Image Background */}
             <div className="absolute inset-0 z-0">
                 <img
@@ -137,22 +137,26 @@ const Login = () => {
                 />
             </div>
 
-            <div className="relative z-10 w-full max-w-[280px] sm:max-w-[320px]">
-                {/* Title */}
+            <div className="relative z-10 w-full max-w-[360px]">
                 <motion.div
-                    initial={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-6 sm:mb-8"
+                    className="apple-surface rounded-[2.25rem] p-6 sm:p-8 shadow-apple-md"
                 >
-                    <h1 className="text-white text-lg sm:text-xl font-medium mb-4 sm:mb-5">Enter Passcode</h1>
+                    <div className="text-center mb-6">
+                        <div className="mx-auto mb-4 w-12 h-12 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-xl flex items-center justify-center">
+                            <div className="w-2.5 h-2.5 rounded-full bg-white/80" />
+                        </div>
+                        <h1 className="text-white text-xl sm:text-2xl font-semibold tracking-tight">Sign in</h1>
+                        <p className="text-white/60 text-sm mt-1">Enter your 6-digit passcode</p>
+                    </div>
 
-                    {/* Passcode Dots */}
                     <motion.div
                         animate={error ? {
                             x: [-10, 10, -10, 10, -5, 5, 0],
                             transition: { duration: 0.4 }
                         } : {}}
-                        className="flex justify-center gap-2.5 sm:gap-3 mb-8 sm:mb-10"
+                        className="flex justify-center gap-3 mb-6"
                     >
                         {[0, 1, 2, 3, 4, 5].map((index) => (
                             <motion.div
@@ -160,18 +164,17 @@ const Login = () => {
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 transition={{ delay: index * 0.05 }}
+                                className="w-3 h-3"
                             >
-                                <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border-2 transition-all duration-200 ${index < passcode.length
-                                    ? 'bg-white border-white scale-125'
-                                    : 'bg-transparent border-white/50'
+                                <div className={`w-3 h-3 rounded-full border transition-all duration-200 ${index < passcode.length
+                                    ? 'bg-white border-white scale-110'
+                                    : 'bg-transparent border-white/35'
                                     }`} />
                             </motion.div>
                         ))}
                     </motion.div>
-                </motion.div>
 
-                {/* Keypad */}
-                <div className="space-y-2.5 sm:space-y-3">
+                    <div className="space-y-2.5 sm:space-y-3">
                     {/* Numbers 1-9 */}
                     <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                         {keypadNumbers.map((item) => (
@@ -186,7 +189,7 @@ const Login = () => {
                             whileTap={{ scale: 0.92 }}
                             onClick={() => handleNumberClick('0')}
                             disabled={isLoading}
-                            className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white transition-all hover:bg-white/20 active:bg-white/30 disabled:opacity-50 overflow-hidden group"
+                            className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10 backdrop-blur-xl border border-white/25 flex items-center justify-center text-white transition-all hover:bg-white/20 active:bg-white/30 disabled:opacity-50 overflow-hidden group shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
                         >
                             {/* Liquidity ripple effect */}
                             {ripples['0'] && (
@@ -207,6 +210,13 @@ const Login = () => {
                     </div>
                 </div>
 
+                    <div className="mt-6 flex items-center justify-center">
+                        <div className={`text-xs font-medium ${error ? 'text-rose-200' : 'text-white/50'} transition-colors`}
+                        >
+                            {isLoading ? 'Verifying…' : error ? 'Invalid passcode. Try again.' : ' '}
+                        </div>
+                    </div>
+                </motion.div>
             </div>
         </div>
     );

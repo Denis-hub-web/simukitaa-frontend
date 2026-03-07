@@ -32,7 +32,14 @@ export default {
                 danger: '#EF4444',
             },
             fontFamily: {
-                sans: ['Inter', 'system-ui', 'sans-serif'],
+                sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Inter', 'Roboto', 'Arial', 'sans-serif'],
+            },
+            borderRadius: {
+                '4xl': '2rem',
+            },
+            boxShadow: {
+                'apple-sm': '0 1px 2px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.06)',
+                'apple-md': '0 2px 4px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.10)',
             },
             animation: {
                 'fadeIn': 'fadeIn 0.5s ease-in-out',
