@@ -28,7 +28,8 @@ const AdvancedReportPage = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const res = await axios.get(`${API_BASE_URL}/reports/daily-sheet?date=${dateRange.end}`, {
+            const res = await axios.get(`${API_BASE_URL}/reports/daily-sheet`, {
+                params: { startDate: dateRange.start, endDate: dateRange.end },
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Note: In a real app, we'd have a dedicated range endpoint. 
@@ -163,7 +164,7 @@ const AdvancedReportPage = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {reportData?.sales?.map((sale, idx) => (
+                            {(Array.isArray(reportData?.sales?.transactions) ? reportData.sales.transactions : []).map((sale, idx) => (
                                 <tr key={idx} className="hover:bg-blue-50/30 transition-colors group">
                                     <td className="py-6 px-8">
                                         <div className="flex flex-col">
