@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faSearch, faFilter, faMoneyBillWave, faReceipt, faUser, faPhone,
-    faCalendarAlt, faChevronRight, faPrint, faEllipsisV, faChartPie,
-    faCashRegister, faExchangeAlt, faBox, faClock, faUserTie, faArrowUp,
-    faDollarSign, faPercent, faShoppingCart, faFileInvoiceDollar, faRedo,
-    faArrowLeft, faSpinner, faFilePdf, faFileExcel
-} from '@fortawesome/free-solid-svg-icons';
+    ArrowLeft,
+    FileDown,
+    FileSpreadsheet,
+    Filter,
+    Loader2,
+    RefreshCcw,
+    Repeat2,
+    Search
+} from 'lucide-react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
@@ -213,9 +215,9 @@ const SalesPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <FontAwesomeIcon icon={faSpinner} className="text-5xl text-blue-600 animate-spin mb-3" />
+                    <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-3" />
                     <p className="text-gray-600 font-semibold">Loading sales...</p>
                 </div>
             </div>
@@ -225,9 +227,9 @@ const SalesPage = () => {
     const paymentMethods = Array.from(new Set(sales.map(s => s.paymentMethod).filter(Boolean))).sort();
 
     return (
-        <div className="min-h-screen bg-gray-50" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+        <div className="min-h-screen" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
             {/* Modern Header */}
-            <div className="bg-white border-b border-gray-200">
+            <div className="apple-surface border-b border-white/40">
                 <div className="max-w-[95%] mx-auto px-6 py-5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -235,7 +237,7 @@ const SalesPage = () => {
                                 onClick={() => navigate('/dashboard')}
                                 className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors mobile-only"
                             >
-                                <FontAwesomeIcon icon={faArrowLeft} className="text-gray-700 text-sm" />
+                                <ArrowLeft className="w-4 h-4 text-gray-700" />
                             </button>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Sales History</h1>
@@ -257,13 +259,13 @@ const SalesPage = () => {
                                         onClick={handleExportExcel}
                                         className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
                                     >
-                                        <FontAwesomeIcon icon={faFileExcel} /> Excel
+                                        <FileSpreadsheet className="w-4 h-4" /> Excel
                                     </button>
                                     <button
                                         onClick={handleExportPDF}
                                         className="px-4 py-2 bg-blue-50 text-blue-700 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
                                     >
-                                        <FontAwesomeIcon icon={faFilePdf} /> PDF
+                                        <FileDown className="w-4 h-4" /> PDF
                                     </button>
                                 </div>
                             </div>
@@ -273,11 +275,11 @@ const SalesPage = () => {
             </div>
 
             {/* Filters Toolbar */}
-            <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
+            <div className="apple-surface border-b border-white/40 sticky top-0 z-10">
                 <div className="max-w-[95%] mx-auto px-6 py-4">
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="flex-1 relative group min-w-[300px]">
-                            <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
                                 placeholder="Search by ID, product, customer, serial..."
@@ -308,7 +310,7 @@ const SalesPage = () => {
                             </div>
                         </div>
                         <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                            <FontAwesomeIcon icon={faFilter} className="text-purple-500" />
+                            <Filter className="w-4 h-4 text-purple-600" />
                             <select
                                 value={filterMethod}
                                 onChange={(e) => setFilterMethod(e.target.value)}
@@ -332,7 +334,7 @@ const SalesPage = () => {
                             }}
                             className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-blue-500 transition-all"
                         >
-                            <FontAwesomeIcon icon={faRedo} className={`${loading ? 'animate-spin' : ''} text-sm`} />
+                            <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                         </button>
                     </div>
                 </div>
@@ -411,7 +413,7 @@ const SalesPage = () => {
 
             {/* Clean Table Container */}
             <div className="max-w-[95%] mx-auto px-6 py-6">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="apple-card rounded-xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             {/* Minimal Header */}
@@ -516,7 +518,7 @@ const SalesPage = () => {
                                                 </div>
                                                 {isTradeIn && (
                                                     <div className="mt-1 inline-block px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-bold">
-                                                        <FontAwesomeIcon icon={faExchangeAlt} className="mr-1" />
+                                                        <Repeat2 className="inline-block w-3 h-3 mr-1" />
                                                         Trade-In
                                                     </div>
                                                 )}

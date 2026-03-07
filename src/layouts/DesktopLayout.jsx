@@ -3,6 +3,7 @@ import { useNavigate, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bell,
+    Calculator,
     Compass,
     LayoutGrid,
     LogOut,
@@ -17,6 +18,7 @@ import {
     Truck,
     Users,
     Wallet,
+    Wrench,
     X,
     ChevronRight
 } from 'lucide-react';
@@ -59,11 +61,13 @@ const DesktopLayout = () => {
         { icon: Wallet, label: 'Expenses', path: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: Repeat2, label: 'Trade-In Manager', path: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: PackageOpen, label: 'Stock Management', path: '/stock-management', roles: ['CEO', 'MANAGER'] },
+        { icon: Calculator, label: 'Calculator', path: '/stock-calculator', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: Truck, label: 'Supplier Network', path: '/suppliers', roles: ['CEO', 'MANAGER'] },
         { icon: Compass, label: 'Wanakitaa Hub', path: '/wanakitaa', roles: ['CEO', 'MANAGER'] },
         { icon: Megaphone, label: 'Campaigns', path: '/campaigns', roles: ['CEO', 'MANAGER'] },
         { icon: Mail, label: 'Templates', path: '/notification-templates', roles: ['CEO'] },
         { icon: Users, label: 'Team Management', path: '/team-management', roles: ['CEO', 'MANAGER'] },
+        { icon: Wrench, label: 'Tools', path: '/tools', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { icon: Settings, label: 'Settings', path: '/settings', roles: ['CEO', 'MANAGER', 'STAFF'] },
     ];
 

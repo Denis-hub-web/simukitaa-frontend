@@ -1,12 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faArrowLeft, faPlus, faBox, faSearch, faFilter, faTruck,
-    faExclamationTriangle, faCheckCircle, faBarcode, faEdit,
-    faEye, faCubes, faLayerGroup, faPalette, faSdCard, faTags
-} from '@fortawesome/free-solid-svg-icons';
+    ArrowLeft,
+    Barcode,
+    Box,
+    Boxes,
+    CheckCircle2,
+    Edit3,
+    Filter,
+    Layers3,
+    PackageOpen,
+    Plus,
+    Search,
+    Tags,
+    TriangleAlert,
+    Truck
+} from 'lucide-react';
 import axios from 'axios';
 
 import { API_URL as API_BASE_URL } from '../utils/api';
@@ -62,9 +72,9 @@ const StockManagement = () => {
     });
 
     const tabs = [
-        { id: 'all', label: 'All Products', icon: faCubes },
-        { id: 'supplier', label: 'By Supplier', icon: faTruck },
-        { id: 'lowStock', label: 'Low Stock', icon: faExclamationTriangle }
+        { id: 'all', label: 'All Products', icon: Boxes },
+        { id: 'supplier', label: 'By Supplier', icon: Truck },
+        { id: 'lowStock', label: 'Low Stock', icon: TriangleAlert }
     ];
 
     const filteredProducts = products.filter(p => {
@@ -94,11 +104,11 @@ const StockManagement = () => {
                         onClick={() => navigate('/dashboard')}
                         className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
                     >
-                        <FontAwesomeIcon icon={faArrowLeft} />
+                        <ArrowLeft className="w-4 h-4" />
                         <span className="hidden sm:inline">Back</span>
                     </button>
                     <h1 className="text-2xl md:text-3xl font-black text-gray-900 flex items-center gap-3">
-                        <FontAwesomeIcon icon={faBox} className="text-indigo-600" />
+                        <Box className="w-6 h-6 text-indigo-600" />
                         Stock Management
                     </h1>
                     <div className="flex gap-2">
@@ -106,14 +116,14 @@ const StockManagement = () => {
                             onClick={() => navigate('/stock-management/all-devices')}
                             className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"
                         >
-                            <FontAwesomeIcon icon={faCubes} />
+                            <Boxes className="w-4 h-4" />
                             <span className="hidden sm:inline">All Devices</span>
                         </button>
                         <button
                             onClick={() => navigate('/stock-management/add-product')}
                             className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"
                         >
-                            <FontAwesomeIcon icon={faPlus} />
+                            <Plus className="w-4 h-4" />
                             <span className="hidden sm:inline">Add Product</span>
                         </button>
                     </div>
@@ -159,7 +169,7 @@ const StockManagement = () => {
                                     : 'text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
-                                <FontAwesomeIcon icon={tab.icon} />
+                                <tab.icon className="w-4 h-4" />
                                 {tab.label}
                             </button>
                         ))}
@@ -170,7 +180,7 @@ const StockManagement = () => {
                 <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-gray-100 mb-6">
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
-                            <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
                                 value={searchQuery}
@@ -181,7 +191,7 @@ const StockManagement = () => {
                         </div>
                         {activeTab === 'supplier' && (
                             <div className="relative">
-                                <FontAwesomeIcon icon={faFilter} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <select
                                     value={selectedSupplier}
                                     onChange={(e) => setSelectedSupplier(e.target.value)}
@@ -207,7 +217,7 @@ const StockManagement = () => {
                     </div>
                 ) : filteredProducts.length === 0 ? (
                     <div className="bg-white rounded-3xl p-12 text-center shadow-lg">
-                        <FontAwesomeIcon icon={faBox} className="text-6xl text-gray-300 mb-4" />
+                        <PackageOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">No Products Found</h3>
                         <p className="text-gray-600 mb-6">
                             {searchQuery ? 'Try a different search term' : 'Get started by adding your first product'}
@@ -217,7 +227,7 @@ const StockManagement = () => {
                                 onClick={() => navigate('/stock-management/add-product')}
                                 className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
                             >
-                                <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                                <Plus className="inline-block w-4 h-4 mr-2" />
                                 Add First Product
                             </button>
                         )}
@@ -237,7 +247,7 @@ const StockManagement = () => {
                                     <div className="flex items-center gap-4">
                                         {/* Product Icon */}
                                         <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                                            <FontAwesomeIcon icon={faBox} className="text-2xl text-indigo-600" />
+                                            <Box className="w-7 h-7 text-indigo-600" />
                                         </div>
 
                                         {/* Product Info */}
@@ -246,30 +256,30 @@ const StockManagement = () => {
                                                 <h3 className="text-lg font-black text-gray-900 break-words">{product.name}</h3>
                                                 {(product.stockSummary?.total || 0) < 5 && (
                                                     <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-lg whitespace-nowrap">
-                                                        <FontAwesomeIcon icon={faExclamationTriangle} className="mr-1" />
+                                                        <TriangleAlert className="inline-block w-4 h-4 mr-1" />
                                                         Low Stock
                                                     </span>
                                                 )}
                                             </div>
                                             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                                                 <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl font-bold border border-blue-100">
-                                                    <FontAwesomeIcon icon={faBox} className="text-blue-500" />
+                                                    <Box className="w-4 h-4 text-blue-500" />
                                                     Available: {product.stockSummary?.total || 0}
                                                 </div>
                                                 <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-xl font-bold border border-green-100">
-                                                    <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" />
+                                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
                                                     Sold: {product.trackSerials !== false
                                                         ? (product.devices || []).filter(d => d.status === 'sold').length
                                                         : (product.totalSold || 0)}
                                                 </div>
                                                 {product.brand && (
                                                     <span className="flex items-center gap-1 text-gray-500 font-semibold">
-                                                        <FontAwesomeIcon icon={faCubes} className="text-gray-400" />
+                                                        <Boxes className="w-4 h-4 text-gray-400" />
                                                         {product.brand}
                                                     </span>
                                                 )}
                                                 <span className="flex items-center gap-1 text-gray-500 font-semibold">
-                                                    <FontAwesomeIcon icon={faTags} className="text-gray-400" />
+                                                    <Tags className="w-4 h-4 text-gray-400" />
                                                     {product.category || 'Phones'}
                                                 </span>
                                             </div>
@@ -316,7 +326,7 @@ const StockManagement = () => {
                                                     className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors"
                                                     title="Add Device"
                                                 >
-                                                    <FontAwesomeIcon icon={faPlus} />
+                                                    <Plus className="w-4 h-4" />
                                                 </button>
                                             )}
                                             <button
@@ -324,7 +334,11 @@ const StockManagement = () => {
                                                 className="p-3 bg-gray-50 text-gray-400 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-all flex items-center justify-center gap-2 border border-transparent hover:border-purple-100 group/btn"
                                                 title={product.trackSerials === false ? "View Details" : "View Devices"}
                                             >
-                                                <FontAwesomeIcon icon={product.trackSerials === false ? faLayerGroup : faBarcode} className="group-hover/btn:scale-110 transition-transform" />
+                                                {product.trackSerials === false ? (
+                                                    <Layers3 className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                                                ) : (
+                                                    <Barcode className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                                                )}
                                                 <span className="text-xs font-bold hidden sm:inline">
                                                     {product.trackSerials === false ? "View Details" : "View Devices"}
                                                 </span>
@@ -334,7 +348,7 @@ const StockManagement = () => {
                                                 className="p-3 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition-colors"
                                                 title="Edit Product"
                                             >
-                                                <FontAwesomeIcon icon={faEdit} />
+                                                <Edit3 className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </div>
