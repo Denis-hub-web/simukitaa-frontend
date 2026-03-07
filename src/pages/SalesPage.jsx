@@ -11,7 +11,7 @@ import {
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 import { API_URL as API_BASE_URL } from '../utils/api';
 
@@ -101,7 +101,7 @@ const SalesPage = () => {
         const summaryRevenue = filteredSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
         const summaryProfit = filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0);
 
-        doc.autoTable({
+        autoTable(doc, {
             startY: 55,
             head: [['Metric', 'Value']],
             body: [
@@ -115,7 +115,7 @@ const SalesPage = () => {
 
         // Transactions Table
         doc.text('Transaction Details', 15, doc.lastAutoTable.finalY + 15);
-        doc.autoTable({
+        autoTable(doc, {
             startY: doc.lastAutoTable.finalY + 20,
             head: [['Date', 'Product', 'Customer', 'Amount', 'Method']],
             body: filteredSales.map(t => [

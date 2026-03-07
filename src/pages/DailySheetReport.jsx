@@ -11,7 +11,7 @@ import {
 import axios from 'axios';
 import { API_URL } from '../utils/api';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { useNavigate } from 'react-router-dom';
 
 const DailySheetReport = () => {
@@ -130,7 +130,7 @@ const DailySheetReport = () => {
         doc.setFontSize(14);
         doc.text('Performance Summary', 15, 50);
 
-        doc.autoTable({
+        autoTable(doc, {
             startY: 55,
             head: [['Metric', 'Value']],
             body: [
@@ -146,7 +146,7 @@ const DailySheetReport = () => {
 
         // Sales Table
         doc.text('Top Sales Transactions', 15, doc.lastAutoTable.finalY + 15);
-        doc.autoTable({
+        autoTable(doc, {
             startY: doc.lastAutoTable.finalY + 20,
             head: [['Product', 'Staff', 'Amount', 'Method']],
             body: data.sales.transactions.slice(0, 20).map(t => [
