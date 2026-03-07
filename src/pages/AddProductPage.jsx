@@ -25,6 +25,9 @@ const AddProductPage = () => {
         initialQuantity: 0,
         buyingPrice: 0, // NEW: For simple products
         sellingPrice: 0, // NEW: For simple products
+        runningCostMode: 'TOTAL',
+        runningCostValue: '',
+        supplierId: '',
         storageOptions: '',
         colorOptions: '',
         simTypeOptions: 'DUAL_SIM, ESIM, PHYSICAL_SIM',
@@ -112,6 +115,11 @@ const AddProductPage = () => {
                 trackSerials: formData.trackSerials,
                 initialQuantity: parseInt(formData.initialQuantity) || 0,
                 buyingPrice: parseFloat(formData.buyingPrice) || 0,
+                runningCostMode: !formData.trackSerials ? formData.runningCostMode : undefined,
+                runningCostValue: !formData.trackSerials
+                    ? (formData.runningCostValue !== '' ? parseFloat(formData.runningCostValue) : null)
+                    : undefined,
+                supplierId: !formData.trackSerials ? (formData.supplierId || null) : undefined,
                 variants: {
                     storage: (formData.trackSerials && storageArray.length > 0) ? storageArray : ['Standard'],
                     color: (formData.trackSerials && colorArray.length > 0) ? colorArray : ['Standard'],
@@ -333,6 +341,48 @@ const AddProductPage = () => {
                                                 />
                                             </div>
                                         </>
+                                    )}
+
+                                    {(user.role === 'CEO' || user.role === 'MANAGER') && (
+                                        <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                                    Running Cost Mode
+                                                </label>
+                                                <select
+                                                    value={formData.runningCostMode}
+                                                    onChange={(e) => setFormData({ ...formData, runningCostMode: e.target.value })}
+                                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all"
+                                                >
+                                                    <option value="TOTAL">Total (batch)</option>
+                                                    <option value="PER_ITEM">Per item</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                                    Running Cost Value (TZS)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    value={formData.runningCostValue}
+                                                    onChange={(e) => setFormData({ ...formData, runningCostValue: e.target.value })}
+                                                    placeholder="e.g., 10000"
+                                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                                    Supplier ID (optional)
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.supplierId}
+                                                    onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
+                                                    placeholder="e.g., sup_123"
+                                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all"
+                                                />
+                                            </div>
+                                        </div>
                                     )}
                                     <p className="text-xs text-indigo-600 mt-2 font-medium md:col-span-3">
                                         💡 Simplified Mode: Just enter the quantity and prices. Variants and categories are hidden for speed.
