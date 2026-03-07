@@ -7,7 +7,7 @@ import {
     faSearch, faCog, faSignOutAlt, faReceipt,
     faArrowRight, faShieldAlt, faMicrochip, faHistory, faChartLine, faCalendar
 } from '@fortawesome/free-solid-svg-icons';
-import { salesAPI, repairAPI, expenseAPI } from '../utils/api';
+import { salesAPI, repairAPI, expenseAPI, dashboardAPI } from '../utils/api';
 import Modal from '../components/Modal';
 import ConversationalSaleForm from '../components/ConversationalSaleForm';
 import AddCustomerForm from '../components/AddCustomerForm';
@@ -22,6 +22,8 @@ const StaffDashboard = () => {
     const [showCustomerModal, setShowCustomerModal] = useState(false);
     const [showRepairModal, setShowRepairModal] = useState(false);
     const [personalExpenses, setPersonalExpenses] = useState(null);
+    const [activityFeed, setActivityFeed] = useState([]);
+    const [expenseList, setExpenseList] = useState([]);
     const [successMessage, setSuccessMessage] = useState('');
     const [dateRange, setDateRange] = useState({
         start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
@@ -34,12 +36,16 @@ const StaffDashboard = () => {
         loadStats();
     }, []);
 
+    useEffect(() => {
+        loadTimeBoundData();
+    }, [dateRange.start, dateRange.end]);
+
     const loadStats = async () => {
         try {
             const [salesRes, repairsRes, expensesRes] = await Promise.all([
                 salesAPI.getStats(),
                 repairAPI.getStats(),
-                expenseAPI.getSummary()
+                expenseAPI.getSummary({ startDate: dateRange.start, endDate: dateRange.end })
             ]);
             setStats({ sales: salesRes.data.data, repairs: repairsRes.data.data });
             setPersonalExpenses(expensesRes.data.data);
@@ -50,6 +56,21 @@ const StaffDashboard = () => {
                 repairs: { total: 0, pending: 0, inProgress: 0, completed: 0 }
             });
             setLoading(false);
+        }
+    };
+
+    const loadTimeBoundData = async () => {
+        try {
+            const params = { startDate: dateRange.start, endDate: dateRange.end };
+            const [activityRes, expensesRes] = await Promise.all([
+                dashboardAPI.getActivityFeed(params),
+                expenseAPI.getAll(params)
+            ]);
+            setActivityFeed(Array.isArray(activityRes.data.data) ? activityRes.data.data : []);
+            setExpenseList(Array.isArray(expensesRes.data.data) ? expensesRes.data.data : []);
+        } catch (error) {
+            setActivityFeed([]);
+            setExpenseList([]);
         }
     };
 
@@ -181,20 +202,54 @@ const StaffDashboard = () => {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex items-center gap-6 p-6 bg-gray-50/50 rounded-[2rem] border border-gray-100 group transition-all">
-                            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#008069] shadow-inner shrink-0 group-hover:scale-110 transition-transform">
-                                <FontAwesomeIcon icon={faMicrochip} />
+                        {activityFeed.length === 0 ? (
+                            <div className="text-center py-10 opacity-20">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No recent activity</p>
                             </div>
-                            <div className="flex-1">
-                                <p className="text-sm font-black text-gray-900 group-hover:text-[#008069] transition-colors uppercase">System Online</p>
-                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">All systems are running correctly</p>
-                            </div>
-                            <p className="text-[10px] font-black text-gray-300 uppercase">Now</p>
-                        </div>
+                        ) : (
+                            activityFeed.slice(0, 30).map((ev) => (
+                                <div key={ev.id} className="flex items-center gap-6 p-6 bg-gray-50/50 rounded-[2rem] border border-gray-100 group transition-all">
+                                    <div className={`w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-inner shrink-0 group-hover:scale-110 transition-transform ${ev.type === 'sale' ? 'text-emerald-600' : ev.type === 'expense' ? 'text-rose-600' : 'text-purple-600'}`}>
+                                        <FontAwesomeIcon icon={ev.type === 'sale' ? faMoneyBillWave : ev.type === 'expense' ? faReceipt : faTools} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-black text-gray-900 group-hover:text-[#008069] transition-colors uppercase truncate">{ev.title}</p>
+                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest truncate">{ev.subtitle}</p>
+                                    </div>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase">{(ev.amount || 0).toLocaleString()} /=</p>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
 
-                        <div className="text-center py-10 opacity-20">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No recent activity</p>
+                {/* Expenses List */}
+                <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-100 mt-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-2xl font-black text-gray-900 tracking-tighter mb-1 uppercase">My Expenses</h2>
+                            <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Expenses you recorded</p>
                         </div>
+                        <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300">
+                            <FontAwesomeIcon icon={faReceipt} />
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        {expenseList.length === 0 ? (
+                            <div className="text-center py-10 opacity-20">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No expenses in range</p>
+                            </div>
+                        ) : (
+                            expenseList.slice(0, 30).map((e) => (
+                                <div key={e.id} className="flex items-center justify-between gap-6 p-6 bg-gray-50/50 rounded-[2rem] border border-gray-100">
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-black text-gray-900 uppercase truncate">{e.category}</p>
+                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest truncate">{e.description}</p>
+                                    </div>
+                                    <p className="text-[10px] font-black text-rose-600 uppercase">{(e.amount || 0).toLocaleString()} /=</p>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

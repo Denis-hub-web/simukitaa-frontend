@@ -9,12 +9,15 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { API_URL } from '../utils/api';
+import { dashboardAPI, expenseAPI } from '../utils/api';
 
 const ManagerDashboard = () => {
     const navigate = useNavigate();
     const [teamData, setTeamData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [generatingAI, setGeneratingAI] = useState(false);
+    const [activityFeed, setActivityFeed] = useState([]);
+    const [expenseList, setExpenseList] = useState([]);
 
     // Get user for role checking
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -29,6 +32,10 @@ const ManagerDashboard = () => {
         loadTeamPerformance();
     }, []);
 
+    useEffect(() => {
+        loadMyData();
+    }, [dateRange.start, dateRange.end]);
+
     const loadTeamPerformance = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -40,6 +47,25 @@ const ManagerDashboard = () => {
         } catch (error) {
             console.error('Failed to load team performance:', error);
             setLoading(false);
+        }
+    };
+
+    const loadMyData = async () => {
+        try {
+            const params = {
+                startDate: dateRange.start,
+                endDate: dateRange.end,
+                createdBy: user?.id || user?.userId
+            };
+            const [activityRes, expensesRes] = await Promise.all([
+                dashboardAPI.getActivityFeed(params),
+                expenseAPI.getAll(params)
+            ]);
+            setActivityFeed(Array.isArray(activityRes.data.data) ? activityRes.data.data : []);
+            setExpenseList(Array.isArray(expensesRes.data.data) ? expensesRes.data.data : []);
+        } catch (error) {
+            setActivityFeed([]);
+            setExpenseList([]);
         }
     };
 
@@ -235,6 +261,71 @@ const ManagerDashboard = () => {
                                 </div>
                             </motion.div>
                         ))}
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 mt-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-2xl font-black text-gray-900 tracking-tighter mb-1 uppercase">My Activity</h2>
+                            <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Date range feed</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-black text-[#008069] uppercase tracking-widest">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
+                            Live
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        {activityFeed.length === 0 ? (
+                            <div className="text-center py-10 opacity-20">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No activity in range</p>
+                            </div>
+                        ) : (
+                            activityFeed.slice(0, 30).map((ev) => (
+                                <div key={ev.id} className="group p-6 rounded-[1.5rem] bg-gray-50/50 border border-gray-100 flex items-center gap-6">
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${ev.type === 'sale' ? 'bg-emerald-50 text-emerald-600' : ev.type === 'expense' ? 'bg-rose-50 text-rose-600' : 'bg-purple-50 text-purple-600'}`}>
+                                        <FontAwesomeIcon icon={ev.type === 'sale' ? faMoneyBillWave : ev.type === 'expense' ? faMoneyBillWave : faBoxOpen} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-black text-gray-900 uppercase truncate">{ev.title}</p>
+                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest truncate">{ev.subtitle}</p>
+                                    </div>
+                                    {user?.role === 'CEO' && (
+                                        <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{formatCurrency(ev.amount || 0)}</p>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 mt-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-2xl font-black text-gray-900 tracking-tighter mb-1 uppercase">My Expenses</h2>
+                            <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Recorded costs</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        {expenseList.length === 0 ? (
+                            <div className="text-center py-10 opacity-20">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No expenses in range</p>
+                            </div>
+                        ) : (
+                            expenseList.slice(0, 30).map((e) => (
+                                <div key={e.id} className="group p-6 rounded-[1.5rem] bg-gray-50/50 border border-gray-100 flex items-center justify-between gap-6">
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-black text-gray-900 uppercase truncate">{e.category}</p>
+                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest truncate">{e.description}</p>
+                                    </div>
+                                    {user?.role === 'CEO' && (
+                                        <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest">{formatCurrency(e.amount || 0)}</p>
+                                    )}
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

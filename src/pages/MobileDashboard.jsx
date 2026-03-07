@@ -46,6 +46,7 @@ import AddProductForm from '../components/AddProductForm';
 import SettingsTab from '../components/SettingsTab';
 import BusinessCalculator from '../components/BusinessCalculator';
 import AIBusinessIntelligence from '../components/AIBusinessIntelligence';
+import { dashboardAPI, expenseAPI, productAPI } from '../utils/api';
 
 const MobileDashboard = () => {
     const navigate = useNavigate();
@@ -63,6 +64,9 @@ const MobileDashboard = () => {
     const [showCustomerModal, setShowCustomerModal] = useState(false);
     const [showProductModal, setShowProductModal] = useState(false);
     const [personalExpenses, setPersonalExpenses] = useState(null);
+    const [activityFeed, setActivityFeed] = useState([]);
+    const [lowStockItems, setLowStockItems] = useState([]);
+    const [topStaff, setTopStaff] = useState([]);
     const [successMessage, setSuccessMessage] = useState('');
     const [dateRange, setDateRange] = useState({
         start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
@@ -92,6 +96,10 @@ const MobileDashboard = () => {
         return () => clearInterval(interval);
     }, []);
 
+    useEffect(() => {
+        loadTimeBoundData();
+    }, [dateRange.start, dateRange.end]);
+
     const loadDashboardData = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -102,10 +110,40 @@ const MobileDashboard = () => {
 
             setMetrics(metricsRes.data.data);
             setNotifications(Array.isArray(notifRes.data.data.notifications) ? notifRes.data.data.notifications : []);
+
+            if (user?.role === 'CEO') {
+                const [lowStockRes, perfRes] = await Promise.all([
+                    productAPI.getLowStock(),
+                    axios.get(`${API_URL}/manager/team-performance`, { headers: { Authorization: `Bearer ${token}` } })
+                ]);
+                setLowStockItems(lowStockRes.data.data || []);
+                setTopStaff((perfRes.data.data?.data?.team || []).slice(0, 5));
+            }
         } catch (error) {
             console.error('Data sync failed:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadTimeBoundData = async () => {
+        try {
+            const params = {
+                startDate: dateRange.start,
+                endDate: dateRange.end
+            };
+
+            const [activityRes, expensesRes] = await Promise.all([
+                dashboardAPI.getActivityFeed(params),
+                expenseAPI.getAll(params)
+            ]);
+
+            setActivityFeed(Array.isArray(activityRes.data.data) ? activityRes.data.data : []);
+            setPersonalExpenses(Array.isArray(expensesRes.data.data) ? expensesRes.data.data : []);
+        } catch (error) {
+            console.error('Failed to load time bound data:', error);
+            setActivityFeed([]);
+            setPersonalExpenses([]);
         }
     };
 
@@ -298,6 +336,71 @@ const MobileDashboard = () => {
                                         </button>
                                     </div>
 
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div className="apple-card p-6">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Low Stock Alert</p>
+                                                    <h3 className="text-xl font-black text-gray-900 tracking-tighter">
+                                                        {lowStockItems.length} Items
+                                                    </h3>
+                                                </div>
+                                                <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
+                                                    <FontAwesomeIcon icon={faExclamationTriangle} className="text-xl" />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-3">
+                                                {lowStockItems.slice(0, 4).map((p) => (
+                                                    <div key={p.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-black text-gray-900 truncate uppercase">{p.name}</p>
+                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Qty: {p.quantity}</p>
+                                                        </div>
+                                                        <button onClick={() => navigate('/stock-management')} className="text-[10px] font-black text-blue-600 uppercase tracking-widest">View</button>
+                                                    </div>
+                                                ))}
+                                                {lowStockItems.length === 0 && (
+                                                    <div className="text-center py-6 opacity-40">
+                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">All stock healthy</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="apple-card p-6">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Top Performing Staff</p>
+                                                    <h3 className="text-xl font-black text-gray-900 tracking-tighter">Leaderboard</h3>
+                                                </div>
+                                                <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+                                                    <FontAwesomeIcon icon={faTrophy} className="text-xl" />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-3">
+                                                {topStaff.map((m, idx) => (
+                                                    <div key={m.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                                        <div className="flex items-center gap-3 min-w-0">
+                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] ${idx === 0 ? 'bg-amber-50 text-amber-600' : 'bg-white text-gray-600 border border-gray-100'}`}>
+                                                                #{idx + 1}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="text-xs font-black text-gray-900 truncate uppercase">{m.name}</p>
+                                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{m.salesCount} sales</p>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{formatCurrency(m.revenue)}</p>
+                                                    </div>
+                                                ))}
+                                                {topStaff.length === 0 && (
+                                                    <div className="text-center py-6 opacity-40">
+                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No data</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <AIBusinessIntelligence />
                                 </>
                             ) : (
@@ -341,6 +444,59 @@ const MobileDashboard = () => {
                                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Register device</p>
                                                 </div>
                                             </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-gray-100">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h3 className="text-xl font-black text-gray-900 tracking-tighter uppercase">My Activity</h3>
+                                            <FontAwesomeIcon icon={faHistory} className="text-gray-300" />
+                                        </div>
+                                        <div className="space-y-3 max-h-[55vh] overflow-y-auto no-scrollbar">
+                                            {activityFeed.length === 0 ? (
+                                                <div className="text-center py-12 opacity-25">
+                                                    <p className="text-[10px] font-black uppercase tracking-widest">No activity</p>
+                                                </div>
+                                            ) : (
+                                                activityFeed.slice(0, 30).map((ev) => (
+                                                    <div key={ev.id} className="p-4 rounded-2xl border border-gray-100 bg-gray-50 flex items-start gap-4">
+                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${ev.type === 'sale' ? 'bg-emerald-100 text-emerald-600' : ev.type === 'expense' ? 'bg-rose-100 text-rose-600' : 'bg-purple-100 text-purple-600'}`}>
+                                                            <FontAwesomeIcon icon={ev.type === 'sale' ? faMoneyBillWave : ev.type === 'expense' ? faWallet : faTools} />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-black text-gray-900 uppercase truncate">{ev.title}</p>
+                                                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest truncate">{ev.subtitle}</p>
+                                                        </div>
+                                                        <div className="text-right shrink-0">
+                                                            <p className="text-[10px] font-black text-gray-900 uppercase">{formatCurrency(ev.amount || 0)}</p>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-gray-100">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h3 className="text-xl font-black text-gray-900 tracking-tighter uppercase">My Expenses</h3>
+                                            <FontAwesomeIcon icon={faWallet} className="text-gray-300" />
+                                        </div>
+                                        <div className="space-y-3 max-h-[55vh] overflow-y-auto no-scrollbar">
+                                            {personalExpenses.length === 0 ? (
+                                                <div className="text-center py-12 opacity-25">
+                                                    <p className="text-[10px] font-black uppercase tracking-widest">No expenses</p>
+                                                </div>
+                                            ) : (
+                                                personalExpenses.slice(0, 30).map((e) => (
+                                                    <div key={e.id} className="p-4 rounded-2xl border border-gray-100 bg-gray-50 flex items-start justify-between gap-4">
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-black text-gray-900 uppercase truncate">{e.category}</p>
+                                                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest truncate">{e.description}</p>
+                                                        </div>
+                                                        <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest shrink-0">{formatCurrency(e.amount || 0)}</p>
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
                                     </div>
                                 </>

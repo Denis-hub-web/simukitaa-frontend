@@ -71,7 +71,8 @@ export const authAPI = {
 export const dashboardAPI = {
     getMetrics: () => api.get('/dashboard/metrics'),
     getRecentSales: (limit = 10) => api.get(`/dashboard/recent-sales?limit=${limit}`),
-    getSalesChart: () => api.get('/dashboard/sales-chart')
+    getSalesChart: () => api.get('/dashboard/sales-chart'),
+    getActivityFeed: (params) => api.get('/dashboard/activity', { params })
 };
 
 // Customer APIs
@@ -170,6 +171,12 @@ export const tradeInAPI = {
 export const reportsAPI = {
     getSales: (params) => api.get('/reports/sales', { params }),
     getImports: (params) => api.get('/reports/imports', { params })
+};
+
+export const expenseAPI = {
+    getAll: (params) => api.get('/expenses', { params }),
+    getSummary: (params) => api.get('/expenses/summary', { params }),
+    create: (data) => api.post('/expenses', data)
 };
 
 // Payment APIs

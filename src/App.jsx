@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import AdvancedReportPage from './pages/AdvancedReportPage';
 import DesktopLayout from './layouts/DesktopLayout';
+import MobileLayout from './layouts/MobileLayout';
 import MobileDashboard from './pages/MobileDashboard';
 import CEOStockManagement from './pages/CEOStockManagement';
 import CEODataDashboard from './pages/CEODataDashboard';
@@ -105,173 +106,51 @@ function App() {
                         <Route path="/" element={<Navigate to="/dashboard" />} />
                     </Route>
                 ) : (
-                    <>
-                        <Route
-                            path="/dashboard"
-                            element={isLoggedIn ? <MobileDashboard /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/stock"
-                            element={isLoggedIn ? <CEOStockManagement /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/manager"
-                            element={isLoggedIn ? <ManagerDashboard /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/trade-ins/*"
-                            element={isLoggedIn ? <TradeInRouter /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/settings"
-                            element={isLoggedIn ? <SettingsPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/settings/whatsapp"
-                            element={isLoggedIn ? <WhatsAppTemplates /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/ceo-data"
-                            element={isLoggedIn ? <CEODataDashboard /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/technicians"
-                            element={isLoggedIn ? <TechnicianManagement /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/technician-dashboard"
-                            element={isLoggedIn ? <TechnicianDashboard /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/repairs"
-                            element={isLoggedIn ? <RepairManagement /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/repairs/new"
-                            element={isLoggedIn ? <CreateRepairPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/repairs/:id"
-                            element={isLoggedIn ? <RepairDetail /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/repair-form"
-                            element={isLoggedIn ? <ProgressiveRepairForm /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/repair-form/:id"
-                            element={isLoggedIn ? <ProgressiveRepairForm /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/repairs/:id/diagnosis-action"
-                            element={isLoggedIn ? <DiagnosisActionPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/deliveries"
-                            element={isLoggedIn ? <DeliveryDashboard /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/deliveries/:id"
-                            element={isLoggedIn ? <DeliveryDetail /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/users"
-                            element={isLoggedIn ? <UserManagement /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/messages"
-                            element={isLoggedIn ? <MessageCenter /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/wanakitaa"
-                            element={isLoggedIn ? <WanakitaaHub /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/sales/new"
-                            element={isLoggedIn ? <NewSalePage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/sales"
-                            element={isLoggedIn ? <SalesPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/suppliers"
-                            element={isLoggedIn ? <SupplierManagement /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/stock-management"
-                            element={isLoggedIn ? <StockManagement /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/stock-management/add-product"
-                            element={isLoggedIn ? <AddProductPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/stock-management/add-device/:productId"
-                            element={isLoggedIn ? <AddDevicePage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/stock-management/devices/:productId"
-                            element={isLoggedIn ? <ViewDevicesPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/stock-management/edit-product/:productId"
-                            element={isLoggedIn ? <EditProductPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/stock-management/all-devices"
-                            element={isLoggedIn ? <AllDevicesPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/notification-templates"
-                            element={isLoggedIn ? <NotificationTemplates /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/notification-preferences"
-                            element={isLoggedIn ? <NotificationPreferences /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/campaigns"
-                            element={isLoggedIn ? <CampaignManager /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/campaigns/create"
-                            element={isLoggedIn ? <CreateCampaign /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/campaigns/:id"
-                            element={isLoggedIn ? <CampaignDetail /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/serial-scanner-test"
-                            element={isLoggedIn ? <SerialNumberScanner /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/team-management"
-                            element={isLoggedIn ? <TeamManagement /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/stock-inventory"
-                            element={isLoggedIn ? <StockInventoryPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/stock-calculator"
-                            element={isLoggedIn ? <StockCalculatorPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/reports"
-                            element={isLoggedIn ? <ReportsPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/expenses"
-                            element={isLoggedIn ? <ExpensesPage /> : <Navigate to="/login" />}
-                        />
-                        <Route
-                            path="/daily-sheet"
-                            element={isLoggedIn ? <DailySheetReport /> : <Navigate to="/login" />}
-                        />
-                        <Route path="/" element={<Navigate to="/login" />} />
-                    </>
+                    <Route element={isLoggedIn ? <MobileLayout /> : <Navigate to="/login" />}>
+                        <Route path="/dashboard" element={<MobileDashboard />} />
+                        <Route path="/stock" element={<CEOStockManagement />} />
+                        <Route path="/manager" element={<ManagerDashboard />} />
+                        <Route path="/trade-ins/*" element={<TradeInRouter />} />
+                        <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/settings/whatsapp" element={<WhatsAppTemplates />} />
+                        <Route path="/ceo-data" element={<CEODataDashboard />} />
+                        <Route path="/technicians" element={<TechnicianManagement />} />
+                        <Route path="/technician-dashboard" element={<TechnicianDashboard />} />
+                        <Route path="/repairs" element={<RepairManagement />} />
+                        <Route path="/repairs/new" element={<CreateRepairPage />} />
+                        <Route path="/repairs/:id" element={<RepairDetail />} />
+                        <Route path="/repair-form" element={<ProgressiveRepairForm />} />
+                        <Route path="/repair-form/:id" element={<ProgressiveRepairForm />} />
+                        <Route path="/repairs/:id/diagnosis-action" element={<DiagnosisActionPage />} />
+                        <Route path="/deliveries" element={<DeliveryDashboard />} />
+                        <Route path="/deliveries/:id" element={<DeliveryDetail />} />
+                        <Route path="/users" element={<UserManagement />} />
+                        <Route path="/messages" element={<MessageCenter />} />
+                        <Route path="/wanakitaa" element={<WanakitaaHub />} />
+                        <Route path="/sales/new" element={<NewSalePage />} />
+                        <Route path="/sales" element={<SalesPage />} />
+                        <Route path="/suppliers" element={<SupplierManagement />} />
+                        <Route path="/stock-management" element={<StockManagement />} />
+                        <Route path="/stock-management/add-product" element={<AddProductPage />} />
+                        <Route path="/stock-management/add-device/:productId" element={<AddDevicePage />} />
+                        <Route path="/stock-management/devices/:productId" element={<ViewDevicesPage />} />
+                        <Route path="/stock-management/edit-product/:productId" element={<EditProductPage />} />
+                        <Route path="/stock-management/all-devices" element={<AllDevicesPage />} />
+                        <Route path="/notification-templates" element={<NotificationTemplates />} />
+                        <Route path="/notification-preferences" element={<NotificationPreferences />} />
+                        <Route path="/campaigns" element={<CampaignManager />} />
+                        <Route path="/campaigns/create" element={<CreateCampaign />} />
+                        <Route path="/campaigns/:id" element={<CampaignDetail />} />
+                        <Route path="/serial-scanner-test" element={<SerialNumberScanner />} />
+                        <Route path="/team-management" element={<TeamManagement />} />
+                        <Route path="/stock-inventory" element={<StockInventoryPage />} />
+                        <Route path="/stock-calculator" element={<StockCalculatorPage />} />
+                        <Route path="/reports" element={<ReportsPage />} />
+                        <Route path="/expenses" element={<ExpensesPage />} />
+                        <Route path="/daily-sheet" element={<DailySheetReport />} />
+                        <Route path="/tools" element={<ToolsPage />} />
+                        <Route path="/" element={<Navigate to="/dashboard" />} />
+                    </Route>
                 )}
 
                 <Route path="/rate/:token" element={<CustomerReview />} />
