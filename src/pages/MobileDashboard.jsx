@@ -116,8 +116,14 @@ const MobileDashboard = () => {
                     productAPI.getLowStock(),
                     axios.get(`${API_URL}/manager/team-performance`, { headers: { Authorization: `Bearer ${token}` } })
                 ]);
-                setLowStockItems(lowStockRes.data.data || []);
-                setTopStaff((perfRes.data.data?.data?.team || []).slice(0, 5));
+
+                const lowStockProducts = Array.isArray(lowStockRes.data?.data)
+                    ? lowStockRes.data.data
+                    : (lowStockRes.data?.data?.products || []);
+                setLowStockItems(Array.isArray(lowStockProducts) ? lowStockProducts : []);
+
+                const team = perfRes.data?.data?.team || [];
+                setTopStaff(Array.isArray(team) ? team.slice(0, 5) : []);
             }
         } catch (error) {
             console.error('Data sync failed:', error);
