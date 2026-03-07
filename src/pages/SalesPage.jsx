@@ -6,10 +6,12 @@ import {
     faCalendarAlt, faChevronRight, faPrint, faEllipsisV, faChartPie,
     faCashRegister, faExchangeAlt, faBox, faClock, faUserTie, faArrowUp,
     faDollarSign, faPercent, faShoppingCart, faFileInvoiceDollar, faRedo,
-    faArrowLeft, faSpinner
+    faArrowLeft, faSpinner, faFilePdf, faFileExcel
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import jspdf from 'jspdf';
+import 'jspdf-autotable';
 
 import { API_URL as API_BASE_URL } from '../utils/api';
 
@@ -42,6 +44,93 @@ const SalesPage = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleExportExcel = () => {
+        if (!filteredSales.length) return;
+
+        let csv = `SimuKitaa Sales History Report\nGenerated: ${new Date().toLocaleString()}\n`;
+        if (startDate || endDate) {
+            csv += `Period: ${startDate || 'Start'} to ${endDate || 'End'}\n`;
+        }
+        csv += `\n`;
+
+        csv += `Date,Product,Serial,Customer,Staff,Method,Amount,Profit\n`;
+        filteredSales.forEach(s => {
+            const date = new Date(s.saleDate).toLocaleDateString();
+            const product = `"${s.product?.name || 'Unknown'}"`;
+            const serial = `"${s.serialNumber || 'N/A'}"`;
+            const customer = `"${s.customer?.name || 'Walk-in'}"`;
+            const staff = `"${s.staffName || 'System'}"`;
+            const method = s.paymentMethod || 'N/A';
+            const amount = s.totalAmount || 0;
+            const profit = s.profit || 0;
+            csv += `${date},${product},${serial},${customer},${staff},${method},${amount},${profit}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `SimuKitaa_Sales_History_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+    };
+
+    const handleExportPDF = () => {
+        if (!filteredSales.length) return;
+        const doc = new jspdf();
+
+        // Header
+        doc.setFillColor(30, 64, 175);
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('SimuKitaa Sales History', 15, 20);
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Period: ${startDate || 'All Time'} - ${endDate || 'Present'}`, 15, 30);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 150, 30);
+
+        // Stats Summary
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text('Key Metrics', 15, 50);
+
+        const summaryRevenue = filteredSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+        const summaryProfit = filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0);
+
+        doc.autoTable({
+            startY: 55,
+            head: [['Metric', 'Value']],
+            body: [
+                ['Total Transactions', filteredSales.length],
+                ['Total Revenue', `TSh ${summaryRevenue.toLocaleString()}`],
+                ['Total Profit', `TSh ${summaryProfit.toLocaleString()}`]
+            ],
+            theme: 'striped',
+            headStyles: { fillColor: [30, 64, 175] }
+        });
+
+        // Transactions Table
+        doc.text('Transaction Details', 15, doc.lastAutoTable.finalY + 15);
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 20,
+            head: [['Date', 'Product', 'Customer', 'Amount', 'Method']],
+            body: filteredSales.map(t => [
+                new Date(t.saleDate).toLocaleDateString(),
+                t.product?.name || 'Unknown',
+                t.customer?.name || 'Walk-in',
+                `TSh ${(t.totalAmount || 0).toLocaleString()}`,
+                t.paymentMethod || 'N/A'
+            ]),
+            theme: 'grid',
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [51, 65, 85] }
+        });
+
+        doc.save(`SimuKitaa_Sales_History_${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
     const formatCurrency = (amount) => {
@@ -141,6 +230,20 @@ const SalesPage = () => {
                                 <div className="text-right">
                                     <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Net Profit</p>
                                     <p className="text-xl font-bold text-emerald-600">{formatCurrency(totalProfit)} <span className="text-sm text-gray-500 font-normal">TSh</span></p>
+                                </div>
+                                <div className="flex gap-2 ml-4">
+                                    <button
+                                        onClick={handleExportExcel}
+                                        className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                                    >
+                                        <FontAwesomeIcon icon={faFileExcel} /> Excel
+                                    </button>
+                                    <button
+                                        onClick={handleExportPDF}
+                                        className="px-4 py-2 bg-blue-50 text-blue-700 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                    >
+                                        <FontAwesomeIcon icon={faFilePdf} /> PDF
+                                    </button>
                                 </div>
                             </div>
                         )}
