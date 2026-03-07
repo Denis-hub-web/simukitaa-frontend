@@ -28,7 +28,7 @@ const ToolsPage = () => {
         { title: 'Trade-In Manager', desc: 'Approve & Add to Stock', icon: Repeat2, color: 'text-indigo-600', bg: 'bg-indigo-50', link: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
         { title: 'Stock Management', desc: 'Add & Organize Inventory', icon: PackageOpen, color: 'text-blue-600', bg: 'bg-blue-50', link: '/stock-management', roles: ['CEO', 'MANAGER'] },
         { title: 'Supplier Network', desc: 'Procurement Partners', icon: Truck, color: 'text-indigo-600', bg: 'bg-indigo-50', link: '/suppliers', roles: ['CEO', 'MANAGER'] },
-        { title: 'Wanakitaa Hub', desc: 'Loyalty & Community', icon: Compass, color: 'text-purple-600', bg: 'bg-purple-50', link: '/wanakitaa', roles: ['CEO', 'MANAGER'] },
+        { title: 'Wanakitaa Hub', desc: 'Loyalty & Community', icon: Compass, color: 'text-purple-600', bg: 'bg-purple-50', link: '/wanakitaa', roles: ['CEO'] },
         { title: 'Campaigns', desc: 'Bulk Customer Messaging', icon: Megaphone, color: 'text-purple-600', bg: 'bg-purple-50', link: '/campaigns', roles: ['CEO', 'MANAGER'] },
         { title: 'Templates', desc: 'Customize Messages', icon: Mail, color: 'text-blue-600', bg: 'bg-blue-50', link: '/notification-templates', roles: ['CEO', 'MANAGER'] },
         { title: 'Team Management', desc: 'Staff & Permissions', icon: Users, color: 'text-green-600', bg: 'bg-green-50', link: '/team-management', roles: ['CEO', 'MANAGER'] },

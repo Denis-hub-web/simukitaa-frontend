@@ -420,17 +420,17 @@ const AddProductPage = () => {
                                 </div>
 
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
+                                    <table className="w-full text-left border-separate border-spacing-y-3">
                                         <thead>
                                             <tr className="border-b-2 border-gray-100">
                                                 <th className="py-4 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Variant</th>
                                                 <th className="py-4 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Condition Prices (TZS)</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-50">
+                                        <tbody>
                                             {formData.variantPricing.map((variant, idx) => (
-                                                <tr key={`${variant.storage}-${variant.simType}-${variant.color}`} className="hover:bg-gray-50/50 transition-colors">
-                                                    <td className="py-4 px-2">
+                                                <tr key={`${variant.storage}-${variant.simType}-${variant.color}`} className="transition-colors">
+                                                    <td className="py-5 px-3 bg-white rounded-l-2xl border border-gray-100">
                                                         <div className="flex flex-col">
                                                             <span className="font-bold text-gray-900">{variant.storage}</span>
                                                             <div className="flex items-center gap-2">
@@ -443,7 +443,7 @@ const AddProductPage = () => {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="py-4 px-2">
+                                                    <td className="py-5 px-3 bg-white rounded-r-2xl border border-gray-100">
                                                         <div className="space-y-4">
                                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                                                 {['nonActive', 'active', 'refurbished', 'used'].map(condition => (
