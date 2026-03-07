@@ -10,7 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import jspdf from 'jspdf';
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
 import { API_URL as API_BASE_URL } from '../utils/api';
@@ -78,7 +78,7 @@ const SalesPage = () => {
 
     const handleExportPDF = () => {
         if (!filteredSales.length) return;
-        const doc = new jspdf();
+        const doc = new jsPDF();
 
         // Header
         doc.setFillColor(30, 64, 175);

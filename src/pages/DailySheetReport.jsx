@@ -10,7 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { API_URL } from '../utils/api';
-import jspdf from 'jspdf';
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { useNavigate } from 'react-router-dom';
 
@@ -110,7 +110,7 @@ const DailySheetReport = () => {
 
     const handleExportPDF = () => {
         if (!data) return;
-        const doc = new jspdf();
+        const doc = new jsPDF();
 
         // Header
         doc.setFillColor(30, 64, 175);
