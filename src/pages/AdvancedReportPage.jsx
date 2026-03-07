@@ -18,7 +18,7 @@ const AdvancedReportPage = () => {
         end: new Date().toISOString().split('T')[0]
     });
     const [reportData, setReportData] = useState(null);
-    const [aiInsights, setAiInsights] = useState([]);
+    const [insights, setInsights] = useState([]);
 
     useEffect(() => {
         fetchReport();
@@ -28,14 +28,12 @@ const AdvancedReportPage = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const res = await axios.get(`${API_BASE_URL}/reports/daily-sheet`, {
+            const res = await axios.get(`${API_BASE_URL}/reports/analytics`, {
                 params: { startDate: dateRange.start, endDate: dateRange.end },
                 headers: { Authorization: `Bearer ${token}` }
             });
-            // Note: In a real app, we'd have a dedicated range endpoint. 
-            // For now, we'll simulate the complex data based on the daily sheet.
             setReportData(res.data.data);
-            generateAIInsights(res.data.data);
+            setInsights(res.data.data?.insights || []);
         } catch (error) {
             console.error('Failed to fetch report:', error);
         } finally {
@@ -43,29 +41,32 @@ const AdvancedReportPage = () => {
         }
     };
 
-    const generateAIInsights = (data) => {
-        // Simulated AI Logic
-        const insights = [
-            {
-                type: 'success',
-                icon: faMagic,
-                title: 'High Velocity Product',
-                desc: 'iPhone 15 Pro Max sales are up 20% this week. Recommend increasing stock by 5 units.'
-            },
-            {
-                type: 'warning',
-                icon: faBrain,
-                title: 'Stock Alert',
-                desc: 'Samsung S24 Ultra has low engagement. Consider a regional promotion for Arusha customers.'
-            },
-            {
-                type: 'info',
-                icon: faChartPie,
-                title: 'Profit Optimization',
-                desc: 'Average discount is 5%. Reducing this to 3% could increase monthly profit by TSh 1.2M.'
-            }
-        ];
-        setAiInsights(insights);
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('sw-TZ', {
+            style: 'currency',
+            currency: 'TZS',
+            minimumFractionDigits: 0
+        }).format(amount || 0);
+    };
+
+    const fmtPct = (n) => {
+        if (n === null || n === undefined || Number.isNaN(Number(n))) return '0.0%';
+        const v = Number(n);
+        const sign = v > 0 ? '+' : '';
+        return `${sign}${v.toFixed(1)}%`;
+    };
+
+    const getInsightStyle = (type) => {
+        switch (type) {
+            case 'success':
+                return { border: 'border-l-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-700' };
+            case 'warning':
+                return { border: 'border-l-amber-500', bg: 'bg-amber-50', text: 'text-amber-700' };
+            case 'danger':
+                return { border: 'border-l-rose-500', bg: 'bg-rose-50', text: 'text-rose-700' };
+            default:
+                return { border: 'border-l-blue-600', bg: 'bg-blue-50', text: 'text-blue-700' };
+        }
     };
 
     const handleExportCSV = () => {
@@ -106,35 +107,80 @@ const AdvancedReportPage = () => {
                     </div>
                 </div>
 
-            {/* AI Insights Carousel/Grid */}
+                {/* KPI Strip */}
+                {reportData?.kpis && (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="apple-card p-6">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Collected</p>
+                            <p className="text-2xl font-black text-gray-900 tracking-tight">
+                                {formatCurrency(reportData.kpis.sales?.collected)}
+                            </p>
+                            <p className="text-[10px] font-bold text-gray-500 mt-1">
+                                {fmtPct(reportData.kpis.sales?.deltaCollectedPct)} vs previous
+                            </p>
+                        </div>
+                        <div className="apple-card p-6">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Expenses</p>
+                            <p className="text-2xl font-black text-gray-900 tracking-tight">
+                                {formatCurrency(reportData.kpis.expenses?.total)}
+                            </p>
+                            <p className="text-[10px] font-bold text-gray-500 mt-1">
+                                {fmtPct(reportData.kpis.expenses?.deltaTotalPct)} vs previous
+                            </p>
+                        </div>
+                        <div className="apple-card p-6">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Net</p>
+                            <p className={`text-2xl font-black tracking-tight ${Number(reportData.kpis.net?.value || 0) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                {formatCurrency(reportData.kpis.net?.value)}
+                            </p>
+                            <p className="text-[10px] font-bold text-gray-500 mt-1">
+                                {fmtPct(reportData.kpis.net?.deltaPct)} vs previous
+                            </p>
+                        </div>
+                        <div className="apple-card p-6">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Loyalty</p>
+                            <p className="text-2xl font-black text-gray-900 tracking-tight">
+                                {Math.round(reportData.kpis.loyalty?.points || 0).toLocaleString()} pts
+                            </p>
+                            <p className="text-[10px] font-bold text-gray-500 mt-1">
+                                {fmtPct(reportData.kpis.loyalty?.deltaPointsPct)} vs previous
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Intelligence Insights */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {aiInsights.map((insight, idx) => (
+                {insights.map((insight, idx) => {
+                    const style = getInsightStyle(insight.type);
+                    return (
                     <motion.div
                         key={idx}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
-                        className="apple-card p-6 border-l-4 border-l-blue-600 group hover:scale-[1.01] transition-all"
+                        className={`apple-card p-6 border-l-4 ${style.border} group hover:scale-[1.01] transition-all`}
                     >
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                <FontAwesomeIcon icon={insight.icon} className="text-xl" />
+                            <div className={`w-12 h-12 ${style.bg} rounded-xl flex items-center justify-center ${style.text} shadow-inner transition-colors`}>
+                                <FontAwesomeIcon icon={faBrain} className="text-xl" />
                             </div>
                             <h3 className="font-black text-gray-900 uppercase tracking-tighter">{insight.title}</h3>
                         </div>
                         <p className="text-sm text-gray-600 font-medium leading-relaxed">{insight.desc}</p>
                     </motion.div>
-                ))}
+                    );
+                })}
                 </div>
 
-            {/* Main Data Table */}
+                {/* Transactions */}
                 <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden">
                     <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-gray-900 border border-gray-100">
                             <FontAwesomeIcon icon={faTable} />
                         </div>
-                        <h2 className="text-xl font-black text-gray-900 tracking-tight">Sales & Stock Matrix</h2>
+                        <h2 className="text-xl font-black text-gray-900 tracking-tight">Transactions</h2>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -164,7 +210,7 @@ const AdvancedReportPage = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {(Array.isArray(reportData?.sales?.transactions) ? reportData.sales.transactions : []).map((sale, idx) => (
+                            {(Array.isArray(reportData?.transactions) ? reportData.transactions : []).map((sale, idx) => (
                                 <tr key={idx} className="hover:bg-blue-50/30 transition-colors group">
                                     <td className="py-6 px-8">
                                         <div className="flex flex-col">
@@ -173,17 +219,7 @@ const AdvancedReportPage = () => {
                                         </div>
                                     </td>
                                     <td className="py-6 px-8">
-                                        <div className="flex flex-col gap-1">
-                                            {sale.items?.map((item, i) => (
-                                                <div key={i} className="flex items-center gap-2">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                                                    <span className="text-xs font-bold text-gray-700">{item.productName}</span>
-                                                    {item.serialNumber && <span className="text-[9px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-mono">{item.serialNumber}</span>}
-                                                </div>
-                                            )) || (
-                                                    <span className="text-xs font-bold text-gray-700">{sale.productName || 'Sale'}</span>
-                                                )}
-                                        </div>
+                                        <span className="text-xs font-bold text-gray-700">{sale.productName || 'Sale'}</span>
                                     </td>
                                     <td className="py-6 px-8">
                                         <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-[9px] font-black text-gray-600 uppercase tracking-widest shadow-sm">{sale.paymentMethod}</span>
