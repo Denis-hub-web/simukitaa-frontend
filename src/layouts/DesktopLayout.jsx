@@ -1,14 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faHome, faChartLine, faBoxOpen, faUsers, faCog,
-    faBell, faSearch, faSignOutAlt, faBars, faTimes,
-    faMoneyBillWave, faTools, faTruck, faUser, faBox,
-    faExchangeAlt, faDatabase, faChevronRight, faCompass, faBrain, faGem, faEnvelope, faBullhorn, faWallet, faFileAlt,
-    faUserCog
-} from '@fortawesome/free-solid-svg-icons';
+    Bell,
+    Compass,
+    LayoutGrid,
+    LogOut,
+    PackageOpen,
+    Mail,
+    Megaphone,
+    Menu,
+    ReceiptText,
+    Repeat2,
+    Search,
+    Settings,
+    Truck,
+    Users,
+    Wallet,
+    X,
+    ChevronRight
+} from 'lucide-react';
 import { notificationAPI } from '../utils/api';
 
 const DesktopLayout = () => {
@@ -43,17 +54,17 @@ const DesktopLayout = () => {
     };
 
     const menuItems = [
-        { icon: faHome, label: 'Dashboard', path: '/dashboard', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { icon: faMoneyBillWave, label: 'Sales History', path: '/sales', roles: ['CEO', 'MANAGER'] },
-        { icon: faWallet, label: 'Expenses', path: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { icon: faExchangeAlt, label: 'Trade-In Manager', path: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
-        { icon: faBoxOpen, label: 'Stock Management', path: '/stock-management', roles: ['CEO', 'MANAGER'] },
-        { icon: faTruck, label: 'Supplier Network', path: '/suppliers', roles: ['CEO', 'MANAGER'] },
-        { icon: faGem, label: 'Wanakitaa Hub', path: '/wanakitaa', roles: ['CEO', 'MANAGER'] },
-        { icon: faBullhorn, label: 'Campaigns', path: '/campaigns', roles: ['CEO', 'MANAGER'] },
-        { icon: faEnvelope, label: 'Templates', path: '/notification-templates', roles: ['CEO'] },
-        { icon: faUserCog, label: 'Team Management', path: '/team-management', roles: ['CEO', 'MANAGER'] },
-        { icon: faCog, label: 'Settings', path: '/settings', roles: ['CEO', 'MANAGER', 'STAFF'] },
+        { icon: LayoutGrid, label: 'Dashboard', path: '/dashboard', roles: ['CEO', 'MANAGER', 'STAFF'] },
+        { icon: ReceiptText, label: 'Sales History', path: '/sales', roles: ['CEO', 'MANAGER'] },
+        { icon: Wallet, label: 'Expenses', path: '/expenses', roles: ['CEO', 'MANAGER', 'STAFF'] },
+        { icon: Repeat2, label: 'Trade-In Manager', path: '/trade-ins', roles: ['CEO', 'MANAGER', 'STAFF'] },
+        { icon: PackageOpen, label: 'Stock Management', path: '/stock-management', roles: ['CEO', 'MANAGER'] },
+        { icon: Truck, label: 'Supplier Network', path: '/suppliers', roles: ['CEO', 'MANAGER'] },
+        { icon: Compass, label: 'Wanakitaa Hub', path: '/wanakitaa', roles: ['CEO', 'MANAGER'] },
+        { icon: Megaphone, label: 'Campaigns', path: '/campaigns', roles: ['CEO', 'MANAGER'] },
+        { icon: Mail, label: 'Templates', path: '/notification-templates', roles: ['CEO'] },
+        { icon: Users, label: 'Team Management', path: '/team-management', roles: ['CEO', 'MANAGER'] },
+        { icon: Settings, label: 'Settings', path: '/settings', roles: ['CEO', 'MANAGER', 'STAFF'] },
     ];
 
     const visibleMenuItems = menuItems.filter(item => item.roles.includes(userRole));
@@ -64,10 +75,10 @@ const DesktopLayout = () => {
         <div className="premium-bg min-h-screen flex overflow-hidden">
             {/* Elite Sidebar */}
             <aside
-                className={`hidden md:flex flex-col fixed left-0 top-0 h-full bg-white/80 backdrop-blur-2xl transition-all duration-500 z-50 shadow-[0_0_50px_rgba(0,0,0,0.05)] border-r border-white/40 ${sidebarCollapsed ? 'w-24' : 'w-72'}`}
+                className={`hidden md:flex flex-col fixed left-0 top-0 h-full apple-surface transition-all duration-500 z-50 border-r border-white/40 ${sidebarCollapsed ? 'w-24' : 'w-72'}`}
             >
                 {/* Brand Identity */}
-                <div className="h-24 flex items-center justify-between px-6 border-b border-gray-100/50">
+                <div className="h-24 flex items-center justify-between px-6 border-b border-gray-100/60">
                     <AnimatePresence mode="wait">
                         {!sidebarCollapsed && (
                             <motion.div
@@ -76,10 +87,10 @@ const DesktopLayout = () => {
                                 exit={{ opacity: 0, x: -20 }}
                                 className="flex items-center gap-3"
                             >
-                                <div className="w-10 h-10 premium-btn-primary rounded-xl flex items-center justify-center text-white shadow-lg border border-white/20">
-                                    <FontAwesomeIcon icon={faCompass} />
+                                <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-apple-sm border border-white/20">
+                                    <Compass className="w-5 h-5" />
                                 </div>
-                                <h1 className="text-xl font-black text-gray-900 tracking-tighter italic">Simu<span className="text-blue-600">Kitaa</span></h1>
+                                <h1 className="text-lg font-semibold text-gray-900 tracking-tight">Simu<span className="text-blue-600">Kitaa</span></h1>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -87,7 +98,7 @@ const DesktopLayout = () => {
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                         className={`w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all ${sidebarCollapsed ? 'mx-auto' : ''}`}
                     >
-                        <FontAwesomeIcon icon={sidebarCollapsed ? faBars : faTimes} />
+                        {sidebarCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
                     </button>
                 </div>
 
@@ -102,15 +113,14 @@ const DesktopLayout = () => {
                                 : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50'
                                 } ${sidebarCollapsed ? 'justify-center' : ''}`}
                         >
-                            <FontAwesomeIcon
-                                icon={item.icon}
-                                className={`text-sm transition-transform duration-500 group-hover:scale-110 ${sidebarCollapsed ? '' : 'w-5'} ${window.location.pathname === item.path ? 'text-white' : 'text-gray-400 group-hover:text-blue-600'}`}
+                            <item.icon
+                                className={`transition-transform duration-500 group-hover:scale-110 ${sidebarCollapsed ? 'w-5 h-5' : 'w-5 h-5'} ${window.location.pathname === item.path ? 'text-white' : 'text-gray-400 group-hover:text-blue-600'}`}
                             />
                             {!sidebarCollapsed && (
-                                <span className={`font-black text-[10px] uppercase tracking-widest ${window.location.pathname === item.path ? 'text-white' : ''}`}>{item.label}</span>
+                                <span className={`font-medium text-sm tracking-tight ${window.location.pathname === item.path ? 'text-white' : ''}`}>{item.label}</span>
                             )}
                             {window.location.pathname === item.path && !sidebarCollapsed && (
-                                <FontAwesomeIcon icon={faChevronRight} className="ml-auto text-[8px] opacity-40 text-white" />
+                                <ChevronRight className="ml-auto w-4 h-4 opacity-50 text-white" />
                             )}
                         </button>
                     ))}
@@ -119,13 +129,13 @@ const DesktopLayout = () => {
                 {/* User Terminal Info */}
                 <div className="p-6 border-t border-gray-100/50">
                     <div className={`flex items-center gap-4 ${sidebarCollapsed ? 'justify-center' : ''}`}>
-                        <div className="w-12 h-12 premium-btn-outline border-gray-100 rounded-2xl flex items-center justify-center text-blue-600 font-bold shrink-0 shadow-sm">
+                        <div className="w-12 h-12 bg-white rounded-2xl border border-gray-100 shadow-apple-sm flex items-center justify-center text-blue-600 font-bold shrink-0">
                             {userName.charAt(0)}
                         </div>
                         {!sidebarCollapsed && (
                             <div className="overflow-hidden">
-                                <p className="premium-h2 mb-0.5 text-xs truncate">{userName}</p>
-                                <p className="premium-label text-[8px] mb-0">{userRole}</p>
+                                <p className="text-sm font-semibold text-gray-900 truncate">{userName}</p>
+                                <p className="text-xs text-gray-500 mb-0">{userRole}</p>
                             </div>
                         )}
                     </div>
@@ -138,10 +148,7 @@ const DesktopLayout = () => {
                 <header className="h-24 bg-transparent px-8 flex items-center justify-between z-40 relative">
                     <div className="flex-1 max-w-2xl">
                         <div className="relative group">
-                            <FontAwesomeIcon
-                                icon={faSearch}
-                                className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors z-10 pointer-events-none"
-                            />
+                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-600 transition-colors z-10 pointer-events-none" />
                             <input
                                 type="text"
                                 placeholder="Search inventory, customers, or sales..."
@@ -156,7 +163,7 @@ const DesktopLayout = () => {
                             onClick={() => navigate('/dashboard')}
                             className="relative w-14 h-14 premium-card flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all border-gray-100/50 shadow-sm group"
                         >
-                            <FontAwesomeIcon icon={faBell} className="text-xl" />
+                            <Bell className="w-6 h-6" />
                             {notificationCount > 0 && (
                                 <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] min-w-[24px] h-6 px-1.5 flex items-center justify-center rounded-full font-black shadow-lg border-2 border-white">
                                     {notificationCount > 99 ? '99+' : notificationCount}
@@ -169,7 +176,7 @@ const DesktopLayout = () => {
                             onClick={handleLogout}
                             className="w-14 h-14 premium-card flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:border-rose-200 transition-all border-gray-100/50 shadow-sm"
                         >
-                            <FontAwesomeIcon icon={faSignOutAlt} className="text-xl" />
+                            <LogOut className="w-6 h-6" />
                         </button>
                     </div>
                 </header>
