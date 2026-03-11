@@ -20,6 +20,7 @@ const ViewDevicesPage = () => {
     const [editingDeviceId, setEditingDeviceId] = useState(null);
     const [editSerialNumber, setEditSerialNumber] = useState('');
     const [editPrice, setEditPrice] = useState('');
+    const [editCostPrice, setEditCostPrice] = useState('');
     const [editCondition, setEditCondition] = useState('nonActive');
     const [editSimType, setEditSimType] = useState('PHYSICAL_SIM');
     const [editStorage, setEditStorage] = useState('');
@@ -31,7 +32,11 @@ const ViewDevicesPage = () => {
     const [adjusting, setAdjusting] = useState(false);
 
     const [editPriceModal, setEditPriceModal] = useState(false);
+    const [editBatchId, setEditBatchId] = useState(null);
     const [newPrice, setNewPrice] = useState('');
+    const [newCostPrice, setNewCostPrice] = useState('');
+    const [newRunningCostMode, setNewRunningCostMode] = useState('TOTAL');
+    const [newRunningCostValue, setNewRunningCostValue] = useState('');
     const [updatingPrice, setUpdatingPrice] = useState(false);
 
     useEffect(() => {
@@ -128,14 +133,18 @@ const ViewDevicesPage = () => {
         try {
             setUpdating(true);
             const token = localStorage.getItem('token');
-            const response = await axios.put(`${API_BASE_URL}/stock/products/${productId}/devices/${deviceId}`, {
+            const payload = {
                 serialNumber: editSerialNumber,
                 price: parseFloat(editPrice),
                 isPriceLocked: editIsLocked,
                 condition: editCondition,
                 simType: editSimType,
                 variant: { storage: editStorage, color: editColor }
-            }, {
+            };
+            if (user.role === 'CEO' && editCostPrice !== '') {
+                payload.costPrice = parseFloat(editCostPrice);
+            }
+            const response = await axios.put(`${API_BASE_URL}/stock/products/${productId}/devices/${deviceId}`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -151,10 +160,38 @@ const ViewDevicesPage = () => {
         }
     };
 
+    const handleUpdateBatchCosts = async () => {
+        if (!editBatchId) return;
+        try {
+            setUpdatingPrice(true);
+            const token = localStorage.getItem('token');
+            const payload = {
+                price: parseFloat(newPrice) || undefined
+            };
+            if (newCostPrice !== '') payload.costPrice = parseFloat(newCostPrice);
+            if (newRunningCostValue !== '') {
+                payload.runningCostMode = newRunningCostMode;
+                payload.runningCostValue = parseFloat(newRunningCostValue);
+            }
+            await axios.put(`${API_BASE_URL}/stock/products/${productId}/devices/${editBatchId}`, payload, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setEditPriceModal(false);
+            setEditBatchId(null);
+            fetchProduct();
+        } catch (error) {
+            console.error('Batch cost update error:', error);
+            alert(error.response?.data?.message || 'Failed to update costs');
+        } finally {
+            setUpdatingPrice(false);
+        }
+    };
+
     const startEditing = (device) => {
         setEditingDeviceId(device.id);
         setEditSerialNumber(device.serialNumber || '');
         setEditPrice(device.price);
+        setEditCostPrice(device.costPrice !== undefined ? String(device.costPrice) : '');
         setEditIsLocked(device.isPriceLocked);
         setEditCondition(device.condition || 'nonActive');
         setEditSimType(device.simType || 'PHYSICAL_SIM');
@@ -314,17 +351,24 @@ const ViewDevicesPage = () => {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            {user.role === 'CEO' && (
+                                        {user.role === 'CEO' && (
                                                 <>
                                                     <div className="flex items-center justify-end gap-2 text-sm font-bold opacity-70 uppercase tracking-wider mb-1">
                                                         <span>Selling Price</span>
                                                         <button
                                                             onClick={() => {
+                                                                // Open modal for the latest (most recent) batch
+                                                                const batches = (product.devices || []).filter(d => d.isBatch && !d.isAdjustment);
+                                                                const latestBatch = batches.sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))[0];
                                                                 setNewPrice(product.basePricing?.nonActive || 0);
+                                                                setNewCostPrice(latestBatch?.baseUnitCost !== undefined ? String(latestBatch.baseUnitCost) : '');
+                                                                setNewRunningCostMode(latestBatch?.runningCostMode || 'TOTAL');
+                                                                setNewRunningCostValue(latestBatch?.runningCostValue ? String(latestBatch.runningCostValue) : '');
+                                                                setEditBatchId(latestBatch?.id || null);
                                                                 setEditPriceModal(true);
                                                             }}
                                                             className="w-6 h-6 rounded-md bg-white/20 hover:bg-white/40 flex items-center justify-center transition-all"
-                                                            title="Edit Price"
+                                                            title="Edit Price & Costs"
                                                         >
                                                             <FontAwesomeIcon icon={faEdit} className="text-[10px]" />
                                                         </button>
@@ -414,47 +458,89 @@ const ViewDevicesPage = () => {
                                             {user.role === 'CEO' && (
                                                 <>
                                                     <th className="py-4 px-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Unit Cost</th>
+                                                    <th className="py-4 px-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Running Cost</th>
                                                     <th className="py-4 px-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Total</th>
+                                                    <th className="py-4 px-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Action</th>
                                                 </>
                                             )}
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
-                                        {devices.filter(d => d.isBatch || d.serialNumber?.startsWith('BATCH-')).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt)).map((batch) => (
-                                            <tr key={batch.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="py-4 px-4">
-                                                    <div className="text-sm font-bold text-gray-900">
-                                                        {new Date(batch.addedAt).toLocaleDateString()}
-                                                    </div>
-                                                    <div className="text-[10px] text-gray-400">
-                                                        {new Date(batch.addedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </div>
-                                                </td>
-                                                <td className="py-4 px-4">
-                                                    <span className="text-sm font-medium text-gray-700">
-                                                        {suppliers.find(s => s.id === batch.supplierId)?.name || 'Direct Stock'}
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 px-4 text-center">
-                                                    <span className="text-sm font-black text-gray-900">{batch.quantity || 0}</span>
-                                                </td>
-                                                {user.role === 'CEO' && (
-                                                    <>
-                                                        <td className="py-4 px-4 text-right">
-                                                            <span className="text-sm font-bold text-gray-600">{(batch.price || 0).toLocaleString()}</span>
-                                                        </td>
-                                                        <td className="py-4 px-4 text-right">
-                                                            <span className="text-sm font-black text-indigo-600">
-                                                                {((batch.quantity || 0) * (batch.price || 0)).toLocaleString()}
-                                                            </span>
-                                                        </td>
-                                                    </>
-                                                )}
-                                            </tr>
-                                        ))}
+                                        {(() => {
+                                            const allBatches = devices.filter(d => d.isBatch || d.serialNumber?.startsWith('BATCH-')).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+                                            const latestBatchId = allBatches[0]?.id;
+                                            return allBatches.map((batch) => (
+                                                <tr key={batch.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="py-4 px-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <div>
+                                                                <div className="text-sm font-bold text-gray-900">
+                                                                    {new Date(batch.addedAt).toLocaleDateString()}
+                                                                </div>
+                                                                <div className="text-[10px] text-gray-400">
+                                                                    {new Date(batch.addedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                </div>
+                                                            </div>
+                                                            {batch.id === latestBatchId && (
+                                                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase tracking-wider rounded-full border border-emerald-200 whitespace-nowrap">
+                                                                    ✦ Latest
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4 px-4">
+                                                        <span className="text-sm font-medium text-gray-700">
+                                                            {suppliers.find(s => s.id === batch.supplierId)?.name || 'Direct Stock'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 px-4 text-center">
+                                                        <span className="text-sm font-black text-gray-900">{batch.quantity || 0}</span>
+                                                    </td>
+                                                    {user.role === 'CEO' && (
+                                                        <>
+                                                            <td className="py-4 px-4 text-right">
+                                                                <div className="text-sm font-bold text-gray-600">{(batch.baseUnitCost || batch.price || 0).toLocaleString()}</div>
+                                                                <div className="text-[10px] text-gray-400">buying price</div>
+                                                            </td>
+                                                            <td className="py-4 px-4 text-right">
+                                                                {batch.runningCostPerItem > 0 ? (
+                                                                    <div>
+                                                                        <div className="text-sm font-bold text-orange-600">{(batch.runningCostPerItem || 0).toLocaleString()}/item</div>
+                                                                        <div className="text-[10px] text-gray-400">{batch.runningCostMode === 'TOTAL' ? `${(batch.runningCostValue || 0).toLocaleString()} total` : 'per item'}</div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-xs text-gray-300">—</span>
+                                                                )}
+                                                            </td>
+                                                            <td className="py-4 px-4 text-right">
+                                                                <span className="text-sm font-black text-indigo-600">
+                                                                    {((batch.quantity || 0) * (batch.effectiveUnitCost || batch.price || 0)).toLocaleString()}
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-4 px-4 text-center">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setEditBatchId(batch.id);
+                                                                        setNewPrice(product.basePricing?.nonActive || 0);
+                                                                        setNewCostPrice(batch.baseUnitCost !== undefined ? String(batch.baseUnitCost) : '');
+                                                                        setNewRunningCostMode(batch.runningCostMode || 'TOTAL');
+                                                                        setNewRunningCostValue(batch.runningCostValue ? String(batch.runningCostValue) : '');
+                                                                        setEditPriceModal(true);
+                                                                    }}
+                                                                    className="w-8 h-8 rounded-lg bg-gray-50 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-transparent hover:border-indigo-100 mx-auto"
+                                                                    title="Edit Batch Costs"
+                                                                >
+                                                                    <FontAwesomeIcon icon={faEdit} className="text-xs" />
+                                                                </button>
+                                                            </td>
+                                                        </>
+                                                    )}
+                                                </tr>
+                                            ));
+                                        })()}
                                         {devices.filter(d => d.isBatch || d.serialNumber?.startsWith('BATCH-')).length === 0 && (
                                             <tr>
-                                                <td colSpan="6" className="py-12 text-center text-gray-400 font-medium italic">
+                                                <td colSpan="8" className="py-12 text-center text-gray-400 font-medium italic">
                                                     No restocking activity recorded yet. Existing stock might not have batch details.
                                                 </td>
                                             </tr>
@@ -466,7 +552,7 @@ const ViewDevicesPage = () => {
                     </div>
                 )}
 
-                {/* Price Edit Modal */}
+                {/* Batch Cost Edit Modal */}
                 <AnimatePresence>
                     {editPriceModal && (
                         <motion.div
@@ -480,38 +566,84 @@ const ViewDevicesPage = () => {
                                 initial={{ scale: 0.9, y: 20 }}
                                 animate={{ scale: 1, y: 0 }}
                                 exit={{ scale: 0.9, y: 20 }}
-                                className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl"
+                                className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl"
                                 onClick={e => e.stopPropagation()}
                             >
-                                <h3 className="text-xl font-black text-gray-900 mb-2">Update Selling Price</h3>
-                                <p className="text-sm text-gray-500 mb-6">This will update the selling price for all available units.</p>
+                                <h3 className="text-xl font-black text-gray-900 mb-1">Edit Batch Costs</h3>
+                                <p className="text-sm text-gray-500 mb-6">Update selling price, buying price and running costs for this batch.</p>
 
                                 <div className="space-y-4">
+                                    {/* Selling Price */}
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-2">New Selling Price (TZS)</label>
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Selling Price (TZS)</label>
                                         <input
                                             type="number"
                                             value={newPrice}
                                             onChange={(e) => setNewPrice(e.target.value)}
-                                            className="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-lg"
+                                            className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold"
                                             placeholder="e.g. 50000"
                                             autoFocus
                                         />
                                     </div>
 
-                                    <div className="flex gap-3 pt-4">
+                                    {/* Cost / Buying Price */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">💰 Buying Price / Unit Cost (TZS)</label>
+                                        <input
+                                            type="number"
+                                            value={newCostPrice}
+                                            onChange={(e) => setNewCostPrice(e.target.value)}
+                                            className="w-full px-4 py-3 bg-amber-50 rounded-2xl border-2 border-transparent focus:border-amber-500 focus:bg-white transition-all outline-none font-bold"
+                                            placeholder="Price paid per unit to supplier"
+                                        />
+                                    </div>
+
+                                    {/* Running Cost */}
+                                    <div className="bg-sky-50 rounded-2xl p-4 border-2 border-sky-100 space-y-3">
+                                        <label className="text-xs font-black text-sky-700 uppercase tracking-widest">🚚 Running Cost (Transport, etc.)</label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-gray-500 mb-1">Mode</label>
+                                                <select
+                                                    value={newRunningCostMode}
+                                                    onChange={(e) => setNewRunningCostMode(e.target.value)}
+                                                    className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 focus:border-sky-500 focus:outline-none bg-white text-sm font-bold"
+                                                >
+                                                    <option value="TOTAL">Total for batch</option>
+                                                    <option value="PER_ITEM">Per item</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-gray-500 mb-1">Amount (TZS)</label>
+                                                <input
+                                                    type="number"
+                                                    value={newRunningCostValue}
+                                                    onChange={(e) => setNewRunningCostValue(e.target.value)}
+                                                    className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 focus:border-sky-500 focus:outline-none bg-white font-bold"
+                                                    placeholder={newRunningCostMode === 'PER_ITEM' ? 'e.g. 2000' : 'e.g. 50000'}
+                                                />
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-sky-600 font-semibold">
+                                            {newRunningCostMode === 'TOTAL'
+                                                ? '💡 Will be divided by batch quantity to get per-unit cost'
+                                                : '💡 Added directly as per-unit running cost'}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex gap-3 pt-2">
                                         <button
-                                            onClick={() => setEditPriceModal(false)}
-                                            className="flex-1 py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-gray-200 transition-all"
+                                            onClick={() => { setEditPriceModal(false); setEditBatchId(null); }}
+                                            className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-gray-200 transition-all"
                                         >
                                             Cancel
                                         </button>
                                         <button
-                                            onClick={handleUpdatePrice}
+                                            onClick={handleUpdateBatchCosts}
                                             disabled={updatingPrice}
-                                            className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold uppercase tracking-widest text-xs shadow-lg shadow-indigo-200 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                                            className="flex-1 py-3 bg-indigo-600 text-white rounded-2xl font-bold uppercase tracking-widest text-xs shadow-lg shadow-indigo-200 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                                         >
-                                            {updatingPrice ? 'Updating...' : 'Update Price'}
+                                            {updatingPrice ? 'Saving...' : 'Save Costs'}
                                         </button>
                                     </div>
                                 </div>
@@ -669,6 +801,18 @@ const ViewDevicesPage = () => {
                                                                     className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all font-bold text-sm"
                                                                 />
                                                             </div>
+                                                            {user.role === 'CEO' && (
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-amber-500 uppercase mb-1">💰 Buying Price (TZS)</label>
+                                                                    <input
+                                                                        type="number"
+                                                                        value={editCostPrice}
+                                                                        onChange={(e) => setEditCostPrice(e.target.value)}
+                                                                        className="w-full px-4 py-2 rounded-xl border-2 border-amber-100 bg-amber-50 focus:border-amber-400 focus:outline-none transition-all font-bold text-sm"
+                                                                        placeholder="Cost price"
+                                                                    />
+                                                                </div>
+                                                            )}
                                                             <div>
                                                                 <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Condition</label>
                                                                 <select

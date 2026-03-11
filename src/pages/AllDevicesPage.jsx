@@ -30,6 +30,9 @@ const AllDevicesPage = () => {
     const [showFilters, setShowFilters] = useState(false);
     const [editingDeviceId, setEditingDeviceId] = useState(null);
     const [editPrice, setEditPrice] = useState('');
+    const [editCostPrice, setEditCostPrice] = useState('');
+    const [editRunningCostMode, setEditRunningCostMode] = useState('TOTAL');
+    const [editRunningCostValue, setEditRunningCostValue] = useState('');
     const [editIsLocked, setEditIsLocked] = useState(false);
     const [updating, setUpdating] = useState(false);
 
@@ -88,10 +91,20 @@ const AllDevicesPage = () => {
         try {
             setUpdating(true);
             const token = localStorage.getItem('token');
-            await axios.put(`${API_BASE_URL}/stock/products/${productId}/devices/${deviceId}`, {
+            const editingDevice = devices.find(d => d.id === deviceId);
+            const isBatch = editingDevice?.isBatch || editingDevice?.productTrackSerials === false;
+
+            const payload = {
                 price: parseFloat(editPrice),
                 isPriceLocked: editIsLocked
-            }, {
+            };
+            if (editCostPrice !== '') payload.costPrice = parseFloat(editCostPrice);
+            if (isBatch && editRunningCostValue !== '') {
+                payload.runningCostMode = editRunningCostMode;
+                payload.runningCostValue = parseFloat(editRunningCostValue);
+            }
+
+            await axios.put(`${API_BASE_URL}/stock/products/${productId}/devices/${deviceId}`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -108,6 +121,9 @@ const AllDevicesPage = () => {
     const startEditing = (device) => {
         setEditingDeviceId(device.id);
         setEditPrice(device.price);
+        setEditCostPrice(device.costPrice !== undefined ? String(device.costPrice) : '');
+        setEditRunningCostMode(device.runningCostMode || 'TOTAL');
+        setEditRunningCostValue(device.runningCostValue ? String(device.runningCostValue) : '');
         setEditIsLocked(device.isPriceLocked || false);
     };
 
@@ -549,6 +565,42 @@ const AllDevicesPage = () => {
                                                                 placeholder="Enter price"
                                                             />
                                                         </div>
+                                                        <div className="flex-1 min-w-[180px]">
+                                                            <label className="block text-xs font-bold text-amber-500 uppercase mb-1">💰 Buying Price (TZS)</label>
+                                                            <input
+                                                                type="number"
+                                                                value={editCostPrice}
+                                                                onChange={(e) => setEditCostPrice(e.target.value)}
+                                                                className="w-full px-4 py-2 rounded-xl border-2 border-amber-100 bg-amber-50 focus:border-amber-400 focus:outline-none transition-all font-bold"
+                                                                placeholder="Cost price"
+                                                            />
+                                                        </div>
+                                                        {/* Running cost — batch/quantity-tracked devices only */}
+                                                        {(device.isBatch || device.productTrackSerials === false) && (
+                                                            <>
+                                                                <div className="flex-1 min-w-[150px]">
+                                                                    <label className="block text-xs font-bold text-sky-600 uppercase mb-1">🚚 Running Cost Mode</label>
+                                                                    <select
+                                                                        value={editRunningCostMode}
+                                                                        onChange={(e) => setEditRunningCostMode(e.target.value)}
+                                                                        className="w-full px-3 py-2 rounded-xl border-2 border-sky-100 bg-sky-50 focus:border-sky-500 focus:outline-none font-bold text-sm"
+                                                                    >
+                                                                        <option value="TOTAL">Total for batch</option>
+                                                                        <option value="PER_ITEM">Per item</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div className="flex-1 min-w-[160px]">
+                                                                    <label className="block text-xs font-bold text-sky-600 uppercase mb-1">Running Cost (TZS)</label>
+                                                                    <input
+                                                                        type="number"
+                                                                        value={editRunningCostValue}
+                                                                        onChange={(e) => setEditRunningCostValue(e.target.value)}
+                                                                        className="w-full px-4 py-2 rounded-xl border-2 border-sky-100 bg-sky-50 focus:border-sky-500 focus:outline-none transition-all font-bold"
+                                                                        placeholder={editRunningCostMode === 'PER_ITEM' ? 'e.g. 2000' : 'e.g. 50000'}
+                                                                    />
+                                                                </div>
+                                                            </>
+                                                        )}
                                                         <div>
                                                             <label className="flex items-center gap-3 cursor-pointer group mb-2">
                                                                 <div className={`w-10 h-6 rounded-full transition-all relative ${editIsLocked ? 'bg-indigo-600' : 'bg-gray-300'}`}>
