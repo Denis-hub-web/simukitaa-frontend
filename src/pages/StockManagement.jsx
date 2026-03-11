@@ -90,9 +90,11 @@ const StockManagement = () => {
     ];
 
     const filteredProducts = products.filter(p => {
-        const matchesSearch = p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.model?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.brand?.toLowerCase().includes(searchQuery.toLowerCase());
+        const q = searchQuery.trim().toLowerCase();
+        const haystack = [
+            p.name, p.model, p.brand, p.category, p.supplierId
+        ].map(v => (v || '').toLowerCase()).join(' ');
+        const matchesSearch = !q || haystack.includes(q);
 
         const matchesSupplier = selectedSupplier === 'all' || p.supplierId === selectedSupplier;
 
@@ -245,139 +247,252 @@ const StockManagement = () => {
                         )}
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        <AnimatePresence>
-                            {filteredProducts.map((product, index) => (
-                                <motion.div
-                                    key={product.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 20 }}
-                                    transition={{ delay: index * 0.05 }}
-                                    className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all border-2 border-gray-100 hover:border-indigo-200"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        {/* Product Icon */}
-                                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                                            <Box className="w-7 h-7 text-indigo-600" />
+                    <>
+                        {/* ── Mobile Cards (shown below md) ─────────────────── */}
+                        <div className="md:hidden space-y-3">
+                            <AnimatePresence>
+                                {filteredProducts.map((product, index) => (
+                                    <motion.div
+                                        key={product.id}
+                                        initial={{ opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -12 }}
+                                        transition={{ delay: index * 0.04 }}
+                                        className="bg-white rounded-2xl p-4 shadow-sm border-2 border-gray-100"
+                                    >
+                                        {/* Card Header */}
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center flex-shrink-0">
+                                                    <Box className="w-6 h-6 text-indigo-600" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <h3 className="text-base font-black text-gray-900">{product.name}</h3>
+                                                        {(product.stockSummary?.total || 0) < 5 && (
+                                                            <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded-lg whitespace-nowrap">
+                                                                <TriangleAlert className="inline-block w-3 h-3 mr-0.5" />Low
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 font-semibold mt-0.5">
+                                                        {[product.brand, product.category].filter(Boolean).join(' · ')}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* Stock count badge */}
+                                            <div className="text-right flex-shrink-0">
+                                                <div className="text-2xl font-black text-indigo-700">{product.stockSummary?.total || 0}</div>
+                                                <div className="text-[10px] font-bold text-gray-400 uppercase">In Stock</div>
+                                            </div>
                                         </div>
 
-                                        {/* Product Info */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="text-lg font-black text-gray-900 break-words">{product.name}</h3>
-                                                {(product.stockSummary?.total || 0) < 5 && (
-                                                    <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-lg whitespace-nowrap">
-                                                        <TriangleAlert className="inline-block w-4 h-4 mr-1" />
-                                                        Low Stock
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl font-bold border border-blue-100">
-                                                    <Box className="w-4 h-4 text-blue-500" />
-                                                    Available: {product.stockSummary?.total || 0}
-                                                </div>
-                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-xl font-bold border border-green-100">
-                                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                                    Sold: {product.trackSerials !== false
-                                                        ? (product.devices || []).filter(d => d.status === 'sold').length
-                                                        : (product.totalSold || 0)}
-                                                </div>
-                                                {product.brand && (
-                                                    <span className="flex items-center gap-1 text-gray-500 font-semibold">
-                                                        <Boxes className="w-4 h-4 text-gray-400" />
-                                                        {product.brand}
-                                                    </span>
-                                                )}
-                                                <span className="flex items-center gap-1 text-gray-500 font-semibold">
-                                                    <Tags className="w-4 h-4 text-gray-400" />
-                                                    {product.category || 'Phones'}
-                                                </span>
-                                            </div>
-
-                                            {/* Condition Breakdown - Only for tracked products */}
+                                        {/* Stats Row */}
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            <span className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-lg border border-green-100">
+                                                Sold: {product.trackSerials !== false
+                                                    ? (product.devices || []).filter(d => d.status === 'sold').length
+                                                    : (product.totalSold || 0)}
+                                            </span>
                                             {product.trackSerials !== false && (
-                                                <div className="flex flex-wrap gap-3 mt-2">
-                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded-lg text-[10px] font-black uppercase text-gray-600 border border-gray-100">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-                                                        N-Active: {product.stockSummary?.byCondition?.nonActive || 0}
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg text-[10px] font-black uppercase text-green-600 border border-green-100">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
-                                                        Active: {product.stockSummary?.byCondition?.active || 0}
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 rounded-lg text-[10px] font-black uppercase text-blue-600 border border-blue-100">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                                <>
+                                                    <span className="px-2.5 py-1 bg-gray-50 text-gray-600 text-[10px] font-black rounded-lg border border-gray-100 uppercase">
+                                                        N-Act: {product.stockSummary?.byCondition?.nonActive || 0}
+                                                    </span>
+                                                    <span className="px-2.5 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-lg border border-green-100 uppercase">
+                                                        Act: {product.stockSummary?.byCondition?.active || 0}
+                                                    </span>
+                                                    <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-black rounded-lg border border-blue-100 uppercase">
                                                         Refurb: {product.stockSummary?.byCondition?.refurbished || 0}
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 rounded-lg text-[10px] font-black uppercase text-orange-600 border border-orange-100">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
+                                                    </span>
+                                                    <span className="px-2.5 py-1 bg-orange-50 text-orange-700 text-[10px] font-black rounded-lg border border-orange-100 uppercase">
                                                         Used: {product.stockSummary?.byCondition?.used || 0}
-                                                    </div>
-                                                </div>
+                                                    </span>
+                                                </>
                                             )}
-
-                                            {/* Storage Variants */}
-                                            {product.variants?.storage && (
-                                                <div className="flex flex-wrap gap-1 mt-2">
-                                                    {product.variants.storage.map(s => (
-                                                        <span key={s} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-bold rounded border border-indigo-100">
-                                                            {s}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
+                                            {product.variants?.storage?.map(s => (
+                                                <span key={s} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-bold rounded border border-indigo-100">{s}</span>
+                                            ))}
                                         </div>
 
-                                        {/* Actions */}
-                                        <div className="flex items-center gap-2">
-                                            {product.trackSerials !== false && (
+                                        {/* Action Buttons */}
+                                        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                                            <div className="flex gap-2">
+                                                {product.trackSerials !== false && (
+                                                    <button
+                                                        onClick={() => navigate(`/stock-management/add-device/${product.id}`)}
+                                                        className="p-2.5 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors"
+                                                        title="Add Device"
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                                 <button
-                                                    onClick={() => navigate(`/stock-management/add-device/${product.id}`)}
-                                                    className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors"
-                                                    title="Add Device"
+                                                    onClick={() => navigate(`/stock-management/edit-product/${product.id}`)}
+                                                    className="p-2.5 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition-colors"
+                                                    title="Edit Product"
                                                 >
-                                                    <Plus className="w-4 h-4" />
+                                                    <Edit3 className="w-4 h-4" />
                                                 </button>
-                                            )}
+                                                {(user?.role === 'CEO' || user?.role === 'MANAGER') && (
+                                                    <button
+                                                        onClick={() => handleDeleteProduct(product.id)}
+                                                        className="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
                                             <button
                                                 onClick={() => navigate(`/stock-management/devices/${encodeURIComponent(product.id)}`)}
-                                                className="p-3 bg-gray-50 text-gray-400 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-all flex items-center justify-center gap-2 border border-transparent hover:border-purple-100 group/btn"
-                                                title={product.trackSerials === false ? "View Details" : "View Devices"}
+                                                className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition-colors"
                                             >
                                                 {product.trackSerials === false ? (
-                                                    <Layers3 className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                                                    <Layers3 className="w-3.5 h-3.5" />
                                                 ) : (
-                                                    <Barcode className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                                                    <Barcode className="w-3.5 h-3.5" />
                                                 )}
-                                                <span className="text-xs font-bold hidden sm:inline">
-                                                    {product.trackSerials === false ? "View Details" : "View Devices"}
-                                                </span>
+                                                {product.trackSerials === false ? 'Details' : 'Devices'}
                                             </button>
-                                            <button
-                                                onClick={() => navigate(`/stock-management/edit-product/${product.id}`)}
-                                                className="p-3 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition-colors"
-                                                title="Edit Product"
-                                            >
-                                                <Edit3 className="w-4 h-4" />
-                                            </button>
-
-                                            {(user?.role === 'CEO' || user?.role === 'MANAGER') && (
-                                                <button
-                                                    onClick={() => handleDeleteProduct(product.id)}
-                                                    className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
-                                                    title="Delete Product"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            )}
                                         </div>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                    </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* ── Desktop Rows (hidden below md) ────────────────── */}
+                        <div className="hidden md:block space-y-3">
+                            <AnimatePresence>
+                                {filteredProducts.map((product, index) => (
+                                    <motion.div
+                                        key={product.id}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                        transition={{ delay: index * 0.05 }}
+                                        className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all border-2 border-gray-100 hover:border-indigo-200"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            {/* Product Icon */}
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+                                                <Box className="w-7 h-7 text-indigo-600" />
+                                            </div>
+
+                                            {/* Product Info */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <h3 className="text-lg font-black text-gray-900 break-words">{product.name}</h3>
+                                                    {(product.stockSummary?.total || 0) < 5 && (
+                                                        <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-lg whitespace-nowrap">
+                                                            <TriangleAlert className="inline-block w-4 h-4 mr-1" />
+                                                            Low Stock
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl font-bold border border-blue-100">
+                                                        <Box className="w-4 h-4 text-blue-500" />
+                                                        Available: {product.stockSummary?.total || 0}
+                                                    </div>
+                                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-xl font-bold border border-green-100">
+                                                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                                        Sold: {product.trackSerials !== false
+                                                            ? (product.devices || []).filter(d => d.status === 'sold').length
+                                                            : (product.totalSold || 0)}
+                                                    </div>
+                                                    {product.brand && (
+                                                        <span className="flex items-center gap-1 text-gray-500 font-semibold">
+                                                            <Boxes className="w-4 h-4 text-gray-400" />
+                                                            {product.brand}
+                                                        </span>
+                                                    )}
+                                                    <span className="flex items-center gap-1 text-gray-500 font-semibold">
+                                                        <Tags className="w-4 h-4 text-gray-400" />
+                                                        {product.category || 'Phones'}
+                                                    </span>
+                                                </div>
+
+                                                {product.trackSerials !== false && (
+                                                    <div className="flex flex-wrap gap-3 mt-2">
+                                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded-lg text-[10px] font-black uppercase text-gray-600 border border-gray-100">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
+                                                            N-Active: {product.stockSummary?.byCondition?.nonActive || 0}
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg text-[10px] font-black uppercase text-green-600 border border-green-100">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+                                                            Active: {product.stockSummary?.byCondition?.active || 0}
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 rounded-lg text-[10px] font-black uppercase text-blue-600 border border-blue-100">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                                            Refurb: {product.stockSummary?.byCondition?.refurbished || 0}
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 rounded-lg text-[10px] font-black uppercase text-orange-600 border border-orange-100">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
+                                                            Used: {product.stockSummary?.byCondition?.used || 0}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {product.variants?.storage && (
+                                                    <div className="flex flex-wrap gap-1 mt-2">
+                                                        {product.variants.storage.map(s => (
+                                                            <span key={s} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-bold rounded border border-indigo-100">
+                                                                {s}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="flex items-center gap-2">
+                                                {product.trackSerials !== false && (
+                                                    <button
+                                                        onClick={() => navigate(`/stock-management/add-device/${product.id}`)}
+                                                        className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors"
+                                                        title="Add Device"
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => navigate(`/stock-management/devices/${encodeURIComponent(product.id)}`)}
+                                                    className="p-3 bg-gray-50 text-gray-400 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-all flex items-center justify-center gap-2 border border-transparent hover:border-purple-100 group/btn"
+                                                    title={product.trackSerials === false ? 'View Details' : 'View Devices'}
+                                                >
+                                                    {product.trackSerials === false ? (
+                                                        <Layers3 className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                                                    ) : (
+                                                        <Barcode className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                                                    )}
+                                                    <span className="text-xs font-bold hidden sm:inline">
+                                                        {product.trackSerials === false ? 'View Details' : 'View Devices'}
+                                                    </span>
+                                                </button>
+                                                <button
+                                                    onClick={() => navigate(`/stock-management/edit-product/${product.id}`)}
+                                                    className="p-3 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition-colors"
+                                                    title="Edit Product"
+                                                >
+                                                    <Edit3 className="w-4 h-4" />
+                                                </button>
+                                                {(user?.role === 'CEO' || user?.role === 'MANAGER') && (
+                                                    <button
+                                                        onClick={() => handleDeleteProduct(product.id)}
+                                                        className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                                        title="Delete Product"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </div>
+                    </>
                 )}
             </div>
         </div>
