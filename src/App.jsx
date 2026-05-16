@@ -1,58 +1,71 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import './index.css';
+
+// ── Eager: always needed on first load ──
 import Login from './pages/Login';
-import AdvancedReportPage from './pages/AdvancedReportPage';
 import DesktopLayout from './layouts/DesktopLayout';
 import MobileLayout from './layouts/MobileLayout';
-import MobileDashboard from './pages/MobileDashboard';
-import CEOStockManagement from './pages/CEOStockManagement';
-import CEODataDashboard from './pages/CEODataDashboard';
-import ManagerDashboard from './pages/ManagerDashboard';
-import SettingsPage from './pages/SettingsPage';
-import WhatsAppTemplates from './pages/WhatsAppTemplates';
-import AdvancedStockManagement from './pages/AdvancedStockManagement';
-import ConditionStockManagement from './pages/ConditionStockManagement';
-import StockLibrary from './pages/StockLibrary';
-import CategoryView from './pages/CategoryView';
-import AIInsightsView from './pages/AIInsightsView';
-import StockCalculatorPage from './pages/StockCalculatorPage';
-import TradeInRouter from './components/TradeInRouter';
-import TechnicianManagement from './pages/TechnicianManagement';
-import TechnicianDashboard from './pages/TechnicianDashboard';
-import RepairManagement from './pages/RepairManagement';
-import RepairDetail from './pages/RepairDetail';
-import DeliveryDashboard from './pages/DeliveryDashboard';
-import DeliveryDetail from './pages/DeliveryDetail';
-import UserManagement from './pages/UserManagement';
-import WanakitaaHub from './pages/WanakitaaHub';
-import MessageCenter from './pages/MessageCenter';
-import CustomerReview from './pages/CustomerReview';
-import NewSalePage from './pages/NewSalePage';
-import SalesPage from './pages/SalesPage';
-import SupplierManagement from './pages/SupplierManagement';
-import StockManagement from './pages/StockManagement';
-import AddProductPage from './pages/AddProductPage';
-import AddDevicePage from './pages/AddDevicePage';
-import ViewDevicesPage from './pages/ViewDevicesPage';
-import EditProductPage from './pages/EditProductPage';
-import AllDevicesPage from './pages/AllDevicesPage';
-import CreateRepairPage from './pages/CreateRepairPage';
-import ProgressiveRepairForm from './pages/ProgressiveRepairForm';
-import DiagnosisActionPage from './pages/DiagnosisActionPage';
-import NotificationTemplates from './pages/NotificationTemplates';
-import NotificationPreferences from './pages/NotificationPreferences';
-import CampaignManager from './pages/CampaignManager';
-import CreateCampaign from './pages/CreateCampaign';
-import CampaignDetail from './pages/CampaignDetail';
-import SerialNumberScanner from './pages/SerialNumberScanner';
-import TeamManagement from './pages/TeamManagement';
-import StockInventoryPage from './pages/StockInventoryPage';
-import ReportsPage from './pages/ReportsPage';
-import ExpensesPage from './pages/ExpensesPage';
-import DailySheetReport from './pages/DailySheetReport';
-import ToolsPage from './pages/ToolsPage';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
-import './index.css';
+
+// ── Lazy: loaded on demand (each becomes its own JS chunk) ──
+const MobileDashboard        = lazy(() => import('./pages/MobileDashboard'));
+const CEOStockManagement     = lazy(() => import('./pages/CEOStockManagement'));
+const CEODataDashboard       = lazy(() => import('./pages/CEODataDashboard'));
+const ManagerDashboard       = lazy(() => import('./pages/ManagerDashboard'));
+const SettingsPage           = lazy(() => import('./pages/SettingsPage'));
+const WhatsAppTemplates      = lazy(() => import('./pages/WhatsAppTemplates'));
+const AdvancedStockManagement= lazy(() => import('./pages/AdvancedStockManagement'));
+const ConditionStockManagement=lazy(() => import('./pages/ConditionStockManagement'));
+const StockLibrary           = lazy(() => import('./pages/StockLibrary'));
+const CategoryView           = lazy(() => import('./pages/CategoryView'));
+const AIInsightsView         = lazy(() => import('./pages/AIInsightsView'));
+const StockCalculatorPage    = lazy(() => import('./pages/StockCalculatorPage'));
+const TradeInRouter          = lazy(() => import('./components/TradeInRouter'));
+const TechnicianManagement   = lazy(() => import('./pages/TechnicianManagement'));
+const TechnicianDashboard    = lazy(() => import('./pages/TechnicianDashboard'));
+const RepairManagement       = lazy(() => import('./pages/RepairManagement'));
+const RepairDetail           = lazy(() => import('./pages/RepairDetail'));
+const DeliveryDashboard      = lazy(() => import('./pages/DeliveryDashboard'));
+const DeliveryDetail         = lazy(() => import('./pages/DeliveryDetail'));
+const UserManagement         = lazy(() => import('./pages/UserManagement'));
+const WanakitaaHub           = lazy(() => import('./pages/WanakitaaHub'));
+const MessageCenter          = lazy(() => import('./pages/MessageCenter'));
+const CustomerReview         = lazy(() => import('./pages/CustomerReview'));
+const NewSalePage            = lazy(() => import('./pages/NewSalePage'));
+const SalesPage              = lazy(() => import('./pages/SalesPage'));
+const SupplierManagement     = lazy(() => import('./pages/SupplierManagement'));
+const StockManagement        = lazy(() => import('./pages/StockManagement'));
+const AddProductPage         = lazy(() => import('./pages/AddProductPage'));
+const AddDevicePage          = lazy(() => import('./pages/AddDevicePage'));
+const ViewDevicesPage        = lazy(() => import('./pages/ViewDevicesPage'));
+const EditProductPage        = lazy(() => import('./pages/EditProductPage'));
+const AllDevicesPage         = lazy(() => import('./pages/AllDevicesPage'));
+const CreateRepairPage       = lazy(() => import('./pages/CreateRepairPage'));
+const ProgressiveRepairForm  = lazy(() => import('./pages/ProgressiveRepairForm'));
+const DiagnosisActionPage    = lazy(() => import('./pages/DiagnosisActionPage'));
+const NotificationTemplates  = lazy(() => import('./pages/NotificationTemplates'));
+const NotificationPreferences= lazy(() => import('./pages/NotificationPreferences'));
+const CampaignManager        = lazy(() => import('./pages/CampaignManager'));
+const CreateCampaign         = lazy(() => import('./pages/CreateCampaign'));
+const CampaignDetail         = lazy(() => import('./pages/CampaignDetail'));
+const SerialNumberScanner    = lazy(() => import('./pages/SerialNumberScanner'));
+const TeamManagement         = lazy(() => import('./pages/TeamManagement'));
+const StockInventoryPage     = lazy(() => import('./pages/StockInventoryPage'));
+const ReportsPage            = lazy(() => import('./pages/ReportsPage'));
+const ExpensesPage           = lazy(() => import('./pages/ExpensesPage'));
+const DailySheetReport       = lazy(() => import('./pages/DailySheetReport'));
+const ToolsPage              = lazy(() => import('./pages/ToolsPage'));
+const AdvancedReportPage     = lazy(() => import('./pages/AdvancedReportPage'));
+
+// ── Minimal loading fallback ──
+const PageLoader = () => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid rgba(79,142,247,0.15)', borderTopColor: '#4f8ef7', animation: 'spin 0.7s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+);
 
 function App() {
     const isLoggedIn = localStorage.getItem('token');
@@ -60,6 +73,7 @@ function App() {
 
     return (
         <Router>
+            <Suspense fallback={<PageLoader />}>
             <Routes>
                 <Route path="/login" element={<Login />} />
 
@@ -157,6 +171,7 @@ function App() {
                 <Route path="/unauthorized" element={<Unauthorized />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
         </Router>
     );
 }

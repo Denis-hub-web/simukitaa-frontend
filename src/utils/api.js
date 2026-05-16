@@ -101,6 +101,10 @@ export const salesAPI = {
     create: (data) => api.post('/sales', data)
 };
 
+export const deviceSearchAPI = {
+    search: (query) => api.get('/serial-search', { params: { q: query, limit: 12 } })
+};
+
 // Repair APIs
 export const repairAPI = {
     getAll: () => api.get('/repairs'),

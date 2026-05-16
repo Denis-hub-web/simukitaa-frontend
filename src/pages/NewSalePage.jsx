@@ -18,7 +18,7 @@ import {
     Repeat2
 } from 'lucide-react';
 import axios from 'axios';
-import api, { customerAPI, salesAPI, paymentAPI, API_URL } from '../utils/api';
+import api, { customerAPI, salesAPI, paymentAPI, deviceSearchAPI, API_URL } from '../utils/api';
 import TradeInForm from '../components/TradeInForm';
 import SerialScannerModal from '../components/SerialScannerModal';
 
@@ -137,7 +137,8 @@ const NewSalePage = () => {
     // Unified Product & Serial search
     const handleUnifiedSearch = async (query) => {
         setSearchSerial(query);
-        if (query.length < 2) {
+        const trimmedQuery = query.trim();
+        if (trimmedQuery.length < 2) {
             setSuggestions([]);
             setProductSuggestions([]);
             return;
@@ -145,40 +146,10 @@ const NewSalePage = () => {
 
         setSearching(true);
         try {
-            const response = await api.get(`/stock/products`);
-            const products = response.data.data || [];
-
-            // 1. Find Products (by Name/Brand/Model)
-            const filteredProducts = products.filter(p =>
-                (p.name && p.name.toLowerCase().includes(query.toLowerCase())) ||
-                (p.brand && p.brand.toLowerCase().includes(query.toLowerCase())) ||
-                (p.model && p.model.toLowerCase().includes(query.toLowerCase()))
-            );
-            setProductSuggestions(filteredProducts);
-
-            // 2. Find Specific Devices (by Serial/IMEI) - requires 3+ chars
-            if (query.length >= 3) {
-                const deviceMatches = [];
-                products.forEach(product => {
-                    if (product.devices && Array.isArray(product.devices)) {
-                        product.devices.forEach(device => {
-                            if (device.status === 'available' &&
-                                device.serialNumber &&
-                                device.serialNumber.toUpperCase().includes(query.toUpperCase())) {
-                                deviceMatches.push({
-                                    product: product,
-                                    device: device,
-                                    price: device.price || product.basePricing?.[device.condition] || 0,
-                                    condition: device.condition
-                                });
-                            }
-                        });
-                    }
-                });
-                setSuggestions(deviceMatches);
-            } else {
-                setSuggestions([]);
-            }
+            const response = await deviceSearchAPI.search(trimmedQuery);
+            const payload = response.data.data || {};
+            setSuggestions(payload.devices || []);
+            setProductSuggestions(payload.products || []);
         } catch (error) {
             console.error('Search error:', error);
         } finally {
