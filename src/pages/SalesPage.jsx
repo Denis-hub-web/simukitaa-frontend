@@ -409,6 +409,17 @@ const SalesPage = () => {
             })
         ).values()
     ).sort((a, b) => a.name.localeCompare(b.name));
+    const todayIso = new Date().toISOString().split('T')[0];
+    const weekStartIso = (() => {
+        const d = new Date();
+        d.setDate(d.getDate() - d.getDay() + 1);
+        return d.toISOString().split('T')[0];
+    })();
+    const monthStartIso = (() => {
+        const d = new Date();
+        d.setDate(1);
+        return d.toISOString().split('T')[0];
+    })();
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8 overflow-x-hidden" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
@@ -451,99 +462,107 @@ const SalesPage = () => {
                 </div>
 
                 {isCEO && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-white rounded-2xl p-5 border-2 border-blue-100 shadow-sm">
-                            <div className="text-2xl md:text-3xl font-black text-blue-600 mb-1">{filteredSales.length}</div>
-                            <div className="text-sm text-gray-600 font-semibold">Sales</div>
-                        </div>
-                        <div className="bg-white rounded-2xl p-5 border-2 border-emerald-100 shadow-sm">
-                            <div className="text-2xl md:text-3xl font-black text-emerald-600 mb-1">{formatCurrency(filteredRevenue)}</div>
-                            <div className="text-sm text-gray-600 font-semibold">Revenue</div>
-                        </div>
-                        <div className="bg-white rounded-2xl p-5 border-2 border-amber-100 shadow-sm">
-                            <div className="text-2xl md:text-3xl font-black text-amber-600 mb-1">{formatCurrency(filteredCost)}</div>
-                            <div className="text-sm text-gray-600 font-semibold">COGS</div>
-                        </div>
-                        <div className="bg-white rounded-2xl p-5 border-2 border-purple-100 shadow-sm">
-                            <div className="text-2xl md:text-3xl font-black text-purple-600 mb-1">{formatCurrency(filteredProfit)}</div>
-                            <div className="text-sm text-gray-600 font-semibold">Profit</div>
-                        </div>
-                    </div>
-                )}
-
-                {isCEO && (
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
-                        <div className="xl:col-span-2 bg-white rounded-3xl border-2 border-gray-100 shadow-sm p-5 md:p-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
+                            <div className="flex items-center justify-between gap-3 mb-4">
                                 <div>
-                                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Payment Breakdown</p>
-                                    <h2 className="text-xl font-black text-gray-900">Amount by Payment Method</h2>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Custom Date Range</p>
+                                    <h2 className="text-lg font-black text-gray-900">Choose report period</h2>
                                 </div>
-                                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-wider self-start sm:self-auto">
-                                    <Wallet className="w-4 h-4" />
-                                    {paymentSummary.length} methods
+                                <CalendarDays className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                <label className="block">
+                                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">From</span>
+                                    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm font-bold text-gray-800 focus:border-blue-500 focus:outline-none" />
+                                </label>
+                                <label className="block">
+                                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">To</span>
+                                    <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm font-bold text-gray-800 focus:border-blue-500 focus:outline-none" />
+                                </label>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <button onClick={() => { setStartDate(todayIso); setEndDate(todayIso); }} className="px-3 py-2 rounded-xl bg-blue-50 text-blue-700 text-xs font-black hover:bg-blue-100 transition-colors">Today</button>
+                                <button onClick={() => { setStartDate(weekStartIso); setEndDate(todayIso); }} className="px-3 py-2 rounded-xl bg-gray-50 text-gray-700 text-xs font-black hover:bg-gray-100 transition-colors">This Week</button>
+                                <button onClick={() => { setStartDate(monthStartIso); setEndDate(todayIso); }} className="px-3 py-2 rounded-xl bg-gray-50 text-gray-700 text-xs font-black hover:bg-gray-100 transition-colors">This Month</button>
+                                <button onClick={() => { setStartDate(''); setEndDate(''); }} className="px-3 py-2 rounded-xl bg-white text-gray-500 border border-gray-200 text-xs font-black hover:bg-gray-50 transition-colors">All Time</button>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                                <div>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment Methods</p>
+                                    <h2 className="text-lg font-black text-gray-900">Breakdown for selected range</h2>
+                                </div>
+                                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 text-gray-700 text-xs font-black self-start sm:self-auto">
+                                    <Wallet className="w-4 h-4 text-blue-600" />
+                                    {paymentSummary.length || 0}
                                 </div>
                             </div>
-                            <div className="space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {paymentSummary.map(item => {
                                     const pct = topPaymentAmount > 0 ? (item.amount / topPaymentAmount) * 100 : 0;
                                     return (
-                                        <div key={item.method} className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
-                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-                                                <div className="font-black text-gray-900 uppercase tracking-wide text-sm">{item.method.replace(/_/g, ' ')}</div>
-                                                <div className="flex flex-wrap gap-2 text-xs font-bold">
-                                                    <span className="px-2 py-1 rounded-lg bg-white text-gray-600 border border-gray-100">{item.count} sale(s)</span>
-                                                    <span className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">{formatCurrency(item.amount)}</span>
-                                                    <span className="px-2 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-100">Profit {formatCurrency(item.profit)}</span>
+                                        <div key={item.method} className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
+                                            <div className="flex items-start justify-between gap-3 mb-2">
+                                                <div>
+                                                    <div className="font-black text-gray-900 text-sm">{item.method.replace(/_/g, ' ')}</div>
+                                                    <div className="text-xs font-bold text-gray-500">{item.count} sale(s)</div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-black text-emerald-700">{formatCurrency(item.amount)}</div>
+                                                    <div className="text-[11px] font-bold text-purple-600">Profit {formatCurrency(item.profit)}</div>
                                                 </div>
                                             </div>
-                                            <div className="h-2 rounded-full bg-white overflow-hidden">
+                                            <div className="h-1.5 rounded-full bg-white overflow-hidden">
                                                 <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-600" style={{ width: `${pct}%` }} />
                                             </div>
                                         </div>
                                     );
                                 })}
-                                {paymentSummary.length === 0 && <div className="text-center py-8 text-gray-400 font-bold">No payment data in this filter</div>}
+                                {paymentSummary.length === 0 && <div className="text-center py-8 text-gray-400 font-bold md:col-span-2">No payment data in this filter</div>}
                             </div>
                         </div>
+                    </div>
+                )}
 
-                        <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm p-5 md:p-6">
-                            <div className="flex items-center justify-between gap-3 mb-5">
-                                <div>
-                                    <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest">Range Report</p>
-                                    <h2 className="text-xl font-black text-gray-900">Performance</h2>
-                                </div>
-                                <TrendingUp className="w-8 h-8 text-purple-500" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
-                                    <div className="text-[10px] font-black text-emerald-600 uppercase">Avg Sale</div>
-                                    <div className="text-lg font-black text-gray-900 mt-1">{formatCurrency(averageSaleValue)}</div>
-                                </div>
-                                <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
-                                    <div className="text-[10px] font-black text-indigo-600 uppercase">Margin</div>
-                                    <div className="text-lg font-black text-gray-900 mt-1">{filteredMarginPct.toFixed(1)}%</div>
-                                </div>
-                                <div className="rounded-2xl bg-amber-50 border border-amber-100 p-4">
-                                    <div className="text-[10px] font-black text-amber-600 uppercase">Discount</div>
-                                    <div className="text-lg font-black text-gray-900 mt-1">{formatCurrency(filteredDiscount)}</div>
-                                </div>
-                                <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4">
-                                    <div className="text-[10px] font-black text-blue-600 uppercase">Items</div>
-                                    <div className="text-lg font-black text-gray-900 mt-1">{filteredItemsSold}</div>
-                                </div>
-                            </div>
+                {isCEO && (
+                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-5">
+                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+                            <div className="text-xl md:text-2xl font-black text-blue-600">{filteredSales.length}</div>
+                            <div className="text-xs text-gray-500 font-bold">Sales</div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+                            <div className="text-xl md:text-2xl font-black text-emerald-600">{formatCurrency(filteredRevenue)}</div>
+                            <div className="text-xs text-gray-500 font-bold">Revenue</div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+                            <div className="text-xl md:text-2xl font-black text-amber-600">{formatCurrency(filteredCost)}</div>
+                            <div className="text-xs text-gray-500 font-bold">COGS</div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+                            <div className="text-xl md:text-2xl font-black text-purple-600">{formatCurrency(filteredProfit)}</div>
+                            <div className="text-xs text-gray-500 font-bold">Profit</div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+                            <div className="text-xl md:text-2xl font-black text-indigo-600">{filteredMarginPct.toFixed(1)}%</div>
+                            <div className="text-xs text-gray-500 font-bold">Margin</div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+                            <div className="text-xl md:text-2xl font-black text-slate-700">{formatCurrency(averageSaleValue)}</div>
+                            <div className="text-xs text-gray-500 font-bold">Avg Sale</div>
                         </div>
                     </div>
                 )}
 
                 {isCEO && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                        <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm p-5 md:p-6">
+                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
                             <div className="flex items-center justify-between gap-3 mb-5">
                                 <div>
-                                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Everyday Report</p>
-                                    <h2 className="text-xl font-black text-gray-900">Daily Sales</h2>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Daily Report</p>
+                                    <h2 className="text-lg font-black text-gray-900">Everyday Sales</h2>
                                 </div>
                                 <CalendarDays className="w-7 h-7 text-emerald-500" />
                             </div>
@@ -564,11 +583,11 @@ const SalesPage = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm p-5 md:p-6">
+                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
                             <div className="flex items-center justify-between gap-3 mb-5">
                                 <div>
-                                    <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Week Report</p>
-                                    <h2 className="text-xl font-black text-gray-900">Weekly Sales</h2>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Weekly Report</p>
+                                    <h2 className="text-lg font-black text-gray-900">Week by Week</h2>
                                 </div>
                                 <CalendarDays className="w-7 h-7 text-indigo-500" />
                             </div>
