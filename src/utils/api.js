@@ -102,7 +102,7 @@ export const salesAPI = {
 };
 
 export const deviceSearchAPI = {
-    search: (query) => api.get('/serial-search', { params: { q: query, limit: 12 } })
+    search: (query, signal) => api.get('/serial-search', { params: { q: query, limit: 12 }, signal })
 };
 
 // Repair APIs
