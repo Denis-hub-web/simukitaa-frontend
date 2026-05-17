@@ -8,7 +8,10 @@ import {
     Loader2,
     RefreshCcw,
     Repeat2,
-    Search
+    Search,
+    Wallet,
+    CalendarDays,
+    TrendingUp
 } from 'lucide-react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -336,6 +339,49 @@ const SalesPage = () => {
         return matchesSearch && matchesMethod && matchesStaff && matchesDate && matchesProfit && matchesMargin;
     }).sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
 
+    const filteredRevenue = filteredSales.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0);
+    const filteredCost = filteredSales.reduce((sum, s) => sum + computeSaleCostTotal(s), 0);
+    const filteredProfit = filteredSales.reduce((sum, s) => sum + (parseFloat(s.profit) || 0), 0);
+    const filteredDiscount = filteredSales.reduce((sum, s) => sum + (parseFloat(s.totalDiscountAmount ?? s.discountAmount) || 0), 0);
+    const filteredItemsSold = filteredSales.reduce((sum, s) => sum + normalizeItems(s).reduce((acc, it) => acc + (parseInt(it.quantity) || 1), 0), 0);
+    const averageSaleValue = filteredSales.length ? filteredRevenue / filteredSales.length : 0;
+    const filteredMarginPct = filteredRevenue > 0 ? (filteredProfit / filteredRevenue) * 100 : 0;
+    const periodLabel = `${startDate || 'All time'} → ${endDate || 'Today'}`;
+    const paymentSummary = Array.from(filteredSales.reduce((map, sale) => {
+        const method = sale.paymentMethod || 'N/A';
+        const current = map.get(method) || { method, amount: 0, count: 0, profit: 0 };
+        current.amount += parseFloat(sale.totalAmount) || 0;
+        current.profit += parseFloat(sale.profit) || 0;
+        current.count += 1;
+        map.set(method, current);
+        return map;
+    }, new Map()).values()).sort((a, b) => b.amount - a.amount);
+    const topPaymentAmount = paymentSummary[0]?.amount || 0;
+    const dailySummary = Array.from(filteredSales.reduce((map, sale) => {
+        const key = new Date(sale.saleDate).toISOString().split('T')[0];
+        const current = map.get(key) || { key, amount: 0, count: 0, profit: 0 };
+        current.amount += parseFloat(sale.totalAmount) || 0;
+        current.profit += parseFloat(sale.profit) || 0;
+        current.count += 1;
+        map.set(key, current);
+        return map;
+    }, new Map()).values()).sort((a, b) => new Date(b.key) - new Date(a.key));
+    const weeklySummary = Array.from(filteredSales.reduce((map, sale) => {
+        const date = new Date(sale.saleDate);
+        const start = new Date(date);
+        start.setDate(date.getDate() - date.getDay() + 1);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        const key = start.toISOString().split('T')[0];
+        const current = map.get(key) || { key, label: `${start.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} - ${end.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}`, amount: 0, count: 0, profit: 0 };
+        current.amount += parseFloat(sale.totalAmount) || 0;
+        current.profit += parseFloat(sale.profit) || 0;
+        current.count += 1;
+        map.set(key, current);
+        return map;
+    }, new Map()).values()).sort((a, b) => new Date(b.key) - new Date(a.key));
+
     // Calculate Dashboard Stats
     const totalRevenue = sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
     const totalProfit = sales.reduce((sum, s) => sum + (s.profit || 0), 0);
@@ -379,7 +425,7 @@ const SalesPage = () => {
 
                     <div className="text-center sm:flex-1">
                         <h1 className="text-2xl md:text-3xl font-black text-gray-900">Sales History</h1>
-                        <p className="text-sm text-gray-600 font-semibold mt-1">{filteredSales.length} transactions • {itemsSold} items</p>
+                        <p className="text-sm text-gray-600 font-semibold mt-1">{filteredSales.length} transactions • {filteredItemsSold} items • {periodLabel}</p>
                     </div>
 
                     <div className="flex gap-2 self-end sm:self-auto">
@@ -411,16 +457,136 @@ const SalesPage = () => {
                             <div className="text-sm text-gray-600 font-semibold">Sales</div>
                         </div>
                         <div className="bg-white rounded-2xl p-5 border-2 border-emerald-100 shadow-sm">
-                            <div className="text-2xl md:text-3xl font-black text-emerald-600 mb-1">{formatCurrency(filteredSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0))}</div>
+                            <div className="text-2xl md:text-3xl font-black text-emerald-600 mb-1">{formatCurrency(filteredRevenue)}</div>
                             <div className="text-sm text-gray-600 font-semibold">Revenue</div>
                         </div>
                         <div className="bg-white rounded-2xl p-5 border-2 border-amber-100 shadow-sm">
-                            <div className="text-2xl md:text-3xl font-black text-amber-600 mb-1">{formatCurrency(filteredSales.reduce((sum, s) => sum + computeSaleCostTotal(s), 0))}</div>
+                            <div className="text-2xl md:text-3xl font-black text-amber-600 mb-1">{formatCurrency(filteredCost)}</div>
                             <div className="text-sm text-gray-600 font-semibold">COGS</div>
                         </div>
                         <div className="bg-white rounded-2xl p-5 border-2 border-purple-100 shadow-sm">
-                            <div className="text-2xl md:text-3xl font-black text-purple-600 mb-1">{formatCurrency(filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0))}</div>
+                            <div className="text-2xl md:text-3xl font-black text-purple-600 mb-1">{formatCurrency(filteredProfit)}</div>
                             <div className="text-sm text-gray-600 font-semibold">Profit</div>
+                        </div>
+                    </div>
+                )}
+
+                {isCEO && (
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+                        <div className="xl:col-span-2 bg-white rounded-3xl border-2 border-gray-100 shadow-sm p-5 md:p-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+                                <div>
+                                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Payment Breakdown</p>
+                                    <h2 className="text-xl font-black text-gray-900">Amount by Payment Method</h2>
+                                </div>
+                                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-wider self-start sm:self-auto">
+                                    <Wallet className="w-4 h-4" />
+                                    {paymentSummary.length} methods
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                {paymentSummary.map(item => {
+                                    const pct = topPaymentAmount > 0 ? (item.amount / topPaymentAmount) * 100 : 0;
+                                    return (
+                                        <div key={item.method} className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                                                <div className="font-black text-gray-900 uppercase tracking-wide text-sm">{item.method.replace(/_/g, ' ')}</div>
+                                                <div className="flex flex-wrap gap-2 text-xs font-bold">
+                                                    <span className="px-2 py-1 rounded-lg bg-white text-gray-600 border border-gray-100">{item.count} sale(s)</span>
+                                                    <span className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">{formatCurrency(item.amount)}</span>
+                                                    <span className="px-2 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-100">Profit {formatCurrency(item.profit)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="h-2 rounded-full bg-white overflow-hidden">
+                                                <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-600" style={{ width: `${pct}%` }} />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {paymentSummary.length === 0 && <div className="text-center py-8 text-gray-400 font-bold">No payment data in this filter</div>}
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm p-5 md:p-6">
+                            <div className="flex items-center justify-between gap-3 mb-5">
+                                <div>
+                                    <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest">Range Report</p>
+                                    <h2 className="text-xl font-black text-gray-900">Performance</h2>
+                                </div>
+                                <TrendingUp className="w-8 h-8 text-purple-500" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
+                                    <div className="text-[10px] font-black text-emerald-600 uppercase">Avg Sale</div>
+                                    <div className="text-lg font-black text-gray-900 mt-1">{formatCurrency(averageSaleValue)}</div>
+                                </div>
+                                <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
+                                    <div className="text-[10px] font-black text-indigo-600 uppercase">Margin</div>
+                                    <div className="text-lg font-black text-gray-900 mt-1">{filteredMarginPct.toFixed(1)}%</div>
+                                </div>
+                                <div className="rounded-2xl bg-amber-50 border border-amber-100 p-4">
+                                    <div className="text-[10px] font-black text-amber-600 uppercase">Discount</div>
+                                    <div className="text-lg font-black text-gray-900 mt-1">{formatCurrency(filteredDiscount)}</div>
+                                </div>
+                                <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+                                    <div className="text-[10px] font-black text-blue-600 uppercase">Items</div>
+                                    <div className="text-lg font-black text-gray-900 mt-1">{filteredItemsSold}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {isCEO && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                        <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm p-5 md:p-6">
+                            <div className="flex items-center justify-between gap-3 mb-5">
+                                <div>
+                                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Everyday Report</p>
+                                    <h2 className="text-xl font-black text-gray-900">Daily Sales</h2>
+                                </div>
+                                <CalendarDays className="w-7 h-7 text-emerald-500" />
+                            </div>
+                            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                                {dailySummary.slice(0, 14).map(day => (
+                                    <div key={day.key} className="flex items-center justify-between gap-3 rounded-2xl bg-gray-50 border border-gray-100 p-4">
+                                        <div>
+                                            <div className="font-black text-gray-900">{new Date(day.key).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                                            <div className="text-xs font-bold text-gray-500">{day.count} transaction(s)</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-black text-emerald-700">{formatCurrency(day.amount)}</div>
+                                            <div className="text-xs font-bold text-purple-600">+{formatCurrency(day.profit)}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {dailySummary.length === 0 && <div className="text-center py-8 text-gray-400 font-bold">No daily report data</div>}
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm p-5 md:p-6">
+                            <div className="flex items-center justify-between gap-3 mb-5">
+                                <div>
+                                    <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Week Report</p>
+                                    <h2 className="text-xl font-black text-gray-900">Weekly Sales</h2>
+                                </div>
+                                <CalendarDays className="w-7 h-7 text-indigo-500" />
+                            </div>
+                            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                                {weeklySummary.slice(0, 12).map(week => (
+                                    <div key={week.key} className="flex items-center justify-between gap-3 rounded-2xl bg-gray-50 border border-gray-100 p-4">
+                                        <div>
+                                            <div className="font-black text-gray-900">{week.label}</div>
+                                            <div className="text-xs font-bold text-gray-500">{week.count} transaction(s)</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-black text-indigo-700">{formatCurrency(week.amount)}</div>
+                                            <div className="text-xs font-bold text-purple-600">+{formatCurrency(week.profit)}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {weeklySummary.length === 0 && <div className="text-center py-8 text-gray-400 font-bold">No weekly report data</div>}
+                            </div>
                         </div>
                     </div>
                 )}
