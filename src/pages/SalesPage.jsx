@@ -284,6 +284,15 @@ const SalesPage = () => {
         );
     };
 
+    const normalizePayments = (sale) => {
+        if (Array.isArray(sale?.payments) && sale.payments.length > 0) {
+            return sale.payments
+                .map(p => ({ method: p.method || 'N/A', amount: parseFloat(p.amount) || 0 }))
+                .filter(p => p.amount > 0);
+        }
+        return [{ method: sale?.paymentMethod || 'N/A', amount: parseFloat(sale?.amountPaid ?? sale?.totalAmount) || 0 }];
+    };
+
     const filteredSales = sales.filter(sale => {
         const q = searchQuery.trim().toLowerCase();
         const items = normalizeItems(sale);
@@ -306,7 +315,7 @@ const SalesPage = () => {
 
         const matchesSearch = !q || searchHaystack.includes(q);
 
-        const matchesMethod = filterMethod === 'all' || sale.paymentMethod === filterMethod;
+        const matchesMethod = filterMethod === 'all' || normalizePayments(sale).some(p => p.method === filterMethod);
         const saleStaffId = sale.staff?.id || sale.staffId || 'unknown';
         const matchesStaff = filterStaffId === 'all' || saleStaffId === filterStaffId;
 
@@ -348,12 +357,15 @@ const SalesPage = () => {
     const filteredMarginPct = filteredRevenue > 0 ? (filteredProfit / filteredRevenue) * 100 : 0;
     const periodLabel = `${startDate || 'All time'} → ${endDate || 'Today'}`;
     const paymentSummary = Array.from(filteredSales.reduce((map, sale) => {
-        const method = sale.paymentMethod || 'N/A';
-        const current = map.get(method) || { method, amount: 0, count: 0, profit: 0 };
-        current.amount += parseFloat(sale.totalAmount) || 0;
-        current.profit += parseFloat(sale.profit) || 0;
-        current.count += 1;
-        map.set(method, current);
+        const salePaid = normalizePayments(sale).reduce((sum, p) => sum + p.amount, 0);
+        normalizePayments(sale).forEach(payment => {
+            const current = map.get(payment.method) || { method: payment.method, amount: 0, count: 0, profit: 0 };
+            const profitShare = salePaid > 0 ? ((parseFloat(sale.profit) || 0) * (payment.amount / salePaid)) : 0;
+            current.amount += payment.amount;
+            current.profit += profitShare;
+            current.count += 1;
+            map.set(payment.method, current);
+        });
         return map;
     }, new Map()).values()).sort((a, b) => b.amount - a.amount);
     const topPaymentAmount = paymentSummary[0]?.amount || 0;

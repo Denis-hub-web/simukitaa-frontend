@@ -464,6 +464,7 @@ const NewSalePage = () => {
     const [showScannerModal, setShowScannerModal] = useState(false);
     const [productSuggestions, setProductSuggestions] = useState([]);
     const [paymentMethods, setPaymentMethods] = useState(['CASH', 'M-PESA', 'TIGOPESA', 'AIRTEL_MONEY', 'HALOPESA', 'BANK']);
+    const [splitPayments, setSplitPayments] = useState([]);
 
     const loadingStepRef = useRef(0);
     const searchDebounceRef = useRef(null);
@@ -558,6 +559,13 @@ const NewSalePage = () => {
 
     const updateCartItem = (key, patch) => setCartItems(prev => prev.map(i => i.key === key ? { ...i, ...patch } : i));
     const removeCartItem = (key) => setCartItems(prev => prev.filter(i => i.key !== key));
+    const activePayments = splitPayments
+        .map(p => ({ method: p.method === 'CUSTOM' ? p.customMethod : p.method, amount: parseFloat(p.amount) || 0 }))
+        .filter(p => p.method && p.amount > 0);
+    const totalSplitPaid = activePayments.reduce((sum, p) => sum + p.amount, 0);
+    const updateSplitPayment = (index, patch) => setSplitPayments(prev => prev.map((p, i) => i === index ? { ...p, ...patch } : p));
+    const addSplitPayment = () => setSplitPayments(prev => [...prev, { method: paymentMethods[0] || 'CASH', amount: '', customMethod: '' }]);
+    const removeSplitPayment = (index) => setSplitPayments(prev => prev.filter((_, i) => i !== index));
 
     const cartTotals = (() => {
         const items = cartItems.map(i => {
@@ -573,7 +581,7 @@ const NewSalePage = () => {
         const invoiceDiscountAmount = Math.max(0, Math.min(subtotalAfterItemDiscount, computeDiscountAmount({ baseAmount: subtotalAfterItemDiscount, discountType: formData.invoiceDiscountType, discountValue: formData.invoiceDiscountValue })));
         const totalAfterInvoiceDiscount = Math.max(0, subtotalAfterItemDiscount - invoiceDiscountAmount);
         const netPayable = Math.max(0, totalAfterInvoiceDiscount - (parseFloat(formData.tradeInValue) || 0));
-        const paid = parseFloat(formData.amountPaid || 0) || 0;
+        const paid = splitPayments.length > 0 ? totalSplitPaid : (parseFloat(formData.amountPaid || 0) || 0);
         const balance = paid - netPayable;
         return { items, subtotalOriginal, itemDiscountTotal, subtotalAfterItemDiscount, invoiceDiscountAmount, totalAfterInvoiceDiscount, netPayable, paid, balance };
     })();
@@ -591,7 +599,7 @@ const NewSalePage = () => {
                 return formData.customerId !== '';
             case 2: return cartItems.length > 0;
             case 3: return true;
-            case 4: return !!(formData.paymentMethod && formData.amountPaid);
+            case 4: return splitPayments.length > 0 ? activePayments.length > 0 : !!(formData.paymentMethod && formData.amountPaid);
             case 5: return true;
             default: return false;
         }
@@ -601,7 +609,8 @@ const NewSalePage = () => {
         setLoading(true);
         try {
             const paymentMethod = formData.paymentMethod === 'CUSTOM' ? formData.customPaymentMethod : formData.paymentMethod;
-            const paid = parseFloat(formData.amountPaid) || 0;
+            const payments = activePayments.length > 0 ? activePayments : [{ method: paymentMethod, amount: parseFloat(formData.amountPaid) || 0 }];
+            const paid = payments.reduce((sum, p) => sum + p.amount, 0);
             if (formData.receiptMode === 'SEPARATE') {
                 const baseForSplit = cartTotals.subtotalAfterItemDiscount || 0;
                 const totalInvoiceDiscount = cartTotals.invoiceDiscountAmount || 0;
@@ -613,10 +622,11 @@ const NewSalePage = () => {
                 const totalNet = netPerReceipt.reduce((sum, x) => sum + x.net, 0);
                 for (const part of netPerReceipt) {
                     const paidShare = totalNet > 0 ? (paid * (part.net / totalNet)) : 0;
-                    await salesAPI.create({ customerId: formData.isNewCustomer ? null : formData.customerId, customerName: formData.customerName, customerPhone: formData.customerPhone, isNewCustomer: formData.isNewCustomer, paymentMethod, amountPaid: paidShare, discountAmount: part.invoiceDiscountShare, discountNote: 'Invoice discount split across separate receipts', items: [{ productId: part.item.productId, deviceId: part.item.deviceId, quantity: part.item.quantity, sellingPrice: part.item.originalUnitPrice, discountType: part.item.discountType, discountValue: part.item.discountValue }], tradeInId: formData.tradeInId || null, isRegional: formData.isRegional || false, approximateDays: formData.approximateDays || '3-5' });
+                    const partPayments = payments.map(p => ({ method: p.method, amount: totalNet > 0 ? (p.amount * (part.net / totalNet)) : 0 })).filter(p => p.amount > 0);
+                    await salesAPI.create({ customerId: formData.isNewCustomer ? null : formData.customerId, customerName: formData.customerName, customerPhone: formData.customerPhone, isNewCustomer: formData.isNewCustomer, paymentMethod: partPayments.length > 1 ? 'SPLIT' : paymentMethod, payments: partPayments, amountPaid: paidShare, discountAmount: part.invoiceDiscountShare, discountNote: 'Invoice discount split across separate receipts', items: [{ productId: part.item.productId, deviceId: part.item.deviceId, quantity: part.item.quantity, sellingPrice: part.item.originalUnitPrice, discountType: part.item.discountType, discountValue: part.item.discountValue }], tradeInId: formData.tradeInId || null, isRegional: formData.isRegional || false, approximateDays: formData.approximateDays || '3-5' });
                 }
             } else {
-                await salesAPI.create({ customerId: formData.isNewCustomer ? null : formData.customerId, customerName: formData.customerName, customerPhone: formData.customerPhone, isNewCustomer: formData.isNewCustomer, paymentMethod, amountPaid: paid, invoiceDiscountType: formData.invoiceDiscountType, invoiceDiscountValue: formData.invoiceDiscountValue, discountAmount: cartTotals.invoiceDiscountAmount, items: cartTotals.items.map(i => ({ productId: i.productId, deviceId: i.deviceId, quantity: i.quantity, sellingPrice: i.originalUnitPrice, discountType: i.discountType, discountValue: i.discountValue })), tradeInId: formData.tradeInId || null, isRegional: formData.isRegional || false, approximateDays: formData.approximateDays || '3-5' });
+                await salesAPI.create({ customerId: formData.isNewCustomer ? null : formData.customerId, customerName: formData.customerName, customerPhone: formData.customerPhone, isNewCustomer: formData.isNewCustomer, paymentMethod: payments.length > 1 ? 'SPLIT' : paymentMethod, payments, amountPaid: paid, invoiceDiscountType: formData.invoiceDiscountType, invoiceDiscountValue: formData.invoiceDiscountValue, discountAmount: cartTotals.invoiceDiscountAmount, items: cartTotals.items.map(i => ({ productId: i.productId, deviceId: i.deviceId, quantity: i.quantity, sellingPrice: i.originalUnitPrice, discountType: i.discountType, discountValue: i.discountValue })), tradeInId: formData.tradeInId || null, isRegional: formData.isRegional || false, approximateDays: formData.approximateDays || '3-5' });
             }
             alert('✅ Sale completed successfully!');
             navigate('/dashboard');
@@ -1131,12 +1141,45 @@ const NewSalePage = () => {
                                         )}
 
                                         {/* Amount */}
-                                        <div style={{ marginBottom: 20 }}>
-                                            <label className="ns-label" style={{ display: 'block', marginBottom: 8 }}>Amount Paid (TZS)</label>
-                                            <input type="number" value={formData.amountPaid}
-                                                onChange={e => setFormData(f => ({ ...f, amountPaid: e.target.value }))}
-                                                placeholder="0" className="ns-input"
-                                                style={{ fontSize: 24, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, letterSpacing: '-0.02em' }} />
+                                        {splitPayments.length === 0 && (
+                                            <div style={{ marginBottom: 20 }}>
+                                                <label className="ns-label" style={{ display: 'block', marginBottom: 8 }}>Amount Paid (TZS)</label>
+                                                <input type="number" value={formData.amountPaid}
+                                                    onChange={e => setFormData(f => ({ ...f, amountPaid: e.target.value }))}
+                                                    placeholder="0" className="ns-input"
+                                                    style={{ fontSize: 24, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, letterSpacing: '-0.02em' }} />
+                                            </div>
+                                        )}
+
+                                        <div style={{ marginBottom: 20, padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 14 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: splitPayments.length > 0 ? 12 : 0 }}>
+                                                <div>
+                                                    <div className="ns-label" style={{ color: 'var(--green)', marginBottom: 4 }}>Split Payment</div>
+                                                    <div style={{ fontSize: 11, color: 'var(--text-3)' }}>Use when customer pays with more than one method.</div>
+                                                </div>
+                                                <button onClick={addSplitPayment} style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(52,211,153,0.25)', background: 'rgba(52,211,153,0.1)', color: 'var(--green)', fontSize: 11, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                    + Add Method
+                                                </button>
+                                            </div>
+                                            {splitPayments.length > 0 && (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                    {splitPayments.map((payment, index) => (
+                                                        <div key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8, alignItems: 'center' }}>
+                                                            <select value={payment.method} onChange={e => updateSplitPayment(index, { method: e.target.value })} className="ns-select">
+                                                                {paymentMethods.map(method => <option key={method} value={method}>{method.replace(/_/g, ' ')}</option>)}
+                                                                <option value="CUSTOM">CUSTOM</option>
+                                                            </select>
+                                                            <input type="number" value={payment.amount} onChange={e => updateSplitPayment(index, { amount: e.target.value })} placeholder="Amount" className="ns-input" />
+                                                            <button onClick={() => removeSplitPayment(index)} style={{ width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(248,113,113,0.25)', background: 'rgba(248,113,113,0.08)', color: 'var(--red)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                <X style={{ width: 14, height: 14 }} />
+                                                            </button>
+                                                            {payment.method === 'CUSTOM' && (
+                                                                <input type="text" value={payment.customMethod || ''} onChange={e => updateSplitPayment(index, { customMethod: e.target.value.toUpperCase() })} placeholder="Custom method" className="ns-input" style={{ gridColumn: '1 / -1', textTransform: 'uppercase' }} />
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Receipt mode + Discount side by side */}
@@ -1169,7 +1212,7 @@ const NewSalePage = () => {
                                             {formData.tradeInValue > 0 && <div className="price-row"><span className="label" style={{ color: 'var(--orange)' }}>Trade-In Credit</span><span className="val" style={{ color: 'var(--orange)' }}>−{formData.tradeInValue.toLocaleString()}</span></div>}
                                             <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
                                             <div className="price-row total"><span className="label">Net Payable</span><span className="val">{Math.round(cartTotals.netPayable).toLocaleString()} TZS</span></div>
-                                            {formData.amountPaid && (
+                                            {(formData.amountPaid || splitPayments.length > 0) && (
                                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                                                     style={{ padding: '10px 14px', background: cartTotals.balance >= 0 ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)', border: `1px solid ${cartTotals.balance >= 0 ? 'rgba(52,211,153,0.2)' : 'rgba(248,113,113,0.2)'}`, borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Change / Balance</span>
@@ -1265,9 +1308,20 @@ const NewSalePage = () => {
                                                 <div style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 14 }}>
                                                     <div className="ns-label" style={{ marginBottom: 12, color: 'var(--green)' }}>Payment</div>
                                                     <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 6 }}>Method</div>
-                                                    <div style={{ fontWeight: 700, color: 'var(--text-1)', marginBottom: 10 }}>
-                                                        {formData.paymentMethod === 'CUSTOM' ? (formData.customPaymentMethod || 'CUSTOM') : formData.paymentMethod}
-                                                    </div>
+                                                    {activePayments.length > 0 ? (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                                                            {activePayments.map((payment, index) => (
+                                                                <div key={index} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 12 }}>
+                                                                    <span style={{ color: 'var(--text-1)', fontWeight: 700 }}>{payment.method}</span>
+                                                                    <span style={{ color: 'var(--green)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>{Math.round(payment.amount).toLocaleString()}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ fontWeight: 700, color: 'var(--text-1)', marginBottom: 10 }}>
+                                                            {formData.paymentMethod === 'CUSTOM' ? (formData.customPaymentMethod || 'CUSTOM') : formData.paymentMethod}
+                                                        </div>
+                                                    )}
                                                     <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 6 }}>Paid</div>
                                                     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 16, color: 'var(--green)' }}>{Math.round(cartTotals.paid).toLocaleString()} TZS</div>
                                                 </div>
@@ -1380,7 +1434,7 @@ const NewSalePage = () => {
                                                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 20, color: 'var(--text-1)' }}>{Math.round(cartTotals.netPayable).toLocaleString()}</span>
                                             </div>
                                             <div style={{ fontSize: 9, color: 'var(--text-3)', fontWeight: 700, marginTop: 2 }}>TZS</div>
-                                            {formData.amountPaid && (
+                                            {(formData.amountPaid || splitPayments.length > 0) && (
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 10, fontWeight: 700 }}>
                                                     <span style={{ color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{cartTotals.balance >= 0 ? 'Change' : 'Due'}</span>
                                                     <span style={{ fontFamily: "'JetBrains Mono',monospace", color: cartTotals.balance >= 0 ? 'var(--green)' : 'var(--red)' }}>{Math.abs(Math.round(cartTotals.balance)).toLocaleString()} TZS</span>
