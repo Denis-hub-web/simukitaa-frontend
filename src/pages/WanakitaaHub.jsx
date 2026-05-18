@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
 import { API_URL as API_BASE_URL } from '../utils/api';
+import { loyaltyAPI } from '../utils/api';
 
 const WanakitaaHub = () => {
     const navigate = useNavigate();
@@ -22,6 +23,8 @@ const WanakitaaHub = () => {
     const [selectedMember, setSelectedMember] = useState(null);
     const [syncing, setSyncing] = useState(false);
     const [tiers, setTiers] = useState([]);
+    const [rules, setRules] = useState({ saleAmountPerPoint: 5000, repairAmountPerPoint: 2000, reviewBonusPoints: 20 });
+    const [editingRules, setEditingRules] = useState(false);
     const [editingTiers, setEditingTiers] = useState(false);
     const [tempTiers, setTempTiers] = useState([]);
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -33,6 +36,7 @@ const WanakitaaHub = () => {
 
     useEffect(() => {
         fetchTiers();
+        fetchRules();
         if (activeTab === 'community') fetchCustomers();
         if (activeTab === 'leaderboard') fetchLeaderboard();
     }, [activeTab, period]);
@@ -62,6 +66,25 @@ const WanakitaaHub = () => {
             fetchLeaderboard();
         } catch (err) {
             alert('Update failed');
+        }
+    };
+
+    const fetchRules = async () => {
+        try {
+            const response = await loyaltyAPI.getRules();
+            if (response.data.success) setRules(response.data.data);
+        } catch (err) {
+            console.error('Fetch loyalty rules error:', err);
+        }
+    };
+
+    const handleUpdateRules = async () => {
+        try {
+            await loyaltyAPI.updateRules(rules);
+            setEditingRules(false);
+            alert('Point rules updated');
+        } catch (err) {
+            alert('Failed to update point rules');
         }
     };
 
@@ -390,6 +413,18 @@ const WanakitaaHub = () => {
                                                         <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider">{editingTiers ? 'Save' : 'Manage Tiers'}</span>
                                                     </motion.button>
                                                 )}
+
+                                                {user.role === 'CEO' && (
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.02, backgroundColor: 'rgba(99, 102, 241, 0.15)' }}
+                                                        whileTap={{ scale: 0.98 }}
+                                                        onClick={() => setEditingRules(!editingRules)}
+                                                        className="w-full py-3 md:py-4 bg-indigo-500/10 rounded-xl md:rounded-2xl border border-indigo-500/20 flex items-center justify-center gap-2 md:gap-3 transition-all text-indigo-300"
+                                                    >
+                                                        <FontAwesomeIcon icon={editingRules ? faSave : faEdit} className="text-sm" />
+                                                        <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider">{editingRules ? 'Close Rules' : 'Point Rules'}</span>
+                                                    </motion.button>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600 rounded-full blur-[100px] opacity-20" />
@@ -444,6 +479,44 @@ const WanakitaaHub = () => {
                                         )}
                                     </AnimatePresence>
 
+                                    <AnimatePresence>
+                                        {editingRules && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0, y: -20 }}
+                                                animate={{ height: 'auto', opacity: 1, y: 0 }}
+                                                exit={{ height: 0, opacity: 0, y: -20 }}
+                                                className="premium-card p-8 border-indigo-500/20 shadow-indigo-500/5 overflow-hidden"
+                                            >
+                                                <div className="flex items-center gap-3 mb-6">
+                                                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                                                        <FontAwesomeIcon icon={faGem} />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-black text-gray-900 tracking-tighter uppercase text-sm">Point Rules</h3>
+                                                        <p className="text-[10px] font-bold text-gray-400">Example: set sale amount per point to 166667 for 500,000 ≈ 3 points.</p>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Sales Amount for 1 Point</label>
+                                                        <input type="number" className="premium-input w-full py-3 mt-2" value={rules.saleAmountPerPoint || ''} onChange={e => setRules(r => ({ ...r, saleAmountPerPoint: e.target.value }))} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Repair Amount for 1 Point</label>
+                                                        <input type="number" className="premium-input w-full py-3 mt-2" value={rules.repairAmountPerPoint || ''} onChange={e => setRules(r => ({ ...r, repairAmountPerPoint: e.target.value }))} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Review Bonus Points</label>
+                                                        <input type="number" className="premium-input w-full py-3 mt-2" value={rules.reviewBonusPoints || ''} onChange={e => setRules(r => ({ ...r, reviewBonusPoints: e.target.value }))} />
+                                                    </div>
+                                                    <button onClick={handleUpdateRules} className="premium-btn-primary w-full py-5 text-[10px]">
+                                                        Save Point Rules
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
                                     {/* Loyalty System Guide */}
                                     <div className="premium-card p-8 border-indigo-500/10 shadow-indigo-500/5">
                                         <div className="flex items-center gap-3 mb-8">
@@ -460,7 +533,7 @@ const WanakitaaHub = () => {
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-1">POINTS FROM SALES</p>
-                                                        <p className="text-[9px] font-bold text-gray-400">1 Point / TSH 5,000</p>
+                                                        <p className="text-[9px] font-bold text-gray-400">1 Point / TSH {(Number(rules.saleAmountPerPoint) || 0).toLocaleString()}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -471,7 +544,7 @@ const WanakitaaHub = () => {
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-1">POINTS FROM REPAIRS</p>
-                                                        <p className="text-[9px] font-bold text-gray-400">1 Point / TSH 2,000</p>
+                                                        <p className="text-[9px] font-bold text-gray-400">1 Point / TSH {(Number(rules.repairAmountPerPoint) || 0).toLocaleString()}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -482,7 +555,7 @@ const WanakitaaHub = () => {
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-1">REVIEW BONUSES</p>
-                                                        <p className="text-[9px] font-bold text-gray-400">20 Points Per Review</p>
+                                                        <p className="text-[9px] font-bold text-gray-400">{Number(rules.reviewBonusPoints) || 0} Points Per Review</p>
                                                     </div>
                                                 </div>
                                             </div>

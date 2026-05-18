@@ -31,6 +31,8 @@ const DeliveryDashboard      = lazy(() => import('./pages/DeliveryDashboard'));
 const DeliveryDetail         = lazy(() => import('./pages/DeliveryDetail'));
 const UserManagement         = lazy(() => import('./pages/UserManagement'));
 const WanakitaaHub           = lazy(() => import('./pages/WanakitaaHub'));
+const CustomerVoiceKiosk     = lazy(() => import('./pages/CustomerVoiceKiosk'));
+const CustomerVoiceAdmin     = lazy(() => import('./pages/CustomerVoiceAdmin'));
 const MessageCenter          = lazy(() => import('./pages/MessageCenter'));
 const CustomerReview         = lazy(() => import('./pages/CustomerReview'));
 const NewSalePage            = lazy(() => import('./pages/NewSalePage'));
@@ -96,6 +98,7 @@ function App() {
                         <Route path="/deliveries" element={<DeliveryDashboard />} />
                         <Route path="/deliveries/:id" element={<DeliveryDetail />} />
                         <Route path="/wanakitaa" element={<WanakitaaHub />} />
+                        <Route path="/customer-voice-admin" element={<CustomerVoiceAdmin />} />
                         <Route path="/users" element={<UserManagement />} />
                         <Route path="/trade-ins/*" element={<TradeInRouter />} />
                         <Route path="/messages" element={<MessageCenter />} />
@@ -141,6 +144,7 @@ function App() {
                         <Route path="/users" element={<UserManagement />} />
                         <Route path="/messages" element={<MessageCenter />} />
                         <Route path="/wanakitaa" element={<WanakitaaHub />} />
+                        <Route path="/customer-voice-admin" element={<CustomerVoiceAdmin />} />
                         <Route path="/sales/new" element={<NewSalePage />} />
                         <Route path="/sales" element={<SalesPage />} />
                         <Route path="/suppliers" element={<SupplierManagement />} />
@@ -168,6 +172,7 @@ function App() {
                 )}
 
                 <Route path="/rate/:token" element={<CustomerReview />} />
+                <Route path="/customer-voice" element={<CustomerVoiceKiosk />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>

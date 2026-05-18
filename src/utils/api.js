@@ -188,4 +188,19 @@ export const paymentAPI = {
     getMethods: () => api.get('/payment/methods')
 };
 
+export const loyaltyAPI = {
+    getRules: () => api.get('/loyalty/rules'),
+    updateRules: (data) => api.put('/loyalty/rules', data),
+    getTiers: () => api.get('/loyalty/tiers'),
+    updateTiers: (tiers) => api.post('/loyalty/tiers', { tiers })
+};
+
+export const customerVoiceAPI = {
+    getQuestions: () => api.get('/customer-voice/questions'),
+    submitResponse: (data) => api.post('/customer-voice/responses', data),
+    getSettings: () => api.get('/customer-voice/settings'),
+    updateSettings: (questions) => api.put('/customer-voice/settings', { questions }),
+    getResponses: () => api.get('/customer-voice/responses')
+};
+
 export default api;
