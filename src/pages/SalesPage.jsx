@@ -657,37 +657,37 @@ const SalesPage = () => {
                 )}
 
                 {isCEO && (
-                    <div className="grid grid-cols-2 lg:grid-cols-8 gap-3 mb-5">
-                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
-                            <div className="text-xl md:text-2xl font-black text-blue-600">{filteredSales.length}</div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-8 gap-3 mb-5">
+                        <div className="bg-white rounded-2xl p-3 sm:p-4 border border-gray-200 shadow-sm min-w-0 overflow-hidden">
+                            <div className="text-lg sm:text-xl md:text-2xl font-black text-blue-600 truncate">{filteredSales.length}</div>
                             <div className="text-xs text-gray-500 font-bold">Sales</div>
                         </div>
-                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
-                            <div className="text-xl md:text-2xl font-black text-emerald-600">{formatCurrency(filteredRevenue)}</div>
+                        <div className="bg-white rounded-2xl p-3 sm:p-4 border border-gray-200 shadow-sm min-w-0 overflow-hidden">
+                            <div className="text-lg sm:text-xl md:text-2xl font-black text-emerald-600 truncate" title={formatCurrency(filteredRevenue)}>{formatCurrency(filteredRevenue)}</div>
                             <div className="text-xs text-gray-500 font-bold">Revenue</div>
                         </div>
-                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
-                            <div className="text-xl md:text-2xl font-black text-amber-600">{formatCurrency(filteredCost)}</div>
+                        <div className="bg-white rounded-2xl p-3 sm:p-4 border border-gray-200 shadow-sm min-w-0 overflow-hidden">
+                            <div className="text-lg sm:text-xl md:text-2xl font-black text-amber-600 truncate" title={formatCurrency(filteredCost)}>{formatCurrency(filteredCost)}</div>
                             <div className="text-xs text-gray-500 font-bold">COGS</div>
                         </div>
-                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
-                            <div className="text-xl md:text-2xl font-black text-purple-600">{formatCurrency(filteredProfit)}</div>
+                        <div className="bg-white rounded-2xl p-3 sm:p-4 border border-gray-200 shadow-sm min-w-0 overflow-hidden">
+                            <div className="text-lg sm:text-xl md:text-2xl font-black text-purple-600 truncate" title={formatCurrency(filteredProfit)}>{formatCurrency(filteredProfit)}</div>
                             <div className="text-xs text-gray-500 font-bold">Profit</div>
                         </div>
-                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
-                            <div className="text-xl md:text-2xl font-black text-indigo-600">{filteredMarginPct.toFixed(1)}%</div>
+                        <div className="bg-white rounded-2xl p-3 sm:p-4 border border-gray-200 shadow-sm min-w-0 overflow-hidden">
+                            <div className="text-lg sm:text-xl md:text-2xl font-black text-indigo-600 truncate">{filteredMarginPct.toFixed(1)}%</div>
                             <div className="text-xs text-gray-500 font-bold">Margin</div>
                         </div>
-                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
-                            <div className="text-xl md:text-2xl font-black text-slate-700">{formatCurrency(averageSaleValue)}</div>
+                        <div className="bg-white rounded-2xl p-3 sm:p-4 border border-gray-200 shadow-sm min-w-0 overflow-hidden">
+                            <div className="text-lg sm:text-xl md:text-2xl font-black text-slate-700 truncate" title={formatCurrency(averageSaleValue)}>{formatCurrency(averageSaleValue)}</div>
                             <div className="text-xs text-gray-500 font-bold">Avg Sale</div>
                         </div>
-                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
-                            <div className="text-xl md:text-2xl font-black text-red-600">-{formatCurrency(totalExpenses)}</div>
+                        <div className="bg-white rounded-2xl p-3 sm:p-4 border border-gray-200 shadow-sm min-w-0 overflow-hidden">
+                            <div className="text-lg sm:text-xl md:text-2xl font-black text-red-600 truncate" title={`-${formatCurrency(totalExpenses)}`}>-{formatCurrency(totalExpenses)}</div>
                             <div className="text-xs text-gray-500 font-bold">Expenses</div>
                         </div>
-                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
-                            <div className="text-xl md:text-2xl font-black text-green-700">{formatCurrency(netProfitAfterExpenses)}</div>
+                        <div className="bg-white rounded-2xl p-3 sm:p-4 border border-gray-200 shadow-sm min-w-0 overflow-hidden">
+                            <div className="text-lg sm:text-xl md:text-2xl font-black text-green-700 truncate" title={formatCurrency(netProfitAfterExpenses)}>{formatCurrency(netProfitAfterExpenses)}</div>
                             <div className="text-xs text-gray-500 font-bold">Net Close</div>
                         </div>
                     </div>

@@ -420,6 +420,19 @@ const STEP_META = [
 ];
 
 /* ─────────── helpers ─────────── */
+const parseMoney = (value) => {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+    const cleaned = String(value ?? '').replace(/,/g, '').replace(/[^\d.-]/g, '');
+    const parsed = parseFloat(cleaned);
+    return Number.isFinite(parsed) ? parsed : 0;
+};
+const formatMoneyInput = (value) => {
+    const raw = String(value ?? '').replace(/,/g, '').replace(/[^\d.]/g, '');
+    if (!raw) return '';
+    const [whole, decimal] = raw.split('.');
+    const formattedWhole = whole ? Number(whole).toLocaleString('en-US') : '';
+    return decimal !== undefined ? `${formattedWhole}.${decimal.slice(0, 2)}` : formattedWhole;
+};
 const normalizeDiscountType = (t) => {
     const v = String(t || '').toUpperCase();
     if (v === 'PERCENT' || v === 'PERCENTAGE') return 'PERCENT';
@@ -428,8 +441,8 @@ const normalizeDiscountType = (t) => {
 };
 const computeDiscountAmount = ({ baseAmount, discountType, discountValue }) => {
     const t = normalizeDiscountType(discountType);
-    const val = parseFloat(discountValue);
-    const base = parseFloat(baseAmount);
+    const val = parseMoney(discountValue);
+    const base = parseMoney(baseAmount);
     if (!t || !Number.isFinite(val) || val <= 0) return 0;
     if (!Number.isFinite(base) || base <= 0) return 0;
     if (t === 'PERCENT') return Math.max(0, Math.min(base, (base * val) / 100));
@@ -545,7 +558,7 @@ const NewSalePage = () => {
             const existingIndex = prev.findIndex(i => i.key === key);
             const trackSerials = foundDevice?.product?.trackSerials !== false;
             if (trackSerials && existingIndex !== -1) return prev;
-            const newItem = { key, productId, productName: formData.productName || `${foundDevice.product?.brand || ''} ${foundDevice.product?.name || ''}`.trim(), deviceId, serialNumber: formData.serialNumber || '', condition: formData.condition || '', sellingPrice: parseFloat(formData.sellingPrice) || 0, quantity: 1, discountType: '', discountValue: '' };
+            const newItem = { key, productId, productName: formData.productName || `${foundDevice.product?.brand || ''} ${foundDevice.product?.name || ''}`.trim(), deviceId, serialNumber: formData.serialNumber || '', condition: formData.condition || '', sellingPrice: parseMoney(formData.sellingPrice), quantity: 1, discountType: '', discountValue: '' };
             if (existingIndex !== -1) {
                 const next = [...prev];
                 next[existingIndex] = { ...next[existingIndex], quantity: (parseInt(next[existingIndex].quantity) || 1) + 1 };
@@ -560,7 +573,7 @@ const NewSalePage = () => {
     const updateCartItem = (key, patch) => setCartItems(prev => prev.map(i => i.key === key ? { ...i, ...patch } : i));
     const removeCartItem = (key) => setCartItems(prev => prev.filter(i => i.key !== key));
     const activePayments = splitPayments
-        .map(p => ({ method: p.method === 'CUSTOM' ? p.customMethod : p.method, amount: parseFloat(p.amount) || 0 }))
+        .map(p => ({ method: p.method === 'CUSTOM' ? p.customMethod : p.method, amount: parseMoney(p.amount) }))
         .filter(p => p.method && p.amount > 0);
     const totalSplitPaid = activePayments.reduce((sum, p) => sum + p.amount, 0);
     const updateSplitPayment = (index, patch) => setSplitPayments(prev => prev.map((p, i) => i === index ? { ...p, ...patch } : p));
@@ -570,7 +583,7 @@ const NewSalePage = () => {
     const cartTotals = (() => {
         const items = cartItems.map(i => {
             const qty = Math.max(1, parseInt(i.quantity) || 1);
-            const unit = parseFloat(i.sellingPrice) || 0;
+            const unit = parseMoney(i.sellingPrice);
             const itemDiscPerUnit = computeDiscountAmount({ baseAmount: unit, discountType: i.discountType, discountValue: i.discountValue });
             const unitFinal = Math.max(0, unit - itemDiscPerUnit);
             return { ...i, quantity: qty, originalUnitPrice: unit, itemDiscountAmount: itemDiscPerUnit, finalUnitPrice: unitFinal, lineBase: unit * qty, lineItemDiscount: itemDiscPerUnit * qty, lineTotalAfterItemDiscount: unitFinal * qty };
@@ -580,8 +593,8 @@ const NewSalePage = () => {
         const subtotalAfterItemDiscount = items.reduce((s, i) => s + i.lineTotalAfterItemDiscount, 0);
         const invoiceDiscountAmount = Math.max(0, Math.min(subtotalAfterItemDiscount, computeDiscountAmount({ baseAmount: subtotalAfterItemDiscount, discountType: formData.invoiceDiscountType, discountValue: formData.invoiceDiscountValue })));
         const totalAfterInvoiceDiscount = Math.max(0, subtotalAfterItemDiscount - invoiceDiscountAmount);
-        const netPayable = Math.max(0, totalAfterInvoiceDiscount - (parseFloat(formData.tradeInValue) || 0));
-        const paid = splitPayments.length > 0 ? totalSplitPaid : (parseFloat(formData.amountPaid || 0) || 0);
+        const netPayable = Math.max(0, totalAfterInvoiceDiscount - parseMoney(formData.tradeInValue));
+        const paid = splitPayments.length > 0 ? totalSplitPaid : parseMoney(formData.amountPaid);
         const balance = paid - netPayable;
         return { items, subtotalOriginal, itemDiscountTotal, subtotalAfterItemDiscount, invoiceDiscountAmount, totalAfterInvoiceDiscount, netPayable, paid, balance };
     })();
@@ -609,7 +622,7 @@ const NewSalePage = () => {
         setLoading(true);
         try {
             const paymentMethod = formData.paymentMethod === 'CUSTOM' ? formData.customPaymentMethod : formData.paymentMethod;
-            const payments = activePayments.length > 0 ? activePayments : [{ method: paymentMethod, amount: parseFloat(formData.amountPaid) || 0 }];
+            const payments = activePayments.length > 0 ? activePayments : [{ method: paymentMethod, amount: parseMoney(formData.amountPaid) }];
             const paid = payments.reduce((sum, p) => sum + p.amount, 0);
             if (formData.receiptMode === 'SEPARATE') {
                 const baseForSplit = cartTotals.subtotalAfterItemDiscount || 0;
@@ -1013,7 +1026,7 @@ const NewSalePage = () => {
                                                                         </div>
                                                                         <div>
                                                                             <div className="ns-label" style={{ marginBottom: 4, fontSize: 8 }}>Unit Price</div>
-                                                                            <input type="number" min={0} value={i.originalUnitPrice} onChange={e => updateCartItem(i.key, { sellingPrice: e.target.value })} className="ns-input" style={{ padding: '8px 12px', fontSize: 13, fontFamily: "'JetBrains Mono',monospace" }} />
+                                                                            <input type="text" inputMode="decimal" value={formatMoneyInput(i.sellingPrice)} onChange={e => updateCartItem(i.key, { sellingPrice: formatMoneyInput(e.target.value) })} className="ns-input" style={{ padding: '8px 12px', fontSize: 13, fontFamily: "'JetBrains Mono',monospace" }} />
                                                                         </div>
                                                                         <div style={{ gridColumn: 'span 2' }}>
                                                                             <div className="ns-label" style={{ marginBottom: 4, fontSize: 8 }}>Discount</div>
@@ -1023,7 +1036,7 @@ const NewSalePage = () => {
                                                                                     <option value="AMOUNT">Amt</option>
                                                                                     <option value="PERCENT">%</option>
                                                                                 </select>
-                                                                                <input type="number" min={0} value={i.discountValue ?? ''} onChange={e => updateCartItem(i.key, { discountValue: e.target.value })} className="ns-input" style={{ flex: 1, padding: '8px 10px', fontSize: 12 }} />
+                                                                                <input type="text" inputMode="decimal" value={i.discountType === 'PERCENT' ? (i.discountValue ?? '') : formatMoneyInput(i.discountValue ?? '')} onChange={e => updateCartItem(i.key, { discountValue: i.discountType === 'PERCENT' ? e.target.value.replace(/[^\d.]/g, '') : formatMoneyInput(e.target.value) })} className="ns-input" style={{ flex: 1, padding: '8px 10px', fontSize: 12 }} />
                                                                             </div>
                                                                         </div>
                                                                         <div style={{ gridColumn: 'span 2' }}>
@@ -1082,7 +1095,7 @@ const NewSalePage = () => {
                                         </div>
 
                                         <AnimatePresence>
-                                            {formData.tradeInValue > 0 && (
+                                            {parseMoney(formData.tradeInValue) > 0 && (
                                                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                                                     style={{ padding: '16px 20px', background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
                                                     <div>
@@ -1090,7 +1103,7 @@ const NewSalePage = () => {
                                                         <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-1)' }}>{formData.tradeInDeviceName}</div>
                                                     </div>
                                                     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 700, color: 'var(--orange)', whiteSpace: 'nowrap' }}>
-                                                        − {formData.tradeInValue.toLocaleString()} TZS
+                                                        − {Math.round(parseMoney(formData.tradeInValue)).toLocaleString()} TZS
                                                     </div>
                                                 </motion.div>
                                             )}
@@ -1144,8 +1157,8 @@ const NewSalePage = () => {
                                         {splitPayments.length === 0 && (
                                             <div style={{ marginBottom: 20 }}>
                                                 <label className="ns-label" style={{ display: 'block', marginBottom: 8 }}>Amount Paid (TZS)</label>
-                                                <input type="number" value={formData.amountPaid}
-                                                    onChange={e => setFormData(f => ({ ...f, amountPaid: e.target.value }))}
+                                                <input type="text" inputMode="decimal" value={formatMoneyInput(formData.amountPaid)}
+                                                    onChange={e => setFormData(f => ({ ...f, amountPaid: formatMoneyInput(e.target.value) }))}
                                                     placeholder="0" className="ns-input"
                                                     style={{ fontSize: 24, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, letterSpacing: '-0.02em' }} />
                                             </div>
@@ -1169,7 +1182,7 @@ const NewSalePage = () => {
                                                                 {paymentMethods.map(method => <option key={method} value={method}>{method.replace(/_/g, ' ')}</option>)}
                                                                 <option value="CUSTOM">CUSTOM</option>
                                                             </select>
-                                                            <input type="number" value={payment.amount} onChange={e => updateSplitPayment(index, { amount: e.target.value })} placeholder="Amount" className="ns-input" />
+                                                            <input type="text" inputMode="decimal" value={formatMoneyInput(payment.amount)} onChange={e => updateSplitPayment(index, { amount: formatMoneyInput(e.target.value) })} placeholder="Amount" className="ns-input" />
                                                             <button onClick={() => removeSplitPayment(index)} style={{ width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(248,113,113,0.25)', background: 'rgba(248,113,113,0.08)', color: 'var(--red)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                                 <X style={{ width: 14, height: 14 }} />
                                                             </button>
@@ -1198,7 +1211,7 @@ const NewSalePage = () => {
                                                         <option value="AMOUNT">Amt</option>
                                                         <option value="PERCENT">%</option>
                                                     </select>
-                                                    <input type="number" min={0} value={formData.invoiceDiscountValue} onChange={e => setFormData(f => ({ ...f, invoiceDiscountValue: e.target.value }))}
+                                                    <input type="text" inputMode="decimal" value={formData.invoiceDiscountType === 'PERCENT' ? formData.invoiceDiscountValue : formatMoneyInput(formData.invoiceDiscountValue)} onChange={e => setFormData(f => ({ ...f, invoiceDiscountValue: formData.invoiceDiscountType === 'PERCENT' ? e.target.value.replace(/[^\d.]/g, '') : formatMoneyInput(e.target.value) }))}
                                                         placeholder={formData.invoiceDiscountType === 'PERCENT' ? '0%' : '0'} className="ns-input" style={{ flex: 1 }} />
                                                 </div>
                                             </div>
@@ -1209,7 +1222,7 @@ const NewSalePage = () => {
                                             <div className="price-row"><span className="label">Subtotal</span><span className="val">{Math.round(cartTotals.subtotalOriginal).toLocaleString()}</span></div>
                                             {cartTotals.itemDiscountTotal > 0 && <div className="price-row"><span className="label">Item Discounts</span><span className="val" style={{ color: 'var(--red)' }}>−{Math.round(cartTotals.itemDiscountTotal).toLocaleString()}</span></div>}
                                             {cartTotals.invoiceDiscountAmount > 0 && <div className="price-row"><span className="label">Invoice Discount</span><span className="val" style={{ color: 'var(--red)' }}>−{Math.round(cartTotals.invoiceDiscountAmount).toLocaleString()}</span></div>}
-                                            {formData.tradeInValue > 0 && <div className="price-row"><span className="label" style={{ color: 'var(--orange)' }}>Trade-In Credit</span><span className="val" style={{ color: 'var(--orange)' }}>−{formData.tradeInValue.toLocaleString()}</span></div>}
+                                            {parseMoney(formData.tradeInValue) > 0 && <div className="price-row"><span className="label" style={{ color: 'var(--orange)' }}>Trade-In Credit</span><span className="val" style={{ color: 'var(--orange)' }}>−{Math.round(parseMoney(formData.tradeInValue)).toLocaleString()}</span></div>}
                                             <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
                                             <div className="price-row total"><span className="label">Net Payable</span><span className="val">{Math.round(cartTotals.netPayable).toLocaleString()} TZS</span></div>
                                             {(formData.amountPaid || splitPayments.length > 0) && (
@@ -1254,13 +1267,19 @@ const NewSalePage = () => {
                             {currentStep === 5 && (
                                 <motion.div key="s5" variants={stepVariants} initial="enter" animate="center" exit="exit">
                                     <div className="ns-card" style={{ padding: '28px 24px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                                             <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                 <Sparkles style={{ width: 20, height: 20, color: 'var(--gold)' }} />
                                             </div>
                                             <div>
-                                                <p className="step-section-title">Review Sale</p>
-                                                <p className="ns-label" style={{ marginTop: 2, color: 'var(--text-3)' }}>Verify all details before completing</p>
+                                                <p className="step-section-title">Customer Invoice</p>
+                                                <p className="ns-label" style={{ marginTop: 2, color: 'var(--text-3)' }}>Clean preview before completing the sale</p>
+                                            </div>
+                                            </div>
+                                            <div style={{ padding: '10px 14px', borderRadius: 14, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)', textAlign: 'right' }}>
+                                                <div className="ns-label" style={{ color: 'var(--green)', marginBottom: 2 }}>Amount Due</div>
+                                                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 800, fontSize: 20, color: 'var(--text-1)' }}>{Math.round(cartTotals.netPayable).toLocaleString()} TZS</div>
                                             </div>
                                         </div>
 
@@ -1281,7 +1300,7 @@ const NewSalePage = () => {
                                             </div>
 
                                             {/* Items */}
-                                            <div style={{ padding: '16px 18px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 14 }}>
+                                            <div style={{ padding: '16px 18px', background: 'linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))', border: '1px solid var(--border)', borderRadius: 16 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                                                     <div className="ns-label" style={{ color: 'var(--accent-2)' }}>Invoice Items</div>
                                                     <div className="review-badge">{cartTotals.items.length} item(s)</div>
@@ -1304,7 +1323,7 @@ const NewSalePage = () => {
                                             </div>
 
                                             {/* Payment + Totals */}
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 12 }}>
                                                 <div style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 14 }}>
                                                     <div className="ns-label" style={{ marginBottom: 12, color: 'var(--green)' }}>Payment</div>
                                                     <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 6 }}>Method</div>
@@ -1338,10 +1357,10 @@ const NewSalePage = () => {
                                                                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 600, color: 'var(--red)', fontSize: 11 }}>−{Math.round(cartTotals.itemDiscountTotal).toLocaleString()}</span>
                                                             </div>
                                                         )}
-                                                        {formData.tradeInValue > 0 && (
+                                                        {parseMoney(formData.tradeInValue) > 0 && (
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                                                                 <span style={{ color: 'var(--orange)' }}>Trade-In</span>
-                                                                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 600, color: 'var(--orange)', fontSize: 11 }}>−{Math.round(formData.tradeInValue).toLocaleString()}</span>
+                                                                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 600, color: 'var(--orange)', fontSize: 11 }}>−{Math.round(parseMoney(formData.tradeInValue)).toLocaleString()}</span>
                                                             </div>
                                                         )}
                                                         <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
@@ -1421,10 +1440,10 @@ const NewSalePage = () => {
                                                     <span style={{ color: 'var(--red)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>−{Math.round(cartTotals.itemDiscountTotal).toLocaleString()}</span>
                                                 </div>
                                             )}
-                                            {formData.tradeInValue > 0 && (
+                                            {parseMoney(formData.tradeInValue) > 0 && (
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
                                                     <span style={{ color: 'var(--orange)' }}>Trade-In</span>
-                                                    <span style={{ color: 'var(--orange)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>−{Math.round(parseFloat(formData.tradeInValue)).toLocaleString()}</span>
+                                                    <span style={{ color: 'var(--orange)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>−{Math.round(parseMoney(formData.tradeInValue)).toLocaleString()}</span>
                                                 </div>
                                             )}
                                         </div>
