@@ -11,6 +11,7 @@ import {
     Search,
     Wallet,
     CalendarDays,
+    PlusCircle,
     TrendingUp
 } from 'lucide-react';
 import axios from 'axios';
@@ -20,6 +21,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 import { API_URL as API_BASE_URL } from '../utils/api';
+import { expenseAPI, serviceIncomeAPI } from '../utils/api';
 
 const SalesPage = () => {
     const navigate = useNavigate();
@@ -36,10 +38,26 @@ const SalesPage = () => {
     const [marginMax, setMarginMax] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [expenses, setExpenses] = useState([]);
+    const [serviceIncome, setServiceIncome] = useState([]);
+    const [showServiceForm, setShowServiceForm] = useState(false);
+    const [serviceForm, setServiceForm] = useState({
+        date: new Date().toISOString().split('T')[0],
+        serviceName: 'iOS Update',
+        customerName: '',
+        customerPhone: '',
+        description: '',
+        amount: '',
+        paymentMethod: 'CASH'
+    });
 
     useEffect(() => {
         fetchSales();
     }, []);
+
+    useEffect(() => {
+        fetchExpensesAndServices();
+    }, [startDate, endDate]);
 
     const fetchSales = async () => {
         try {
@@ -53,6 +71,23 @@ const SalesPage = () => {
             console.error('Error fetching sales:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchExpensesAndServices = async () => {
+        if (!isCEO) return;
+        try {
+            const params = {};
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
+            const [expenseResponse, serviceResponse] = await Promise.all([
+                expenseAPI.getAll(params),
+                serviceIncomeAPI.getAll(params)
+            ]);
+            setExpenses(expenseResponse.data.data || []);
+            setServiceIncome(serviceResponse.data.data || []);
+        } catch (error) {
+            console.error('Failed to fetch expenses/services:', error);
         }
     };
 
@@ -121,7 +156,7 @@ const SalesPage = () => {
                 Customer: sale.customer?.name || 'Walk-in',
                 Phone: sale.customer?.phone || '',
                 Staff: sale.staff?.name || sale.staffName || 'System',
-                PaymentMethod: sale.paymentMethod || 'N/A',
+                PaymentMethod: getPaymentLabel(sale),
                 ItemsCount: items.reduce((sum, it) => sum + (parseInt(it.quantity) || 1), 0),
                 ItemsPreview: topItems,
                 Amount: parseFloat(sale.totalAmount) || 0,
@@ -147,7 +182,7 @@ const SalesPage = () => {
                     SaleDate: new Date(sale.saleDate).toLocaleString(),
                     Customer: sale.customer?.name || 'Walk-in',
                     Staff: sale.staff?.name || sale.staffName || 'System',
-                    PaymentMethod: sale.paymentMethod || 'N/A',
+                    PaymentMethod: getPaymentLabel(sale),
                     LineNo: idx + 1,
                     Product: it.productName || 'Unknown',
                     Quantity: qty,
@@ -242,7 +277,7 @@ const SalesPage = () => {
                     `TSh ${(t.totalAmount || 0).toLocaleString()}`,
                     `TSh ${computeSaleCostTotal(t).toLocaleString()}`,
                     `TSh ${(t.profit || 0).toLocaleString()}`,
-                    t.paymentMethod || 'N/A'
+                    getPaymentLabel(t)
                 ];
             }),
             theme: 'grid',
@@ -287,10 +322,36 @@ const SalesPage = () => {
     const normalizePayments = (sale) => {
         if (Array.isArray(sale?.payments) && sale.payments.length > 0) {
             return sale.payments
-                .map(p => ({ method: p.method || 'N/A', amount: parseFloat(p.amount) || 0 }))
+                .map(p => ({ method: p.method || 'Unspecified', amount: parseFloat(p.amount) || 0 }))
                 .filter(p => p.amount > 0);
         }
-        return [{ method: sale?.paymentMethod || 'N/A', amount: parseFloat(sale?.amountPaid ?? sale?.totalAmount) || 0 }];
+        return [{ method: sale?.paymentMethod || 'Unspecified', amount: parseFloat(sale?.amountPaid ?? sale?.totalAmount) || 0 }];
+    };
+
+    const getPaymentLabel = (sale) => {
+        const payments = normalizePayments(sale);
+        if (payments.length > 1) return payments.map(p => `${p.method.replace(/_/g, ' ')} ${formatCurrency(p.amount)}`).join(' + ');
+        return (payments[0]?.method || 'Unspecified').replace(/_/g, ' ');
+    };
+
+    const handleServiceSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await serviceIncomeAPI.create(serviceForm);
+            setServiceForm({
+                date: new Date().toISOString().split('T')[0],
+                serviceName: 'iOS Update',
+                customerName: '',
+                customerPhone: '',
+                description: '',
+                amount: '',
+                paymentMethod: 'CASH'
+            });
+            setShowServiceForm(false);
+            fetchExpensesAndServices();
+        } catch (error) {
+            alert(error.response?.data?.message || 'Failed to record service income');
+        }
     };
 
     const filteredSales = sales.filter(sale => {
@@ -352,6 +413,11 @@ const SalesPage = () => {
     const filteredCost = filteredSales.reduce((sum, s) => sum + computeSaleCostTotal(s), 0);
     const filteredProfit = filteredSales.reduce((sum, s) => sum + (parseFloat(s.profit) || 0), 0);
     const filteredDiscount = filteredSales.reduce((sum, s) => sum + (parseFloat(s.totalDiscountAmount ?? s.discountAmount) || 0), 0);
+    const totalExpenses = expenses.reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
+    const totalServiceIncome = serviceIncome.reduce((sum, service) => sum + (parseFloat(service.amount) || 0), 0);
+    const closeRevenue = filteredRevenue + totalServiceIncome;
+    const netCashAfterExpenses = closeRevenue - totalExpenses;
+    const netProfitAfterExpenses = filteredProfit + totalServiceIncome - totalExpenses;
     const filteredItemsSold = filteredSales.reduce((sum, s) => sum + normalizeItems(s).reduce((acc, it) => acc + (parseInt(it.quantity) || 1), 0), 0);
     const averageSaleValue = filteredSales.length ? filteredRevenue / filteredSales.length : 0;
     const filteredMarginPct = filteredRevenue > 0 ? (filteredProfit / filteredRevenue) * 100 : 0;
@@ -411,7 +477,15 @@ const SalesPage = () => {
         );
     }
 
-    const paymentMethods = Array.from(new Set(sales.map(s => s.paymentMethod).filter(Boolean))).sort();
+    const paymentMethods = Array.from(new Set([
+        'CASH',
+        'M-PESA',
+        'TIGOPESA',
+        'AIRTEL_MONEY',
+        'HALOPESA',
+        'BANK',
+        ...sales.flatMap(s => normalizePayments(s).map(p => p.method))
+    ].filter(method => method && method !== 'Unspecified'))).sort();
     const staffOptions = Array.from(
         new Map(
             sales.map(s => {
@@ -468,10 +542,53 @@ const SalesPage = () => {
                                     <FileDown className="w-4 h-4" />
                                     <span className="hidden sm:inline">PDF</span>
                                 </button>
+                                <button
+                                    onClick={() => setShowServiceForm(!showServiceForm)}
+                                    className="px-4 py-2 bg-gradient-to-r from-slate-800 to-slate-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"
+                                >
+                                    <PlusCircle className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Service</span>
+                                </button>
                             </>
                         )}
                     </div>
                 </div>
+
+                {isCEO && (
+                    <AnimatePresence>
+                        {showServiceForm && (
+                            <motion.form
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                onSubmit={handleServiceSubmit}
+                                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5 mb-5"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-end gap-3">
+                                    <label className="flex-1">
+                                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Service</span>
+                                        <input value={serviceForm.serviceName} onChange={e => setServiceForm(f => ({ ...f, serviceName: e.target.value }))} className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm font-bold" placeholder="iOS Update" required />
+                                    </label>
+                                    <label>
+                                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Amount</span>
+                                        <input type="number" value={serviceForm.amount} onChange={e => setServiceForm(f => ({ ...f, amount: e.target.value }))} className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm font-bold" required />
+                                    </label>
+                                    <label>
+                                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Method</span>
+                                        <select value={serviceForm.paymentMethod} onChange={e => setServiceForm(f => ({ ...f, paymentMethod: e.target.value }))} className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm font-bold">
+                                            {paymentMethods.map(method => <option key={method} value={method}>{method.replace(/_/g, ' ')}</option>)}
+                                        </select>
+                                    </label>
+                                    <label>
+                                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Customer</span>
+                                        <input value={serviceForm.customerName} onChange={e => setServiceForm(f => ({ ...f, customerName: e.target.value }))} className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm font-bold" placeholder="Optional" />
+                                    </label>
+                                    <button className="px-5 py-3 rounded-xl bg-slate-900 text-white font-black">Record Income</button>
+                                </div>
+                            </motion.form>
+                        )}
+                    </AnimatePresence>
+                )}
 
                 {isCEO && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
@@ -540,7 +657,7 @@ const SalesPage = () => {
                 )}
 
                 {isCEO && (
-                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-5">
+                    <div className="grid grid-cols-2 lg:grid-cols-8 gap-3 mb-5">
                         <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
                             <div className="text-xl md:text-2xl font-black text-blue-600">{filteredSales.length}</div>
                             <div className="text-xs text-gray-500 font-bold">Sales</div>
@@ -564,6 +681,55 @@ const SalesPage = () => {
                         <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
                             <div className="text-xl md:text-2xl font-black text-slate-700">{formatCurrency(averageSaleValue)}</div>
                             <div className="text-xs text-gray-500 font-bold">Avg Sale</div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+                            <div className="text-xl md:text-2xl font-black text-red-600">-{formatCurrency(totalExpenses)}</div>
+                            <div className="text-xs text-gray-500 font-bold">Expenses</div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+                            <div className="text-xl md:text-2xl font-black text-green-700">{formatCurrency(netProfitAfterExpenses)}</div>
+                            <div className="text-xs text-gray-500 font-bold">Net Close</div>
+                        </div>
+                    </div>
+                )}
+
+                {isCEO && (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Close Reality</p>
+                            <h2 className="text-lg font-black text-gray-900 mb-4">Sales + Services - Expenses</h2>
+                            <div className="space-y-3">
+                                <div className="flex justify-between text-sm font-bold"><span>Sales Revenue</span><span>{formatCurrency(filteredRevenue)}</span></div>
+                                <div className="flex justify-between text-sm font-bold text-emerald-700"><span>Service Income</span><span>+{formatCurrency(totalServiceIncome)}</span></div>
+                                <div className="flex justify-between text-sm font-bold text-red-600"><span>Expenses</span><span>-{formatCurrency(totalExpenses)}</span></div>
+                                <div className="pt-3 border-t border-gray-100 flex justify-between font-black text-gray-900"><span>Cash After Expenses</span><span>{formatCurrency(netCashAfterExpenses)}</span></div>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Expenses Tab</p>
+                            <h2 className="text-lg font-black text-gray-900 mb-4">Latest Expenses</h2>
+                            <div className="space-y-2 max-h-44 overflow-y-auto">
+                                {expenses.slice(0, 5).map(expense => (
+                                    <div key={expense.id} className="flex justify-between gap-3 rounded-xl bg-red-50 px-3 py-2 text-sm">
+                                        <span className="font-bold text-gray-700 truncate">{expense.category} • {expense.description}</span>
+                                        <span className="font-black text-red-700">-{formatCurrency(expense.amount)}</span>
+                                    </div>
+                                ))}
+                                {expenses.length === 0 && <div className="text-sm text-gray-400 font-bold">No expenses in this period</div>}
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Services Tab</p>
+                            <h2 className="text-lg font-black text-gray-900 mb-4">Office Service Income</h2>
+                            <div className="space-y-2 max-h-44 overflow-y-auto">
+                                {serviceIncome.slice(0, 5).map(service => (
+                                    <div key={service.id} className="flex justify-between gap-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm">
+                                        <span className="font-bold text-gray-700 truncate">{service.serviceName} • {service.customerName || 'Walk-in'}</span>
+                                        <span className="font-black text-emerald-700">+{formatCurrency(service.amount)}</span>
+                                    </div>
+                                ))}
+                                {serviceIncome.length === 0 && <div className="text-sm text-gray-400 font-bold">No service income in this period</div>}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -766,7 +932,7 @@ const SalesPage = () => {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-xs font-black text-gray-400 uppercase">{sale.paymentMethod?.replace(/_/g, ' ') || 'N/A'}</div>
+                                        <div className="text-xs font-black text-gray-400 uppercase">{getPaymentLabel(sale)}</div>
                                         {isCEO && (
                                             <div className="mt-2 space-y-1">
                                                 <div className="text-base font-black text-gray-900">{formatCurrency(sale.totalAmount)}</div>
@@ -936,7 +1102,7 @@ const SalesPage = () => {
                                                                 sale.paymentMethod === 'M_PESA' ? 'bg-red-100 text-red-700' :
                                                                     'bg-gray-100 text-gray-700'}
                                                  `}>
-                                                    {sale.paymentMethod?.replace(/_/g, ' ') || 'N/A'}
+                                                    {getPaymentLabel(sale)}
                                                 </span>
                                             </td>
 

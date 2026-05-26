@@ -183,6 +183,12 @@ export const expenseAPI = {
     create: (data) => api.post('/expenses', data)
 };
 
+export const serviceIncomeAPI = {
+    getAll: (params) => api.get('/service-income', { params }),
+    getSummary: (params) => api.get('/service-income/summary', { params }),
+    create: (data) => api.post('/service-income', data)
+};
+
 // Payment APIs
 export const paymentAPI = {
     getMethods: () => api.get('/payment/methods')
